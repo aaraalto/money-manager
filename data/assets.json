@@ -1,0 +1,19 @@
+[
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "name": "Emergency Fund",
+    "type": "cash",
+    "value": 10000.0,
+    "apy": 0.04,
+    "liquidity": "liquid"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440001",
+    "name": "401k",
+    "type": "equity",
+    "value": 50000.0,
+    "apy": 0.07,
+    "liquidity": "illiquid"
+  }
+]
+
