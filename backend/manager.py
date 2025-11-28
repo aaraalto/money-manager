@@ -11,7 +11,7 @@ from uuid import UUID
 # Add the project root to sys.path so imports work
 sys.path.append(str(Path(__file__).parent.parent))
 
-from backend.models import Asset, Liability, Transaction, AssetType, LiquidityStatus
+from backend.models import Asset, Liability, Transaction, AssetType, LiquidityStatus, LiabilityTag
 
 DATA_DIR = Path("data")
 ASSETS_FILE = DATA_DIR / "assets.json"
@@ -100,11 +100,92 @@ def add_liability(args):
         name=args.name,
         balance=args.balance,
         interest_rate=args.interest_rate,
-        min_payment=args.min_payment
+        min_payment=args.min_payment,
+        credit_limit=args.credit_limit,
+        tags=args.tags or []
     )
     liabilities.append(new_liability)
     save_json(LIABILITIES_FILE, liabilities)
     print(f"Liability '{new_liability.name}' added successfully.")
+
+def update_liability(args):
+    liabilities = load_json(LIABILITIES_FILE, Liability)
+    target_name = args.name.lower()
+    
+    found = False
+    for l in liabilities:
+        if l.name.lower() == target_name:
+            if args.interest_rate is not None:
+                l.interest_rate = args.interest_rate
+            if args.min_payment is not None:
+                l.min_payment = args.min_payment
+            if args.balance is not None:
+                l.balance = args.balance
+            if args.credit_limit is not None:
+                l.credit_limit = args.credit_limit
+            
+            print(f"Updated liability: {l.name}")
+            found = True
+            # Don't break in case of duplicate names, update all matches? 
+            # Standard behavior is usually update unique ID, but name is user facing.
+            # Let's stop at first match for safety, or list multiple? 
+            # Given the list, names seem distinct.
+            break
+            
+    if found:
+        save_json(LIABILITIES_FILE, liabilities)
+    else:
+        print(f"Error: No liability found with name matching '{args.name}'")
+
+def bulk_update_liabilities(args):
+    liabilities = load_json(LIABILITIES_FILE, Liability)
+    print("Starting bulk update for liabilities (Press Ctrl+C to cancel anytime).")
+    print("Press Enter to skip a value.")
+    
+    updated_count = 0
+    for l in liabilities:
+        print(f"\n--- {l.name} ---")
+        print(f"Current Balance: {l.balance}, Rate: {l.interest_rate}, Min Payment: {l.min_payment}")
+        
+        # Balance
+        new_bal = input(f"New Balance [{l.balance}]: ").strip()
+        if new_bal:
+            try:
+                l.balance = float(new_bal)
+            except ValueError:
+                print("Invalid number, keeping original.")
+        
+        # Rate
+        new_rate = input(f"New Interest Rate [{l.interest_rate}]: ").strip()
+        if new_rate:
+            try:
+                l.interest_rate = float(new_rate)
+            except ValueError:
+                print("Invalid number, keeping original.")
+
+        # Min Payment
+        new_min = input(f"New Min Payment [{l.min_payment}]: ").strip()
+        if new_min:
+            try:
+                l.min_payment = float(new_min)
+            except ValueError:
+                print("Invalid number, keeping original.")
+        
+        # Credit Limit (if Credit Card)
+        if l.tags and LiabilityTag.CREDIT_CARD in l.tags:
+            current_limit = l.credit_limit if l.credit_limit is not None else "None"
+            new_limit = input(f"New Credit Limit [{current_limit}]: ").strip()
+            if new_limit:
+                try:
+                    l.credit_limit = float(new_limit)
+                except ValueError:
+                    print("Invalid number, keeping original.")
+
+        updated_count += 1
+
+    if updated_count > 0:
+        save_json(LIABILITIES_FILE, liabilities)
+        print(f"\nSuccessfully updated {updated_count} liabilities.")
 
 def add_transaction(args):
     new_tx = Transaction(
@@ -164,7 +245,22 @@ def main():
     liab_parser.add_argument("--balance", type=float, required=True)
     liab_parser.add_argument("--interest-rate", type=float, required=True, help="Annual rate (e.g., 0.05 for 5%)")
     liab_parser.add_argument("--min-payment", type=float, required=True)
+    liab_parser.add_argument("--credit-limit", type=float, help="Total credit limit")
+    liab_parser.add_argument("--tags", nargs="*", choices=[e.value for e in LiabilityTag], help="Tags for the liability")
     liab_parser.set_defaults(func=add_liability)
+
+    # Update Liability
+    update_liab_parser = subparsers.add_parser("update-liability", aliases=["ul"], help="Update an existing liability")
+    update_liab_parser.add_argument("-n", "--name", required=True, help="Name of the liability to update (case-insensitive match)")
+    update_liab_parser.add_argument("-i", "--interest-rate", type=float, help="New annual rate (e.g., 0.05 for 5%)")
+    update_liab_parser.add_argument("-m", "--min-payment", type=float, help="New minimum payment")
+    update_liab_parser.add_argument("-b", "--balance", type=float, help="New balance")
+    update_liab_parser.add_argument("-c", "--credit-limit", type=float, help="New credit limit")
+    update_liab_parser.set_defaults(func=update_liability)
+
+    # Bulk Update Liabilities
+    bulk_liab_parser = subparsers.add_parser("bulk-update-liabilities", aliases=["bul"], help="Interactively update all liabilities")
+    bulk_liab_parser.set_defaults(func=bulk_update_liabilities)
 
     # Add Transaction
     tx_parser = subparsers.add_parser("add-transaction", help="Add a new transaction")

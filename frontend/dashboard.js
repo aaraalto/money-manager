@@ -4,11 +4,36 @@ const API_URL = "http://localhost:8000/api/view";
 
 async function init() {
     try {
+        // Robust check for dependencies
+        if (typeof d3 === 'undefined') {
+            throw new Error("D3.js library not found. Please check your internet connection.");
+        }
+        if (typeof gsap === 'undefined') {
+            console.warn("GSAP not found. Animations will be disabled.");
+        }
+
         const response = await fetch(API_URL);
         const data = await response.json();
         
         document.getElementById("loading").style.display = "none";
         document.getElementById("dashboard").style.display = "block";
+        
+        // Animate cards entry if GSAP is available
+        if (typeof gsap !== 'undefined') {
+            gsap.to(".card", {
+                duration: 0.6,
+                opacity: 1,
+                y: 0,
+                stagger: 0.1,
+                ease: "power2.out"
+            });
+        } else {
+            // Fallback: make visible immediately
+            document.querySelectorAll('.card').forEach(el => {
+                el.style.opacity = 1;
+                el.style.transform = 'none';
+            });
+        }
         
         renderNetWorth(data.net_worth);
         renderProjection(data.projection);
@@ -16,16 +41,40 @@ async function init() {
         
     } catch (error) {
         console.error("Failed to load data:", error);
-        document.getElementById("loading").textContent = "Error loading data. Is the backend running?";
+        document.getElementById("loading").innerHTML = `
+            <div style="color: #ff3b30; padding: 20px; background: #fff; border-radius: 12px;">
+                <h3>Error Loading Dashboard</h3>
+                <p>${error.message}</p>
+                <small>Check console for details.</small>
+            </div>
+        `;
     }
 }
 
 function renderNetWorth(data) {
-    document.getElementById("nw-total").textContent = formatCurrency(data.total);
-    document.getElementById("nw-liquid").textContent = formatCurrency(data.liquid);
-    document.getElementById("nw-debt").textContent = formatCurrency(data.liabilities_total);
+    if (typeof gsap !== 'undefined') {
+        animateValue("nw-total", data.total);
+        animateValue("nw-liquid", data.liquid);
+        animateValue("nw-debt", data.liabilities_total);
+    } else {
+        document.getElementById("nw-total").textContent = formatCurrency(data.total);
+        document.getElementById("nw-liquid").textContent = formatCurrency(data.liquid);
+        document.getElementById("nw-debt").textContent = formatCurrency(data.liabilities_total);
+    }
     
     renderReasoning("nw-reasoning", data.reasoning);
+}
+
+function animateValue(elementId, endValue) {
+    const obj = { val: 0 };
+    gsap.to(obj, {
+        val: endValue,
+        duration: 1.5,
+        ease: "power2.out",
+        onUpdate: function() {
+            document.getElementById(elementId).textContent = formatCurrency(obj.val);
+        }
+    });
 }
 
 function renderProjection(data) {
@@ -41,9 +90,6 @@ function renderDebtPayoff(data) {
     
     const seriesSnowball = data.snowball.series.map(d => ({ date: new Date(d.date), value: d.value, strategy: "Snowball" }));
     const seriesAvalanche = data.avalanche.series.map(d => ({ date: new Date(d.date), value: d.value, strategy: "Avalanche" }));
-    
-    // Combine for multi-line chart
-    const combined = [...seriesSnowball, ...seriesAvalanche];
     
     drawMultiLineChart(container, seriesSnowball, seriesAvalanche);
     renderReasoning("debt-reasoning", data.comparison);
@@ -68,6 +114,8 @@ function formatCurrency(value) {
 // --- D3 Charts ---
 
 function drawAreaChart(selector, data, yLabel) {
+    if (typeof d3 === 'undefined') return;
+
     const container = d3.select(selector);
     container.html(""); // Clear
     
@@ -96,20 +144,59 @@ function drawAreaChart(selector, data, yLabel) {
     svg.append("g")
         .call(d3.axisLeft(y));
         
-    // Area
+    // Area generator
+    const area = d3.area()
+        .x(d => x(d.date))
+        .y0(height) 
+        .y1(d => y(d.value));
+        
+    const areaFinal = d3.area()
+        .x(d => x(d.date))
+        .y0(y(0)) 
+        .y1(d => y(d.value));
+
+    // Line generator
+    const line = d3.line()
+        .x(d => x(d.date))
+        .y(d => y(d.value));
+
+    // Clip path for revealing the graph
+    const clipId = "clip-projection-" + Math.random().toString(36).substr(2, 9);
+    svg.append("clipPath")
+        .attr("id", clipId)
+        .append("rect")
+        .attr("width", typeof gsap !== 'undefined' ? 0 : width) // Start hidden if animating
+        .attr("height", height);
+
+    // Add Area
     svg.append("path")
         .datum(data)
         .attr("fill", "#cce5ff")
+        .attr("d", areaFinal)
+        .attr("clip-path", `url(#${clipId})`)
+        .style("opacity", 0.6);
+
+    // Add Line
+    svg.append("path")
+        .datum(data)
+        .attr("fill", "none")
         .attr("stroke", "#007aff")
-        .attr("stroke-width", 1.5)
-        .attr("d", d3.area()
-            .x(d => x(d.date))
-            .y0(y(0))
-            .y1(d => y(d.value))
-        );
+        .attr("stroke-width", 2)
+        .attr("d", line)
+        .attr("clip-path", `url(#${clipId})`);
+
+    if (typeof gsap !== 'undefined') {
+        gsap.to(`#${clipId} rect`, {
+            width: width,
+            duration: 2,
+            ease: "power2.out"
+        });
+    }
 }
 
 function drawMultiLineChart(selector, data1, data2) {
+    if (typeof d3 === 'undefined') return;
+
     const container = d3.select(selector);
     container.html("");
     
@@ -140,34 +227,68 @@ function drawMultiLineChart(selector, data1, data2) {
     svg.append("g")
         .call(d3.axisLeft(y));
         
-    // Line 1 (Snowball)
-    svg.append("path")
-        .datum(data1)
-        .attr("fill", "none")
-        .attr("stroke", "#ff3b30") // Red
-        .attr("stroke-width", 2)
-        .attr("d", d3.line()
-            .x(d => x(d.date))
-            .y(d => y(d.value))
-        );
-        
-    // Line 2 (Avalanche)
-    svg.append("path")
-        .datum(data2)
-        .attr("fill", "none")
-        .attr("stroke", "#34c759") // Green
-        .attr("stroke-width", 2)
-        .attr("stroke-dasharray", "5,5")
-        .attr("d", d3.line()
-            .x(d => x(d.date))
-            .y(d => y(d.value))
-        );
+    // Line generator
+    const line = d3.line()
+        .x(d => x(d.date))
+        .y(d => y(d.value));
+
+    // Helper to add and animate line
+    function addLine(data, color, dashed = false, delay = 0) {
+        const path = svg.append("path")
+            .datum(data)
+            .attr("fill", "none")
+            .attr("stroke", color)
+            .attr("stroke-width", 2)
+            .attr("d", line);
+            
+        if (dashed) {
+            path.attr("stroke-dasharray", "5,5");
+        }
+
+        if (typeof gsap !== 'undefined') {
+            const length = path.node().getTotalLength();
+            
+            if (!dashed) {
+                // Draw animation for solid lines
+                path.attr("stroke-dasharray", length + " " + length)
+                    .attr("stroke-dashoffset", length);
+                
+                gsap.to(path.node(), {
+                    strokeDashoffset: 0,
+                    duration: 2,
+                    delay: delay,
+                    ease: "power2.out"
+                });
+            } else {
+                // Fade animation for dashed lines
+                path.attr("opacity", 0);
+                gsap.to(path.node(), {
+                    opacity: 1,
+                    duration: 2,
+                    delay: delay,
+                    ease: "power2.out"
+                });
+            }
+        }
+    }
+
+    addLine(data1, "#ff3b30", false, 0); // Snowball
+    addLine(data2, "#34c759", true, 0.5); // Avalanche
 
     // Legend
-    svg.append("text").attr("x", width + 10).attr("y", 20).text("Snowball").style("fill", "#ff3b30").style("font-size", "12px");
-    svg.append("text").attr("x", width + 10).attr("y", 40).text("Avalanche").style("fill", "#34c759").style("font-size", "12px");
+    const legend = svg.append("g");
+    legend.append("text").attr("x", width + 10).attr("y", 20).text("Snowball").style("fill", "#ff3b30").style("font-size", "12px");
+    legend.append("text").attr("x", width + 10).attr("y", 40).text("Avalanche").style("fill", "#34c759").style("font-size", "12px");
+    
+    if (typeof gsap !== 'undefined') {
+        legend.style("opacity", 0);
+        gsap.to(legend.node(), {
+            opacity: 1,
+            delay: 1.5,
+            duration: 1
+        });
+    }
 }
 
 // Start
 init();
-

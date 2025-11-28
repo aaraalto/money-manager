@@ -33,8 +33,42 @@ app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
 async def read_root():
     return FileResponse(FRONTEND_DIR / "index.html")
 
+@app.get("/generative")
+async def read_generative():
+    return FileResponse(FRONTEND_DIR / "generative_example.html")
+
+from pydantic import BaseModel
+
+class Scenario(BaseModel):
+    query: str
+    monthly_payment: float
+    results: Dict[str, Any]
+
+SCENARIOS_FILE = Path("data/scenarios.json")
+
+@app.post("/api/save-scenario")
+async def save_scenario(scenario: Scenario):
+    existing = []
+    if SCENARIOS_FILE.exists():
+        try:
+            with open(SCENARIOS_FILE, "r") as f:
+                existing = json.load(f)
+        except json.JSONDecodeError:
+            pass
+    
+    existing.append(scenario.dict())
+    
+    # Limit to last 50 scenarios
+    if len(existing) > 50:
+        existing = existing[-50:]
+        
+    with open(SCENARIOS_FILE, "w") as f:
+        json.dump(existing, f, indent=2, default=str)
+        
+    return {"status": "success", "count": len(existing)}
+
 @app.get("/api/view")
-async def get_dashboard_view() -> Dict[str, Any]:
+async def get_dashboard_view(monthly_payment: float = 500.0) -> Dict[str, Any]:
     assets = load_json(ASSETS_FILE, Asset)
     liabilities = load_json(LIABILITIES_FILE, Liability)
     
@@ -52,8 +86,8 @@ async def get_dashboard_view() -> Dict[str, Any]:
     
     # 3. Debt Payoff (Snowball vs Avalanche)
     # We simulate both to show comparison
-    snowball = simulate_debt_payoff(liabilities, "snowball", extra_monthly_payment=500.0)
-    avalanche = simulate_debt_payoff(liabilities, "avalanche", extra_monthly_payment=500.0)
+    snowball = simulate_debt_payoff(liabilities, "snowball", extra_monthly_payment=monthly_payment)
+    avalanche = simulate_debt_payoff(liabilities, "avalanche", extra_monthly_payment=monthly_payment)
     
     # 4. Affordability (Example check)
     # Just a placeholder check for the dashboard
@@ -61,6 +95,7 @@ async def get_dashboard_view() -> Dict[str, Any]:
 
     return {
         "net_worth": nw_context.dict(),
+        "liabilities": [l.dict() for l in liabilities],
         "projection": projection.dict(),
         "debt_payoff": {
             "snowball": snowball.dict(),

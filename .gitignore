@@ -1,0 +1,19 @@
+__pycache__/
+*.pyc
+.DS_Store
+.venv/
+env/
+venv/
+.env
+*.log
+.cursor/
+
+# Data files (optional, depending on if you want to commit your personal data)
+data/liabilities.json
+data/assets.json
+data/transactions.csv
+data/scenarios.json
+
+# Frontend dependencies if installed via npm (though current setup is manual)
+node_modules/
+

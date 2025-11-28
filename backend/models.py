@@ -16,6 +16,14 @@ class LiquidityStatus(str, Enum):
     LIQUID = "liquid"
     ILLIQUID = "illiquid"
 
+class LiabilityTag(str, Enum):
+    CREDIT_CARD = "Credit Card"
+    PERSONAL_LOANS = "Personal Loans"
+    STUDENT_LOANS = "Student Loans"
+    FAMILY_LOAN = "Family Loan"
+    TAXES = "Taxes"
+    SHORT_FAMILY_LOAN = "Short Family Loan"
+
 class Asset(BaseModel):
     id: UUID = Field(default_factory=uuid4)
     name: str
@@ -30,6 +38,8 @@ class Liability(BaseModel):
     balance: float = Field(..., ge=0)
     interest_rate: float = Field(..., ge=0, description="Annual Interest Rate (e.g., 0.24 for 24%)")
     min_payment: float = Field(..., ge=0)
+    credit_limit: Optional[float] = Field(None, ge=0, description="Total credit limit for the account")
+    tags: list[LiabilityTag] = []
 
 class Transaction(BaseModel):
     date: date
