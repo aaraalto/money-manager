@@ -1,0 +1,29 @@
+{# frontend/partials/insight_card.html #}
+<div id="insights-wrapper" class="insights-container" style="display: block;">
+    <div id="insights-content">
+        <div class="insight-card {{ insight.severity }} active" style="display: block;">
+            <div class="insight-header">
+                <div class="insight-title">{{ insight.title }}</div>
+            </div>
+            <div class="insight-desc">{{ insight.description }}</div>
+            {% if insight.action_item %}
+            <div class="insight-action">{{ insight.action_item }}</div>
+            {% endif %}
+        </div>
+    </div>
+    
+    {% if total > 1 %}
+    <div class="insight-nav" style="display: flex;">
+        <button class="nav-btn" hx-get="/partials/insights?index={{ index - 1 }}" hx-target="#insights-wrapper" hx-swap="outerHTML">&lsaquo;</button>
+        
+        <div id="nav-dots" class="nav-dots">
+            {% for i in range(total) %}
+            <div class="nav-dot {% if i == index %}active{% endif %}"></div>
+            {% endfor %}
+        </div>
+        
+        <button class="nav-btn" hx-get="/partials/insights?index={{ index + 1 }}" hx-target="#insights-wrapper" hx-swap="outerHTML">&rsaquo;</button>
+    </div>
+    {% endif %}
+</div>
+

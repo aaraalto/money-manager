@@ -3,46 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wealth OS Dashboard</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f7; color: #1d1d1f; }
-        .container { max-width: 1200px; margin: 0 auto; }
-        header { margin-bottom: 30px; }
-        h1 { font-weight: 600; }
-        .card { background: white; border-radius: 18px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); opacity: 0; transform: translateY(20px); }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 24px; }
-        .kpi-row { display: flex; justify-content: space-between; margin-bottom: 20px; }
-        .kpi { text-align: center; }
-        .kpi-label { font-size: 0.9em; color: #86868b; }
-        .kpi-value { font-size: 2em; font-weight: 700; }
-        
-        /* Chart Containers */
-        .chart-container { width: 100%; height: 300px; }
-        
-        /* Reasoning Logs */
-        .reasoning { background: #f5f5f7; padding: 15px; border-radius: 12px; font-family: monospace; font-size: 0.9em; margin-top: 10px; }
-        .reasoning ul { padding-left: 20px; margin: 0; }
-        
-        /* D3 Styles */
-        .line { fill: none; stroke-width: 2px; }
-        .area { opacity: 0.3; }
-        .axis path, .axis line { stroke: #d2d2d7; }
-        .grid-line { stroke: #e5e5ea; stroke-dasharray: 3,3; }
-    </style>
+    <title>Wealth HQ</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="/static/css/variables.css">
+    <link rel="stylesheet" href="/static/css/dashboard.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Wealth OS</h1>
-            <p>Local. Private. Deterministic.</p>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1>Wealth HQ</h1>
+                    <p>Private. Secure. Yours.</p>
+                </div>
+                <a href="/generative" class="btn-nav">
+                    Future Simulator <span>&rarr;</span>
+                </a>
+            </div>
         </header>
 
-        <div id="loading">Loading Financial Engine...</div>
+        <div id="loading">Crunching the numbers...</div>
 
         <div id="dashboard" style="display:none;">
             <!-- Net Worth Snapshot -->
             <div class="card">
-                <h2>Current Snapshot</h2>
+                <h2>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                    Where You Stand
+                </h2>
                 <div class="kpi-row">
                     <div class="kpi">
                         <div class="kpi-label">Net Worth</div>
@@ -63,14 +56,20 @@
             <div class="grid">
                 <!-- Projection Chart -->
                 <div class="card">
-                    <h2>10-Year Wealth Projection</h2>
+                    <h2>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 6l-9.5 9.5-5-5L1 18"></path><path d="M17 6h6v6"></path></svg>
+                        Your Wealth Trajectory
+                    </h2>
                     <div class="chart-container" id="chart-projection"></div>
                     <div class="reasoning" id="proj-context"></div>
                 </div>
 
                 <!-- Debt Payoff Chart -->
                 <div class="card">
-                    <h2>Debt Burnout: Snowball vs Avalanche</h2>
+                    <h2>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                        Debt Freedom Plan
+                    </h2>
                     <div class="chart-container" id="chart-debt"></div>
                     <div class="reasoning" id="debt-reasoning"></div>
                 </div>
@@ -82,7 +81,7 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="/static/gsap-public/minified/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script> <!-- Fallback -->
-    <script src="/static/dashboard.js?v=2"></script>
+    <script src="/static/dashboard.js?v=3"></script>
 </body>
 </html>
 

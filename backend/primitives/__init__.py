@@ -4,4 +4,4 @@ from .debt import simulate_debt_payoff, PayoffContext, PayoffLog
 from .affordability import assess_affordability, AffordabilityContext
 from .tags import group_liabilities_by_tag
 from .types import TimeSeriesPoint
-
+from .advisor import generate_insights

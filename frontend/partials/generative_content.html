@@ -1,0 +1,74 @@
+{# frontend/partials/generative_content.html #}
+
+{# 1. Metrics #}
+<div id="metric-fcf" hx-swap-oob="true" style="color: #4a90e2">{{ format_currency(data.cash_flow.free) }}</div>
+<div id="metric-date" hx-swap-oob="true" class="date">{{ data.debt_payoff.avalanche.date_free }}</div>
+<div id="metric-savings" hx-swap-oob="true" class="saving">{{ format_currency(data.debt_payoff.snowball.interest_paid - data.debt_payoff.avalanche.interest_paid) }}</div>
+
+{# 2. Chart #}
+<div id="chart-container" hx-swap-oob="true">
+    {{ chart_svg | safe }}
+</div>
+
+{# 3. Payment Table #}
+<div id="payment-table-container" hx-swap-oob="true">
+    <h3>Your Attack Plan</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Liability</th>
+                <th class="num">Balance</th>
+                <th class="num">Rate</th>
+                <th class="num">Min</th>
+                <th class="num">Extra</th>
+                <th class="num">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in plan %}
+            <tr>
+                <td>
+                    {{ item.name }}
+                    {% if item.extraAllocation > 0 %}
+                    <span class="strategy-tag">PAY THIS</span>
+                    {% endif %}
+                </td>
+                <td class="num">{{ format_currency(item.balance) }}</td>
+                <td class="num">{{ "%.1f"|format(item.interest_rate * 100) }}%</td>
+                <td class="num">{{ format_currency(item.min_payment) }}</td>
+                <td class="num" style="color: #30d158">
+                    {% if item.extraAllocation > 0 %}
+                        +{{ format_currency(item.extraAllocation) }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td class="num" style="font-weight: bold">{{ format_currency(item.pay) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <div style="margin-top: 10px; font-size: 0.8rem; color: #666; text-align: right;">
+        Visible Total: {{ format_currency(visible_total) }}
+    </div>
+</div>
+
+{# 4. Filters (Update active state) #}
+<div id="filter-container" class="filter-row" hx-swap-oob="true">
+    {% set tags = ['All', 'Credit Card', 'Personal Loans', 'Student Loans', 'Taxes'] %}
+    {% for tag in tags %}
+        <button 
+            class="filter-btn {% if tag == filter_tag %}active{% endif %}"
+            onclick="document.querySelector('input[name=filter_tag]').value='{{ tag }}'; htmx.trigger('#query-input', 'change')"
+        >
+            {{ tag }}
+        </button>
+    {% endfor %}
+</div>
+
+{# 5. Insights (Initial Load) #}
+{# We trigger a separate load for insights to keep this partial clean, or include the first one here. #}
+{# Let's use hx-trigger to load the first insight if it's empty #}
+<div id="insights-trigger" hx-get="/partials/insights?index=0" hx-target="#insights-wrapper" hx-trigger="load" hx-swap="innerHTML" style="display:none"></div>
+

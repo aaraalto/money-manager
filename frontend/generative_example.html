@@ -1,458 +1,130 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generative Wealth UI</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: #000;
-            color: #fff;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-        .container {
-            width: 100%;
-            max-width: 900px;
-            padding: 40px;
-        }
-        h1 {
-            font-weight: 200;
-            font-size: 2.5rem;
-            text-align: center;
-            margin-bottom: 50px;
-            background: linear-gradient(90deg, #fff, #888);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        
-        /* Generative Input Area */
-        .input-area {
-            font-size: 2rem;
-            font-weight: 300;
-            text-align: center;
-            margin-bottom: 30px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .highlight-input {
-            background: transparent;
-            border: none;
-            border-bottom: 2px solid #333;
-            color: #4a90e2;
-            font-size: 2rem;
-            font-weight: 600;
-            min-width: 100px;
-            text-align: center;
-            outline: none;
-            transition: all 0.3s ease;
-        }
-        .highlight-input:focus {
-            border-bottom-color: #4a90e2;
-        }
-        
-        .action-row {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 60px;
-        }
-        
-        button {
-            background: #1c1c1e;
-            border: 1px solid #333;
-            color: #888;
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        button:hover {
-            border-color: #4a90e2;
-            color: #fff;
-        }
-        button.primary {
-            background: #4a90e2;
-            color: white;
-            border-color: #4a90e2;
-        }
-        button.primary:hover {
-            background: #357abd;
-        }
-        
-        /* Generated Output Card */
-        .generated-card {
-            background: #1c1c1e;
-            border-radius: 24px;
-            padding: 40px;
-            opacity: 0;
-            transform: translateY(30px);
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-        }
-        
-        .metrics-row {
-            display: flex;
-            justify-content: space-around;
-            margin-bottom: 40px;
-            text-align: center;
-        }
-        .metric-label { font-size: 0.9rem; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
-        .metric-value { font-size: 2.5rem; font-weight: 700; }
-        .metric-value.saving { color: #30d158; }
-        .metric-value.date { color: #fff; }
-        
-        /* Chart Container */
-        #chart-container {
-            height: 300px;
-            width: 100%;
-        }
-
-        /* Payment Table */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 40px;
-            font-size: 0.9rem;
-        }
-        th, td {
-            text-align: left;
-            padding: 12px;
-            border-bottom: 1px solid #333;
-        }
-        th {
-            color: #888;
-            font-weight: 400;
-            text-transform: uppercase;
-            font-size: 0.8rem;
-            letter-spacing: 1px;
-        }
-        td.num { text-align: right; }
-        th.num { text-align: right; }
-        tr:last-child td { border-bottom: none; }
-        .strategy-tag {
-            display: inline-block;
-            padding: 2px 6px;
-            border-radius: 4px;
-            background: rgba(48, 209, 88, 0.2);
-            color: #30d158;
-            font-size: 0.7rem;
-            margin-left: 8px;
-        }
-        
-        .loader { text-align: center; color: #555; font-size: 0.9rem; margin-top: 20px; opacity: 0; transition: opacity 0.3s; }
-        
-        /* D3 Styles */
-        .line { fill: none; stroke-width: 3px; }
-        .axis text { fill: #666; }
-        .axis path, .axis line { stroke: #333; }
-        .grid-line { stroke: #333; stroke-dasharray: 3,3; }
-    </style>
+    <title>Wealth Simulator</title>
+    <link rel="stylesheet" href="/static/css/variables.css">
+    <link rel="stylesheet" href="/static/css/generative.css?v=4">
+    <script src="/static/js/htmx.min.js"></script>
+    <!-- GSAP & Draggable -->
+    <script src="/static/gsap-public/minified/gsap.min.js"></script>
+    <script src="/static/gsap-public/minified/Draggable.min.js"></script>
+    <script src="/static/gsap-public/minified/InertiaPlugin.min.js"></script>
 </head>
+
 <body>
     <div class="container">
-        <h1>Freedom Simulator</h1>
-        
-        <div class="input-area">
-            <span id="prompt-text">If I pay</span>
-            <input type="text" id="query-input" class="highlight-input" value="$500" placeholder="e.g. $1000">
-            <span>monthly...</span>
-        </div>
-        
-        <div class="action-row">
-             <button id="save-btn">Save Scenario</button>
-             <button onclick="location.reload()">Reset</button>
-        </div>
+        <a href="/"
+            style="text-decoration: none; color: #888; font-size: 0.9rem; margin-bottom: 20px; display: inline-block;">&larr;
+            Back to HQ</a>
+        <h1>Simulation Lab</h1>
 
-        <div id="loader" class="loader">Running simulation...</div>
+        <div class="simulation-layout">
+            <div class="rotary-section">
+                <div class="rotary-container" id="payment-rotary">
+                    <svg viewBox="0 0 400 400" class="rotary-svg">
+                        <!-- Track -->
+                        <circle cx="200" cy="200" r="160" class="rotary-track" />
+                        <!-- Progress -->
+                        <circle cx="200" cy="200" r="160" class="rotary-progress" />
 
-        <div id="result-card" class="generated-card">
-            <div class="metrics-row">
-                <div>
-                    <div class="metric-label">Debt Free By</div>
-                    <div class="metric-value date" id="metric-date">--</div>
-                </div>
-                <div>
-                    <div class="metric-label">Total Interest</div>
-                    <div class="metric-value" id="metric-interest">--</div>
-                </div>
-                <div>
-                    <div class="metric-label">Avalanche Savings</div>
-                    <div class="metric-value saving" id="metric-savings">--</div>
+                        <!-- Knob Group -->
+                        <g class="rotary-knob-group">
+                            <!-- Latch/Handle Design -->
+                            <circle cx="200" cy="40" r="24" class="knob-handle-outer" />
+                            <circle cx="200" cy="40" r="12" class="knob-handle-inner" />
+                        </g>
+                    </svg>
+
+                    <div class="rotary-center-content">
+                        <div class="rotary-value-display">
+                            <div>
+                                <span class="rotary-currency">$</span><span id="rotary-display"
+                                    class="rotary-amount">500</span>
+                            </div>
+                            <span class="rotary-label">Extra / Month</span>
+                        </div>
+
+                        <!-- Placeholder for Insights (will be populated dynamically or static for now) -->
+                        <div class="rotary-insights">
+                            <div class="insight-mini">
+                                <span class="insight-icon">✨</span>
+                                <span class="insight-text">Save $1.2k in interest</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div id="chart-container"></div>
-            <div id="payment-table-container"></div>
+
+            <div class="results-section">
+                <div id="loader" class="loader htmx-indicator">Simulating your future...</div>
+
+                <div id="result-card" class="generated-card" style="opacity: 1; transform: none;">
+                    <div class="metrics-row" id="metrics-row">
+                        <div>
+                            <div class="metric-label">Monthly Surplus</div>
+                            <div class="metric-value" id="metric-fcf" style="color: #4a90e2">--</div>
+                        </div>
+                        <div>
+                            <div class="metric-label">Debt Free By</div>
+                            <div class="metric-value date" id="metric-date">--</div>
+                        </div>
+                        <div>
+                            <div class="metric-label">Interest Saved</div>
+                            <div class="metric-value saving" id="metric-savings">--</div>
+                        </div>
+                    </div>
+
+                    <div id="chart-container">
+                        <!-- SVG Chart loads here via OOB -->
+                    </div>
+
+                    <div id="filter-container" class="filter-row">
+                        <!-- Filters load here via OOB -->
+                    </div>
+
+                    <div id="payment-table-container">
+                        <!-- Table loads here via OOB -->
+                    </div>
+
+                    <div id="insights-section">
+                        <div id="insights-wrapper">
+                            <!-- Insight Card loads here via separate partial -->
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
+
+        <!-- Hidden Form for HTMX -->
+        <form id="sim-form" onsubmit="return false;">
+            <input type="hidden" name="monthly_payment" id="hidden-payment-input" value="500"
+                hx-get="/partials/calculate" hx-trigger="change delay:200ms, load" hx-include="[name='filter_tag']"
+                hx-indicator="#loader">
+
+            <!-- Hidden input for Filter State -->
+            <input type="hidden" name="filter_tag" value="All">
+        </form>
+
     </div>
 
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-    
+    <script src="/static/js/rotary.js"></script>
     <script>
-        const API_URL = "http://localhost:8000/api/view";
-        const SAVE_URL = "http://localhost:8000/api/save-scenario";
-        let debounceTimer;
-        let currentData = null;
-        let currentPayment = 500;
-        
-        // Init
+        gsap.registerPlugin(Draggable);
+
         document.addEventListener('DOMContentLoaded', () => {
-            fetchData(500);
-            
-            // Input Listener
-            const input = document.getElementById('query-input');
-            input.addEventListener('input', (e) => {
-                // Simple NLP: extract number from string
-                const val = extractNumber(e.target.value);
-                
-                if (val !== null && val >= 0) {
-                    currentPayment = val;
-                    document.getElementById('loader').style.opacity = 1;
-                    clearTimeout(debounceTimer);
-                    debounceTimer = setTimeout(() => fetchData(val), 600);
-                }
+            // Initialize Rotary
+            new RotaryKnob('#payment-rotary', {
+                minValue: 0,
+                maxValue: 5000,
+                initialValue: 500,
+                inputSelector: '#hidden-payment-input',
+                displaySelector: '#rotary-display'
             });
-            
-            // Save Listener
-            document.getElementById('save-btn').addEventListener('click', saveScenario);
         });
-
-        function extractNumber(str) {
-            const matches = str.match(/(\d+(\.\d+)?)/);
-            return matches ? parseFloat(matches[0]) : null;
-        }
-
-        async function fetchData(amount) {
-            try {
-                const res = await fetch(`${API_URL}?monthly_payment=${amount}`);
-                const data = await res.json();
-                currentData = data;
-                
-                updateUI(data);
-                document.getElementById('loader').style.opacity = 0;
-            } catch (e) {
-                console.error(e);
-            }
-        }
-        
-        async function saveScenario() {
-            if (!currentData) return;
-            const btn = document.getElementById('save-btn');
-            const originalText = btn.textContent;
-            btn.textContent = "Saving...";
-            
-            const payload = {
-                query: document.getElementById('query-input').value,
-                monthly_payment: currentPayment,
-                results: {
-                    date_free: currentData.debt_payoff.avalanche.date_free,
-                    interest_paid: currentData.debt_payoff.avalanche.interest_paid,
-                    savings: currentData.debt_payoff.snowball.interest_paid - currentData.debt_payoff.avalanche.interest_paid
-                }
-            };
-            
-            try {
-                await fetch(SAVE_URL, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
-                });
-                btn.textContent = "Saved!";
-                btn.classList.add("primary");
-                setTimeout(() => {
-                    btn.textContent = originalText;
-                    btn.classList.remove("primary");
-                }, 2000);
-            } catch (e) {
-                console.error(e);
-                btn.textContent = "Error";
-            }
-        }
-
-        function updateUI(data) {
-            const snowball = data.debt_payoff.snowball;
-            const avalanche = data.debt_payoff.avalanche;
-            
-            // Update Metrics
-            document.getElementById('metric-date').textContent = formatDate(avalanche.date_free);
-            document.getElementById('metric-interest').textContent = formatCurrency(avalanche.interest_paid);
-            
-            const savings = snowball.interest_paid - avalanche.interest_paid;
-            document.getElementById('metric-savings').textContent = formatCurrency(Math.max(0, savings));
-            
-            // Animate Card Entry
-            gsap.to("#result-card", { opacity: 1, y: 0, duration: 0.8, ease: "power3.out" });
-            
-            // Render Chart
-            renderChart(data.debt_payoff);
-
-            // Render Payment Table
-            renderPaymentTable(data.liabilities, currentPayment);
-        }
-
-        function renderPaymentTable(liabilities, totalMonthlyPayment) {
-            if (!liabilities || liabilities.length === 0) return;
-
-            // 1. Sort by Avalanche (Highest Rate) for allocation
-            const sorted = [...liabilities].sort((a, b) => b.interest_rate - a.interest_rate);
-            
-            // 2. Calculate payments
-            let totalMin = 0;
-            sorted.forEach(l => totalMin += l.min_payment);
-            
-            // Calculate extra available (Total Monthly - Sum of Mins)
-            // Note: 'totalMonthlyPayment' is the *extra* amount passed from the input?
-            // Wait, the input says "If I pay $500 monthly..."
-            // The prompt is "If I pay $X monthly...".
-            // In the backend `get_dashboard_view`, the parameter is `monthly_payment` which defaults to 500.
-            // In `simulate_debt_payoff`, it's used as `extra_monthly_payment`.
-            // So the input is EXTRA payment on top of minimums.
-            
-            // Let's re-read the UI text: "If I pay $500 monthly..."
-            // Usually users mean "If I put $500 towards my debt total".
-            // But the backend treats it as `extra_monthly_payment`.
-            // If the user inputs "500", and their minimums are 300, do they mean 500 TOTAL or 500 EXTRA?
-            // The backend variable is `extra_monthly_payment`.
-            // If the user thinks "Total Budget for Debt", then Extra = Total - Min.
-            // If the user thinks "Extra I can add", then Extra = Input.
-            
-            // The UI says "If I pay $500 monthly...". This usually implies total outflow.
-            // If my minimums are $1000 and I say "If I pay $500 monthly", I'm in trouble.
-            // If the backend treats it as extra, then the total outflow is Min + 500.
-            // Let's assume the backend treats it as EXTRA based on `simulate_debt_payoff` signature.
-            
-            // However, for the TABLE, we want to show the reality.
-            // If the backend treats it as EXTRA, then we distribute the EXTRA amount.
-            
-            let extra = totalMonthlyPayment; // Input is treated as EXTRA
-            
-            const plan = sorted.map(l => {
-                return { ...l, pay: l.min_payment, extraAllocation: 0 };
-            });
-            
-            // Re-loop to assign extra correctly to the top priority
-            for (let item of plan) {
-                if (extra > 0 && item.balance > 0) {
-                    item.extraAllocation = extra;
-                    item.pay += extra;
-                    extra = 0; // All allocated to the top one (simple avalanche)
-                }
-            }
-            
-            let html = `<h3>Monthly Payment Plan</h3>`;
-            html += `<table>
-                <thead>
-                    <tr>
-                        <th>Liability</th>
-                        <th class="num">Balance</th>
-                        <th class="num">Rate</th>
-                        <th class="num">Min</th>
-                        <th class="num">Extra</th>
-                        <th class="num">Total</th>
-                    </tr>
-                </thead>
-                <tbody>`;
-                
-            plan.forEach(item => {
-                html += `<tr>
-                    <td>${item.name} ${item.extraAllocation > 0 ? '<span class="strategy-tag">FOCUS</span>' : ''}</td>
-                    <td class="num">${formatCurrency(item.balance)}</td>
-                    <td class="num">${(item.interest_rate * 100).toFixed(1)}%</td>
-                    <td class="num">${formatCurrency(item.min_payment)}</td>
-                    <td class="num" style="color: #30d158">${item.extraAllocation > 0 ? '+' + formatCurrency(item.extraAllocation) : '-'}</td>
-                    <td class="num" style="font-weight: bold">${formatCurrency(item.pay)}</td>
-                </tr>`;
-            });
-            
-            html += `</tbody></table>`;
-            html += `<div style="margin-top: 10px; font-size: 0.8rem; color: #666; text-align: right;">
-                Total Monthly: ${formatCurrency(totalMin + totalMonthlyPayment)} (Mins + Extra)
-            </div>`;
-            
-            document.getElementById('payment-table-container').innerHTML = html;
-        }
-
-        function renderChart(payoffData) {
-            const container = d3.select("#chart-container");
-            container.html("");
-            
-            const width = container.node().getBoundingClientRect().width;
-            const height = 300;
-            const margin = {top: 20, right: 20, bottom: 30, left: 50};
-            
-            const svg = container.append("svg")
-                .attr("width", width)
-                .attr("height", height)
-                .append("g")
-                .attr("transform", `translate(${margin.left},${margin.top})`);
-                
-            // Combine data to find scales
-            const sSeries = payoffData.snowball.series.map(d => ({...d, date: new Date(d.date)}));
-            const aSeries = payoffData.avalanche.series.map(d => ({...d, date: new Date(d.date)}));
-            
-            const x = d3.scaleTime()
-                .domain(d3.extent(sSeries, d => d.date))
-                .range([0, width - margin.left - margin.right]);
-                
-            const y = d3.scaleLinear()
-                .domain([0, d3.max(sSeries, d => d.value)])
-                .range([height - margin.top - margin.bottom, 0]);
-                
-            // Axes
-            svg.append("g")
-                .attr("transform", `translate(0,${height - margin.top - margin.bottom})`)
-                .call(d3.axisBottom(x).ticks(5))
-                .attr("class", "axis");
-                
-            svg.append("g")
-                .call(d3.axisLeft(y).ticks(5).tickFormat(d => "$" + d/1000 + "k"))
-                .attr("class", "axis");
-            
-            // Lines
-            const line = d3.line()
-                .x(d => x(d.date))
-                .y(d => y(d.value))
-                .curve(d3.curveBasis);
-                
-            // Snowball Line (Red)
-            const pathS = svg.append("path")
-                .datum(sSeries)
-                .attr("class", "line")
-                .attr("stroke", "#ff453a")
-                .attr("d", line);
-                
-            // Avalanche Line (Green)
-            const pathA = svg.append("path")
-                .datum(aSeries)
-                .attr("class", "line")
-                .attr("stroke", "#30d158")
-                .attr("stroke-dasharray", "4,4") // Dashed to differentiate
-                .attr("d", line);
-
-            // Animate Lines
-            if (pathS.node()) {
-                const len = pathS.node().getTotalLength();
-                pathS.attr("stroke-dasharray", len + " " + len).attr("stroke-dashoffset", len);
-                gsap.to(pathS.node(), { strokeDashoffset: 0, duration: 1.5, ease: "power2.out" });
-            }
-        }
-
-        function formatCurrency(val) {
-            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
-        }
-        
-        function formatDate(dateStr) {
-            const d = new Date(dateStr);
-            return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-        }
     </script>
 </body>
+
 </html>

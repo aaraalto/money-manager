@@ -11,11 +11,13 @@ from uuid import UUID
 # Add the project root to sys.path so imports work
 sys.path.append(str(Path(__file__).parent.parent))
 
-from backend.models import Asset, Liability, Transaction, AssetType, LiquidityStatus, LiabilityTag
+from backend.models import Asset, Liability, Transaction, IncomeSource, SpendingCategory, AssetType, LiquidityStatus, LiabilityTag
 
 DATA_DIR = Path("data")
 ASSETS_FILE = DATA_DIR / "assets.json"
 LIABILITIES_FILE = DATA_DIR / "liabilities.json"
+INCOME_FILE = DATA_DIR / "income.json"
+SPENDING_FILE = DATA_DIR / "spending_plan.csv"
 TRANSACTIONS_FILE = DATA_DIR / "transactions.csv"
 
 T = TypeVar("T", bound=Union[Asset, Liability])
@@ -37,6 +39,24 @@ def save_json(file_path: Path, items: List[T]):
     with open(file_path, "w") as f:
         # Use mode_dump or dict()
         json.dump([json.loads(item.json()) for item in items], f, indent=2)
+
+def load_spending_plan() -> List[SpendingCategory]:
+    if not SPENDING_FILE.exists():
+        return []
+    items = []
+    try:
+        with open(SPENDING_FILE, "r") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                if not row: continue
+                try:
+                    items.append(SpendingCategory(**row))
+                except Exception as e:
+                    print(f"Skipping invalid spending row: {row} - {e}")
+    except Exception as e:
+        print(f"Error reading spending file: {e}")
+        return []
+    return items
 
 def load_transactions() -> List[Transaction]:
     if not TRANSACTIONS_FILE.exists():

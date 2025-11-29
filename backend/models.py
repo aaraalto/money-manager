@@ -2,7 +2,7 @@ from enum import Enum
 from typing import Optional
 from uuid import UUID, uuid4
 from datetime import date
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 class AssetType(str, Enum):
     CASH = "cash"
@@ -10,6 +10,7 @@ class AssetType(str, Enum):
     REAL_ESTATE = "real_estate"
     CRYPTO = "crypto"
     VEHICLE = "vehicle"
+    RETIREMENT = "401k"
     OTHER = "other"
 
 class LiquidityStatus(str, Enum):
@@ -41,13 +42,25 @@ class Liability(BaseModel):
     credit_limit: Optional[float] = Field(None, ge=0, description="Total credit limit for the account")
     tags: list[LiabilityTag] = []
 
+class IncomeSource(BaseModel):
+    source: str
+    amount: float = Field(..., ge=0)
+    frequency: str = "monthly"  # monthly, bi-weekly, etc.
+
+class SpendingCategory(BaseModel):
+    category: str
+    amount: float = Field(..., ge=0)
+    type: str  # Need, Want, Savings
+
+
 class Transaction(BaseModel):
     date: date
     amount: float = Field(..., description="Positive for income, negative for expense")
     category: str
     merchant: str
     
-    @validator("date", pre=True)
+    @field_validator("date", mode="before")
+    @classmethod
     def parse_date(cls, v):
         if isinstance(v, str):
             return date.fromisoformat(v)

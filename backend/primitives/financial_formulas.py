@@ -67,3 +67,46 @@ def calculate_amortization_payment(principal: float, annual_rate: float, years: 
     # Formula: P = (r * PV) / (1 - (1 + r)^-n)
     payment = (periodic_rate * principal) / (1 - (1 + periodic_rate) ** -num_payments)
     return payment
+
+def calculate_future_value(principal: float, annual_rate: float, years: int, periods_per_year: int = 12) -> float:
+    """
+    Calculates the future value of a lump sum investment.
+    
+    Args:
+        principal: Present value.
+        annual_rate: Annual interest rate (decimal).
+        years: Number of years.
+        periods_per_year: Number of compounding periods per year.
+    """
+    rate_per_period = annual_rate / periods_per_year
+    total_periods = years * periods_per_year
+    return principal * ((1 + rate_per_period) ** total_periods)
+
+def calculate_present_value(future_value: float, annual_rate: float, years: int, periods_per_year: int = 12) -> float:
+    """
+    Calculates the present value needed to reach a future target.
+    
+    Args:
+        future_value: Target amount.
+        annual_rate: Annual interest rate (decimal).
+        years: Number of years.
+        periods_per_year: Number of compounding periods per year.
+    """
+    rate_per_period = annual_rate / periods_per_year
+    total_periods = years * periods_per_year
+    return future_value / ((1 + rate_per_period) ** total_periods)
+
+def calculate_real_return_rate(nominal_rate: float, inflation_rate: float) -> float:
+    """
+    Calculates the real rate of return adjusting for inflation using the Fisher equation.
+    
+    Args:
+        nominal_rate: The nominal interest rate (decimal).
+        inflation_rate: The inflation rate (decimal).
+        
+    Returns:
+        The real interest rate.
+    """
+    # Fisher equation: (1 + nominal) = (1 + real) * (1 + inflation)
+    # real = ((1 + nominal) / (1 + inflation)) - 1
+    return ((1 + nominal_rate) / (1 + inflation_rate)) - 1

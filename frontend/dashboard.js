@@ -1,6 +1,6 @@
 // Wealth OS Dashboard Logic
 
-const API_URL = "http://localhost:8000/api/view";
+const API_URL = "/api/view";
 
 async function init() {
     try {
@@ -18,15 +18,14 @@ async function init() {
         document.getElementById("loading").style.display = "none";
         document.getElementById("dashboard").style.display = "block";
         
-        // Animate cards entry if GSAP is available
+        // Render Data First
+        renderNetWorth(data.net_worth);
+        renderProjection(data.projection);
+        renderDebtPayoff(data.debt_payoff);
+        
+        // Animate Entry
         if (typeof gsap !== 'undefined') {
-            gsap.to(".card", {
-                duration: 0.6,
-                opacity: 1,
-                y: 0,
-                stagger: 0.1,
-                ease: "power2.out"
-            });
+            animateEntry();
         } else {
             // Fallback: make visible immediately
             document.querySelectorAll('.card').forEach(el => {
@@ -35,15 +34,11 @@ async function init() {
             });
         }
         
-        renderNetWorth(data.net_worth);
-        renderProjection(data.projection);
-        renderDebtPayoff(data.debt_payoff);
-        
     } catch (error) {
         console.error("Failed to load data:", error);
         document.getElementById("loading").innerHTML = `
-            <div style="color: #ff3b30; padding: 20px; background: #fff; border-radius: 12px;">
-                <h3>Error Loading Dashboard</h3>
+            <div style="color: #EF4444; padding: 20px; background: #FEF2F2; border-radius: 12px; text-align: center;">
+                <h3 style="margin-top:0">We hit a snag.</h3>
                 <p>${error.message}</p>
                 <small>Check console for details.</small>
             </div>
@@ -51,7 +46,35 @@ async function init() {
     }
 }
 
+function animateEntry() {
+    const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+    
+    // Header Fade In
+    tl.from("header", {
+        y: -20,
+        opacity: 0,
+        duration: 0.8
+    });
+
+    // Cards Stagger
+    tl.to(".card", {
+        y: 0,
+        opacity: 1,
+        duration: 0.8,
+        stagger: 0.15
+    }, "-=0.4");
+    
+    // KPIs pop in
+    tl.from(".kpi", {
+        scale: 0.9,
+        opacity: 0,
+        duration: 0.5,
+        stagger: 0.1
+    }, "-=0.6");
+}
+
 function renderNetWorth(data) {
+    // If GSAP is available, we animate the numbers
     if (typeof gsap !== 'undefined') {
         animateValue("nw-total", data.total);
         animateValue("nw-liquid", data.liquid);
@@ -69,8 +92,8 @@ function animateValue(elementId, endValue) {
     const obj = { val: 0 };
     gsap.to(obj, {
         val: endValue,
-        duration: 1.5,
-        ease: "power2.out",
+        duration: 2,
+        ease: "power4.out",
         onUpdate: function() {
             document.getElementById(elementId).textContent = formatCurrency(obj.val);
         }
@@ -97,6 +120,8 @@ function renderDebtPayoff(data) {
 
 function renderReasoning(elementId, lines) {
     const el = document.getElementById(elementId);
+    if (!lines || lines.length === 0) return;
+    
     const ul = document.createElement("ul");
     lines.forEach(line => {
         const li = document.createElement("li");
@@ -119,9 +144,9 @@ function drawAreaChart(selector, data, yLabel) {
     const container = d3.select(selector);
     container.html(""); // Clear
     
-    const margin = {top: 20, right: 30, bottom: 30, left: 60};
+    const margin = {top: 20, right: 20, bottom: 30, left: 50};
     const width = container.node().getBoundingClientRect().width - margin.left - margin.right;
-    const height = 300 - margin.top - margin.bottom;
+    const height = 320 - margin.top - margin.bottom;
     
     const svg = container.append("svg")
         .attr("width", width + margin.left + margin.right)
@@ -129,68 +154,95 @@ function drawAreaChart(selector, data, yLabel) {
         .append("g")
         .attr("transform", `translate(${margin.left},${margin.top})`);
         
+    // Gradients
+    const defs = svg.append("defs");
+    const gradient = defs.append("linearGradient")
+        .attr("id", "area-gradient")
+        .attr("x1", "0%")
+        .attr("y1", "0%")
+        .attr("x2", "0%")
+        .attr("y2", "100%");
+    
+    gradient.append("stop").attr("offset", "0%").attr("stop-color", "#2563EB").attr("stop-opacity", 0.2);
+    gradient.append("stop").attr("offset", "100%").attr("stop-color", "#2563EB").attr("stop-opacity", 0);
+
     const x = d3.scaleTime()
         .domain(d3.extent(data, d => d.date))
         .range([0, width]);
         
+    const extent = d3.extent(data, d => d.value);
+    const padding = (extent[1] - extent[0]) * 0.1;
+    
     const y = d3.scaleLinear()
-        .domain([0, d3.max(data, d => d.value) * 1.1])
+        .domain([extent[0] - padding, extent[1] + padding])
         .range([height, 0]);
         
+    // Axes
     svg.append("g")
+        .attr("class", "axis")
         .attr("transform", `translate(0,${height})`)
-        .call(d3.axisBottom(x));
+        .call(d3.axisBottom(x).ticks(5).tickSize(0).tickPadding(10));
         
     svg.append("g")
-        .call(d3.axisLeft(y));
-        
+        .attr("class", "axis")
+        .call(d3.axisLeft(y).ticks(5).tickSize(0).tickPadding(10).tickFormat(d => d >= 1000 ? d/1000 + "k" : d));
+
+    // Grid lines
+    svg.selectAll("line.horizontalGrid").data(y.ticks(5)).enter()
+        .append("line")
+        .attr("class", "grid-line")
+        .attr("x1", 0)
+        .attr("x2", width)
+        .attr("y1", d => y(d))
+        .attr("y2", d => y(d));
+
     // Area generator
     const area = d3.area()
         .x(d => x(d.date))
         .y0(height) 
-        .y1(d => y(d.value));
-        
-    const areaFinal = d3.area()
-        .x(d => x(d.date))
-        .y0(y(0)) 
-        .y1(d => y(d.value));
+        .y1(d => y(d.value))
+        .curve(d3.curveMonotoneX);
 
     // Line generator
     const line = d3.line()
         .x(d => x(d.date))
-        .y(d => y(d.value));
+        .y(d => y(d.value))
+        .curve(d3.curveMonotoneX);
 
     // Clip path for revealing the graph
     const clipId = "clip-projection-" + Math.random().toString(36).substr(2, 9);
     svg.append("clipPath")
         .attr("id", clipId)
         .append("rect")
-        .attr("width", typeof gsap !== 'undefined' ? 0 : width) // Start hidden if animating
+        .attr("width", 0) // Start hidden
         .attr("height", height);
 
     // Add Area
     svg.append("path")
         .datum(data)
-        .attr("fill", "#cce5ff")
-        .attr("d", areaFinal)
-        .attr("clip-path", `url(#${clipId})`)
-        .style("opacity", 0.6);
+        .attr("fill", "url(#area-gradient)")
+        .attr("d", area)
+        .attr("clip-path", `url(#${clipId})`);
 
     // Add Line
     svg.append("path")
         .datum(data)
+        .attr("class", "line")
         .attr("fill", "none")
-        .attr("stroke", "#007aff")
-        .attr("stroke-width", 2)
+        .attr("stroke", "#2563EB")
         .attr("d", line)
         .attr("clip-path", `url(#${clipId})`);
 
+    // Animate Chart
     if (typeof gsap !== 'undefined') {
         gsap.to(`#${clipId} rect`, {
             width: width,
-            duration: 2,
-            ease: "power2.out"
+            duration: 2.5,
+            ease: "power2.out",
+            delay: 0.5
         });
+    } else {
+        d3.select(`#${clipId} rect`).attr("width", width);
     }
 }
 
@@ -200,9 +252,9 @@ function drawMultiLineChart(selector, data1, data2) {
     const container = d3.select(selector);
     container.html("");
     
-    const margin = {top: 20, right: 100, bottom: 30, left: 60};
+    const margin = {top: 20, right: 20, bottom: 30, left: 50};
     const width = container.node().getBoundingClientRect().width - margin.left - margin.right;
-    const height = 300 - margin.top - margin.bottom;
+    const height = 320 - margin.top - margin.bottom;
     
     const svg = container.append("svg")
         .attr("width", width + margin.left + margin.right)
@@ -220,25 +272,38 @@ function drawMultiLineChart(selector, data1, data2) {
         .domain([0, d3.max(allData, d => d.value) * 1.1])
         .range([height, 0]);
         
+    // Axes
     svg.append("g")
+        .attr("class", "axis")
         .attr("transform", `translate(0,${height})`)
-        .call(d3.axisBottom(x));
+        .call(d3.axisBottom(x).ticks(5).tickSize(0).tickPadding(10));
         
     svg.append("g")
-        .call(d3.axisLeft(y));
+        .attr("class", "axis")
+        .call(d3.axisLeft(y).ticks(5).tickSize(0).tickPadding(10).tickFormat(d => d >= 1000 ? d/1000 + "k" : d));
         
+    // Grid lines
+    svg.selectAll("line.horizontalGrid").data(y.ticks(5)).enter()
+        .append("line")
+        .attr("class", "grid-line")
+        .attr("x1", 0)
+        .attr("x2", width)
+        .attr("y1", d => y(d))
+        .attr("y2", d => y(d));
+
     // Line generator
     const line = d3.line()
         .x(d => x(d.date))
-        .y(d => y(d.value));
+        .y(d => y(d.value))
+        .curve(d3.curveMonotoneX);
 
     // Helper to add and animate line
     function addLine(data, color, dashed = false, delay = 0) {
         const path = svg.append("path")
             .datum(data)
+            .attr("class", "line")
             .attr("fill", "none")
             .attr("stroke", color)
-            .attr("stroke-width", 2)
             .attr("d", line);
             
         if (dashed) {
@@ -255,7 +320,7 @@ function drawMultiLineChart(selector, data1, data2) {
                 
                 gsap.to(path.node(), {
                     strokeDashoffset: 0,
-                    duration: 2,
+                    duration: 2.5,
                     delay: delay,
                     ease: "power2.out"
                 });
@@ -264,7 +329,7 @@ function drawMultiLineChart(selector, data1, data2) {
                 path.attr("opacity", 0);
                 gsap.to(path.node(), {
                     opacity: 1,
-                    duration: 2,
+                    duration: 2.5,
                     delay: delay,
                     ease: "power2.out"
                 });
@@ -272,19 +337,23 @@ function drawMultiLineChart(selector, data1, data2) {
         }
     }
 
-    addLine(data1, "#ff3b30", false, 0); // Snowball
-    addLine(data2, "#34c759", true, 0.5); // Avalanche
+    addLine(data1, "#EF4444", false, 0.8); // Snowball (Red)
+    addLine(data2, "#10B981", true, 1.2); // Avalanche (Green)
 
     // Legend
-    const legend = svg.append("g");
-    legend.append("text").attr("x", width + 10).attr("y", 20).text("Snowball").style("fill", "#ff3b30").style("font-size", "12px");
-    legend.append("text").attr("x", width + 10).attr("y", 40).text("Avalanche").style("fill", "#34c759").style("font-size", "12px");
+    const legend = svg.append("g").attr("transform", `translate(${width - 120}, 0)`);
+    
+    legend.append("rect").attr("width", 10).attr("height", 10).attr("fill", "#EF4444");
+    legend.append("text").attr("x", 15).attr("y", 10).text("Snowball").style("font-size", "12px").style("fill", "#64748B").style("font-family", "var(--font-body)");
+    
+    legend.append("rect").attr("width", 10).attr("height", 10).attr("y", 20).attr("fill", "#10B981");
+    legend.append("text").attr("x", 15).attr("y", 30).text("Avalanche").style("font-size", "12px").style("fill", "#64748B").style("font-family", "var(--font-body)");
     
     if (typeof gsap !== 'undefined') {
         legend.style("opacity", 0);
         gsap.to(legend.node(), {
             opacity: 1,
-            delay: 1.5,
+            delay: 2,
             duration: 1
         });
     }
