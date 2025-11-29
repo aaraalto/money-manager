@@ -295,11 +295,11 @@ button.primary:hover {
 /* Filter Row */
 .filter-row {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start; /* Changed from center */
     flex-wrap: wrap;
     gap: var(--space-2);
-    margin-top: var(--space-8);
-    margin-bottom: var(--space-6);
+    margin-top: 0;
+    margin-bottom: 0;
 }
 
 /* Override margins when inside card header */
@@ -364,60 +364,122 @@ button.primary:hover {
     letter-spacing: -0.01em;
 }
 
-/* Payment Table - using Bootstrap now */
-/*
-table {
+/* New Simulation Table Styles */
+.sim-table-container {
+    overflow-x: auto;
+}
+
+.sim-table {
     width: 100%;
-    border-collapse: collapse;
-    margin-top: var(--space-3);
+    border-collapse: separate;
+    border-spacing: 0;
     font-size: 0.9rem;
 }
 
-th,
-td {
-    text-align: left;
+.sim-table th {
+    padding: var(--space-3) var(--space-4);
+    color: var(--text-tertiary);
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.sim-table td {
     padding: var(--space-4);
     border-bottom: 1px solid var(--border-subtle);
+    vertical-align: middle;
+    transition: background-color 0.2s ease;
 }
 
-th {
-    color: var(--text-secondary);
-    font-weight: 500;
-    text-transform: uppercase;
-    font-size: 0.8rem;
-    letter-spacing: 1px;
-}
-
-td {
-    color: var(--text-primary);
-}
-
-td.num {
-    text-align: right;
-}
-
-th.num {
-    text-align: right;
-}
-
-tr:last-child td {
+.sim-table tr:last-child td {
     border-bottom: none;
 }
 
-tr:hover {
-    background: var(--bg-subtle);
+.sim-table tr:hover td {
+    background-color: var(--bg-subtle);
 }
-*/
 
-.strategy-tag {
-    display: inline-block;
-    padding: var(--space-1) var(--space-2);
-    border-radius: var(--radius-sm);
-    background: var(--success-dim);
-    color: var(--success);
-    font-size: 0.7rem;
-    margin-left: var(--space-2);
+/* Highlight Row (Pay This) */
+.highlight-row td {
+    background-color: rgba(55, 167, 112, 0.05);
+}
+
+.highlight-row:hover td {
+    background-color: rgba(55, 167, 112, 0.1) !important;
+}
+
+/* Cell Typography */
+.text-right { text-align: right; }
+.text-left { text-align: left; }
+.text-center { text-align: center; }
+
+.cell-mono {
+    font-family: var(--font-mono);
+    color: var(--text-primary);
+}
+
+.cell-name {
     font-weight: 500;
+    color: var(--text-primary);
+}
+
+.name-wrapper {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.text-secondary {
+    color: var(--text-secondary);
+}
+
+.text-muted {
+    color: var(--text-tertiary);
+    opacity: 0.5;
+}
+
+/* Cell specific styling */
+.cell-extra {
+    font-weight: 500;
+}
+
+.cell-total {
+    font-weight: 700;
+}
+
+/* Badges */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 100px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.badge-pay {
+    background: var(--success);
+    color: #fff;
+    box-shadow: 0 2px 4px rgba(55, 167, 112, 0.3);
+}
+
+/* Table Footer */
+.table-footer {
+    margin-top: var(--space-4);
+    text-align: right;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.total-val {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-left: var(--space-2);
 }
 
 .loader {

@@ -11,45 +11,47 @@
 </div>
 
 {# 3. Payment Table #}
-<div id="payment-table-container" hx-swap-oob="true" class="table-responsive">
-    <table class="table table-hover table-striped table-dark">
-        <thead class="table-light">
+<div id="payment-table-container" hx-swap-oob="true" class="sim-table-container">
+    <table class="sim-table">
+        <thead>
             <tr>
-                <th>Liability</th>
-                <th class="num">Balance</th>
-                <th class="num">Rate</th>
-                <th class="num">Min</th>
-                <th class="num">Extra</th>
-                <th class="num">Total</th>
+                <th class="text-left">Liability</th>
+                <th class="text-right">Balance</th>
+                <th class="text-right">Rate</th>
+                <th class="text-right">Min</th>
+                <th class="text-right">Extra</th>
+                <th class="text-right">Total</th>
             </tr>
         </thead>
         <tbody>
             {% for item in plan %}
-            <tr>
-                <td>
-                    {{ item.name }}
-                    {% if item.extraAllocation > 0 %}
-                    <span class="strategy-tag">PAY THIS</span>
-                    {% endif %}
+            <tr class="sim-row {% if item.extraAllocation > 0 %}highlight-row{% endif %}">
+                <td class="cell-name">
+                    <div class="name-wrapper">
+                        <span class="name-text">{{ item.name }}</span>
+                        {% if item.extraAllocation > 0 %}
+                        <span class="badge badge-pay">PAY THIS</span>
+                        {% endif %}
+                    </div>
                 </td>
-                <td class="num">{{ format_currency(item.balance) }}</td>
-                <td class="num">{{ "%.1f"|format(item.interest_rate * 100) }}%</td>
-                <td class="num">{{ format_currency(item.min_payment) }}</td>
-                <td class="num" style="color: #30d158">
+                <td class="text-right cell-mono">{{ format_currency(item.balance) }}</td>
+                <td class="text-right cell-mono text-secondary">{{ "%.1f"|format(item.interest_rate * 100) }}%</td>
+                <td class="text-right cell-mono">{{ format_currency(item.min_payment) }}</td>
+                <td class="text-right cell-mono cell-extra">
                     {% if item.extraAllocation > 0 %}
-                        +{{ format_currency(item.extraAllocation) }}
+                        <span class="text-success">+{{ format_currency(item.extraAllocation) }}</span>
                     {% else %}
-                        -
+                        <span class="text-muted">-</span>
                     {% endif %}
                 </td>
-                <td class="num" style="font-weight: bold">{{ format_currency(item.pay) }}</td>
+                <td class="text-right cell-mono cell-total">{{ format_currency(item.pay) }}</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
     
-    <div style="margin-top: 10px; font-size: 0.8rem; color: #666; text-align: right;">
-        Visible Total: {{ format_currency(visible_total) }}
+    <div class="table-footer">
+        Visible Total: <span class="total-val">{{ format_currency(visible_total) }}</span>
     </div>
 </div>
 
@@ -70,4 +72,3 @@
 {# We trigger a separate load for insights to keep this partial clean, or include the first one here. #}
 {# Let's use hx-trigger to load the first insight if it's empty #}
 <div id="insights-trigger" hx-get="/partials/insights?index=0" hx-target="#insights-wrapper" hx-trigger="load" hx-swap="innerHTML" style="display:none"></div>
-
