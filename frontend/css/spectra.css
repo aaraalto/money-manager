@@ -1,0 +1,387 @@
+/* Spectra Theme - Radiant */
+:root {
+    --bg-body: #0a0a0a;
+    --bg-card: rgba(255, 255, 255, 0.03);
+    --bg-card-hover: rgba(255, 255, 255, 0.06);
+    --border-color: rgba(255, 255, 255, 0.08);
+
+    --text-primary: #ffffff;
+    --text-secondary: #a1a1aa;
+    --text-tertiary: #52525b;
+
+    --accent-blue: #3b82f6;
+    --accent-gold: #f59e0b;
+    --accent-green: #10b981;
+    --accent-red: #ef4444;
+
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+
+    --space-4: 1rem;
+    --space-6: 1.5rem;
+    --space-8: 2rem;
+
+    --radius-lg: 16px;
+    --radius-xl: 24px;
+}
+
+body {
+    background-color: var(--bg-body);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+}
+
+/* Header */
+.spectra-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--space-8) 0;
+    text-align: center;
+}
+
+.spectra-header .logo {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    background: linear-gradient(to right, #fff, #a1a1aa);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.spectra-header .subtitle {
+    font-size: 0.875rem;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: 0.5rem;
+}
+
+/* Main Container */
+.spectra-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 0 var(--space-4) var(--space-8);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+}
+
+/* Hero: Rotary Dial */
+.hero-section {
+    display: flex;
+    justify-content: center;
+    padding: var(--space-4) 0;
+}
+
+.rotary-wrapper {
+    width: 320px;
+    height: 320px;
+    position: relative;
+    filter: drop-shadow(0 0 40px rgba(245, 158, 11, 0.1));
+}
+
+.rotary-svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+.rotary-track {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.05);
+    stroke-width: 32;
+    stroke-linecap: round;
+}
+
+.rotary-progress {
+    fill: none;
+    stroke: var(--accent-gold);
+    stroke-width: 32;
+    stroke-linecap: round;
+    transform-origin: 50% 50%;
+    transform: rotate(-90deg);
+    pointer-events: none;
+    filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.3));
+}
+
+.rotary-knob-group {
+    transform-origin: 50% 50%;
+    cursor: grab;
+}
+
+.rotary-knob-group:active {
+    cursor: grabbing;
+}
+
+.knob-handle-outer {
+    fill: var(--accent-gold);
+    filter: drop-shadow(0 0 15px rgba(245, 158, 11, 0.5));
+}
+
+.knob-handle-inner {
+    fill: #fff;
+}
+
+.rotary-center-fo {
+    pointer-events: none;
+}
+
+.rotary-center-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+}
+
+.rotary-value-display {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    line-height: 1;
+}
+
+.rotary-value-display .currency {
+    font-size: 1.5rem;
+    color: var(--text-tertiary);
+    vertical-align: top;
+    margin-right: 4px;
+}
+
+.rotary-value-display .amount {
+    font-size: 3.5rem;
+    letter-spacing: -2px;
+}
+
+.rotary-center-content .label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent-gold);
+    margin-top: 0.5rem;
+}
+
+.rotary-insight {
+    margin-top: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 0.5rem 1rem;
+    border-radius: 100px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Cards */
+.spectra-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    padding: var(--space-6);
+    backdrop-filter: blur(10px);
+}
+
+/* Metrics Grid */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-4);
+}
+
+.metric-card {
+    padding: var(--space-4);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.metric-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-tertiary);
+    margin-bottom: 0.5rem;
+}
+
+.metric-value {
+    font-family: var(--font-mono);
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+}
+
+.text-blue {
+    color: var(--accent-blue);
+}
+
+.text-gold {
+    color: var(--accent-gold);
+}
+
+.text-white {
+    color: var(--text-primary);
+}
+
+/* Charts */
+.viz-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-6);
+}
+
+.card-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.legend {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.legend .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 4px;
+}
+
+.dot.blue {
+    background: var(--accent-blue);
+}
+
+.dot.red {
+    background: var(--accent-red);
+}
+
+.dot.green {
+    background: var(--accent-green);
+}
+
+.chart-container {
+    height: 250px;
+    width: 100%;
+}
+
+/* Table */
+.table-section {
+    margin-top: var(--space-4);
+}
+
+.btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 0.25rem 0.75rem;
+    border-radius: 100px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-ghost:hover {
+    border-color: var(--text-primary);
+    color: var(--text-primary);
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+.spectra-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.spectra-table th {
+    text-align: left;
+    color: var(--text-tertiary);
+    font-weight: 500;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.spectra-table td {
+    padding: 1rem 0;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color);
+    font-family: var(--font-mono);
+}
+
+.spectra-table tr:last-child td {
+    border-bottom: none;
+}
+
+.text-right {
+    text-align: right;
+}
+
+/* Liabilities List */
+.liabilities-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.liability-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-4);
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+}
+
+.liability-name {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.liability-rate {
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+    margin-top: 2px;
+}
+
+.liability-balance {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .metrics-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .rotary-wrapper {
+        width: 280px;
+        height: 280px;
+    }
+
+    .rotary-value-display .amount {
+        font-size: 3rem;
+    }
+}

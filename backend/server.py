@@ -6,6 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
 from typing import Dict, Any, List
+import uvicorn
 
 from backend.manager import load_json, load_transactions, load_spending_plan, ASSETS_FILE, LIABILITIES_FILE, INCOME_FILE
 from backend.models import Asset, Liability, IncomeSource
@@ -16,7 +17,9 @@ from backend.primitives import (
     assess_affordability,
     generate_insights
 )
+from backend.primitives.metrics import calculate_metrics
 from backend.primitives.svg_charts import generate_simple_line_chart_svg
+from backend.chat_service import ChatService
 
 app = FastAPI(title="Wealth OS API")
 
@@ -33,6 +36,7 @@ app.add_middleware(
 FRONTEND_DIR = Path("frontend")
 app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
 templates = Jinja2Templates(directory=FRONTEND_DIR)
+chat_service = ChatService(templates)
 
 @app.get("/")
 async def read_root():
@@ -50,6 +54,33 @@ class Scenario(BaseModel):
     results: Dict[str, Any]
 
 SCENARIOS_FILE = Path("data/scenarios.json")
+
+@app.post("/api/chat", response_class=HTMLResponse)
+async def chat_endpoint(request: Request):
+    # Parse form data for hx-post
+    form = await request.form()
+    query = form.get("query", "")
+    
+    # Get current context (simplified)
+    assets = load_json(ASSETS_FILE, Asset)
+    liabilities = load_json(LIABILITIES_FILE, Liability)
+    context_data = {
+        "assets": [a.dict() for a in assets],
+        "liabilities": [l.dict() for l in liabilities]
+    }
+    
+    # Get response (User message HTML + OOB swaps)
+    response_html = await chat_service.process_query(query, context_data)
+    
+    # Return the user message first (echo) + AI response
+    # Since we used hx-swap="beforeend", we want to append the user's message AND the AI's.
+    # But the UI handles the user input clearing.
+    # Ideally, we return:
+    # 1. The User's message bubbles (optional, if we want server-side rendering of history)
+    # 2. The AI's response bubble
+    
+    user_bubble = f'<div class="message user">{query}</div>'
+    return user_bubble + response_html
 
 @app.post("/api/save-scenario")
 async def save_scenario(scenario: Scenario):
@@ -79,21 +110,15 @@ async def get_dashboard_view(monthly_payment: float = 500.0, filter_tag: str = "
     income = load_json(INCOME_FILE, IncomeSource)
     spending = load_spending_plan()
     
-    # Calculate Cash Flow
-    total_monthly_income = 0
-    for i in income:
-        if i.frequency == "monthly":
-            total_monthly_income += i.amount
-        elif i.frequency == "bi-weekly":
-            total_monthly_income += i.amount * 26 / 12
-        elif i.frequency == "weekly":
-            total_monthly_income += i.amount * 52 / 12
-        elif i.frequency == "annually":
-            total_monthly_income += i.amount / 12
-
-    total_monthly_spending = sum(s.amount for s in spending)
-    total_min_debt_payments = sum(l.min_payment for l in liabilities)
+    # Calculate Metrics (Income, Spending, Savings Rate, DTI)
+    metrics = calculate_metrics(income, spending, liabilities)
     
+    total_monthly_income = metrics["monthly_gross_income"]
+    total_monthly_spending = metrics["monthly_expenses"]
+    total_min_debt_payments = metrics["monthly_debt_payments"]
+    
+    # Free cash flow is (Income - Spending - Debt Min)
+    # Note: 'monthly_expenses' in metrics is just spending plan items.
     free_cash_flow = total_monthly_income - total_monthly_spending - total_min_debt_payments
     
     # Filter liabilities if a specific tag is requested
@@ -125,6 +150,13 @@ async def get_dashboard_view(monthly_payment: float = 500.0, filter_tag: str = "
     insights = generate_insights(assets, liabilities, income, spending)
 
     return {
+        "financial_health": {
+            "savings_rate": metrics["savings_rate"],
+            "debt_to_income_ratio": metrics["debt_to_income_ratio"],
+            # We don't have historical data yet, so we mock "vs last month" change
+            # In a real app, this would come from a DB
+            "savings_rate_change": 0.02  # Mock: +2%
+        },
         "insights": [i.dict() for i in insights],
         "cash_flow": {
             "income": total_monthly_income,
@@ -227,3 +259,6 @@ async def insights_partial(request: Request, index: int = 0):
         "total": len(insights)
     }
     return templates.TemplateResponse("partials/insight_card.html", context)
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8081)

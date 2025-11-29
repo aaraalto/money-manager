@@ -9,6 +9,7 @@
     --text-secondary: #9b9a97;
     --text-tertiary: #6b6a67;
     --border-default: rgba(255, 255, 255, 0.08);
+    --border-color: var(--border-default);
     --border-subtle: rgba(255, 255, 255, 0.05);
     --brand-primary: #5b8de8;
     --primary: #5b8de8;

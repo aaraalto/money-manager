@@ -1,3 +1,14 @@
+console.log(`%c
+                          ,,   ,,                         
+\`7MM"""Mq.              \`7MM   db                    mm   
+  MM   \`MM.               MM                         MM   
+  MM   ,M9  ,6"Yb.   ,M""bMM \`7MM  ,6"Yb. \`7MMpMMMbmmMMmm 
+  MMmmdM9  8)   MM ,AP    MM   MM 8)   MM   MM    MM MM   
+  MM  YM.   ,pm9MM 8MI    MM   MM  ,pm9MM   MM    MM MM   
+  MM   \`Mb.8M   MM \`Mb    MM   MM 8M   MM   MM    MM MM   
+.JMML. .JMM\`Moo9^Yo.\`Wbmd"MML.JMML\`Moo9^Yo.JMML  JMML\`Mbmo
+`, "color: #f59e0b; font-weight: bold;");
+
 class RotaryKnob {
     constructor(selector, options = {}) {
         this.container = document.querySelector(selector);
@@ -16,28 +27,28 @@ class RotaryKnob {
         };
 
         this.value = this.options.initialValue;
-        
+
         // Elements
         this.knob = this.container.querySelector('.rotary-knob-group');
         this.progressPath = this.container.querySelector('.rotary-progress');
         this.hiddenInput = document.querySelector(this.options.inputSelector);
         this.display = document.querySelector(this.options.displaySelector);
-        
+
         if (!this.knob || !this.progressPath) {
-             console.error("RotaryKnob: Missing SVG elements (.rotary-knob-group or .rotary-progress)");
-             return;
+            console.error("RotaryKnob: Missing SVG elements (.rotary-knob-group or .rotary-progress)");
+            return;
         }
 
         // Measurements
         this.pathLength = this.progressPath.getTotalLength();
         this.progressPath.style.strokeDasharray = this.pathLength;
-        
+
         this.init();
     }
 
     init() {
         const self = this;
-        
+
         // Set initial state
         this.updateFromValue(this.value);
 
@@ -48,17 +59,17 @@ class RotaryKnob {
             trigger: this.container.querySelector('svg'), // Allow dragging anywhere on SVG to rotate
             inertia: true,
             bounds: { minRotation: 0, maxRotation: 360 }, // Standard 360 dial
-            
-            onDrag: function() {
+
+            onDrag: function () {
                 self.handleRotation(this.rotation);
             },
-            onThrowUpdate: function() {
+            onThrowUpdate: function () {
                 self.handleRotation(this.rotation);
             },
-            onDragEnd: function() {
+            onDragEnd: function () {
                 self.commitValue();
             },
-            onThrowComplete: function() {
+            onThrowComplete: function () {
                 self.commitValue();
             }
         });
@@ -72,7 +83,7 @@ class RotaryKnob {
         // Calculate Value
         const pct = rot / 360;
         this.value = Math.round(pct * (this.options.maxValue - this.options.minValue) + this.options.minValue);
-        
+
         // Update Visuals
         this.updateVisuals(rot);
     }
@@ -87,7 +98,7 @@ class RotaryKnob {
 
         // Set Knob Rotation
         gsap.set(this.knob, { rotation: rot, transformOrigin: "center center" });
-        
+
         this.updateVisuals(rot);
     }
 

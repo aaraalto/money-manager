@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spectra | Financial Lenses</title>
+    <link rel="stylesheet" href="/static/css/variables.css">
+    <link rel="stylesheet" href="/static/css/spectra.css">
+    <script src="/static/js/htmx.min.js"></script>
+    <script src="/static/gsap-public/minified/gsap.min.js"></script>
+    <script src="/static/gsap-public/minified/Draggable.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+
+<body>
+
+    <header class="spectra-header">
+        <div class="logo">SPECTRA</div>
+        <div class="subtitle">Financial Lenses</div>
+    </header>
+
+    <main class="spectra-container">
+
+        <!-- Hero: Rotary Dial -->
+        <section class="hero-section">
+            <div class="rotary-wrapper" id="payment-rotary">
+                <svg viewBox="0 0 400 400" class="rotary-svg">
+                    <!-- Track -->
+                    <circle cx="200" cy="200" r="160" class="rotary-track" />
+                    <!-- Progress -->
+                    <circle cx="200" cy="200" r="160" class="rotary-progress" />
+
+                    <!-- Knob Group -->
+                    <g class="rotary-knob-group">
+                        <!-- Latch Handle -->
+                        <circle cx="200" cy="40" r="24" class="knob-handle-outer" />
+                        <circle cx="200" cy="40" r="10" class="knob-handle-inner" />
+                    </g>
+
+                    <!-- Center Content -->
+                    <foreignObject x="60" y="100" width="280" height="200" class="rotary-center-fo">
+                        <div class="rotary-center-content">
+                            <div class="rotary-value-display">
+                                <span class="currency">$</span><span id="rotary-display" class="amount">500</span>
+                            </div>
+                            <span class="label">Monthly Contribution</span>
+
+                            <!-- Insight Placeholder -->
+                            <div class="rotary-insight">
+                                <span class="icon">✨</span>
+                                <span class="text">Save $1.2k interest</span>
+                            </div>
+                        </div>
+                    </foreignObject>
+                </svg>
+            </div>
+        </section>
+
+        <!-- Metrics Grid -->
+        <section class="metrics-grid">
+            <div class="spectra-card metric-card">
+                <div class="metric-label">Monthly Surplus</div>
+                <div class="metric-value text-blue" id="metric-surplus">$2,450</div>
+            </div>
+            <div class="spectra-card metric-card">
+                <div class="metric-label">Debt Free By</div>
+                <div class="metric-value text-white" id="metric-date">Oct 2026</div>
+            </div>
+            <div class="spectra-card metric-card">
+                <div class="metric-label">Interest Saved</div>
+                <div class="metric-value text-gold" id="metric-saved">$12,400</div>
+            </div>
+        </section>
+
+        <!-- Visualizations -->
+        <section class="viz-section">
+            <div class="spectra-card chart-card">
+                <div class="card-header">
+                    <h3>Wealth Trajectory</h3>
+                    <div class="legend">
+                        <span class="dot blue"></span> Net Worth
+                    </div>
+                </div>
+                <div id="wealth-chart" class="chart-container"></div>
+            </div>
+
+            <div class="spectra-card chart-card">
+                <div class="card-header">
+                    <h3>Debt Payoff Strategy</h3>
+                    <div class="legend">
+                        <span class="dot red"></span> Snowball
+                        <span class="dot green"></span> Avalanche
+                    </div>
+                </div>
+                <div id="debt-chart" class="chart-container"></div>
+            </div>
+        </section>
+
+        <!-- Action Plan Table -->
+        <section class="table-section">
+            <div class="spectra-card table-card">
+                <div class="card-header">
+                    <h3>Active Liabilities</h3>
+                </div>
+                <div id="liabilities-list" class="liabilities-list">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <div class="spectra-card table-card">
+                <div class="card-header">
+                    <h3>Attack Plan</h3>
+                    <button class="btn-ghost">Export PDF</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="spectra-table">
+                        <thead>
+                            <tr>
+                                <th>Month</th>
+                                <th>Payment</th>
+                                <th>Principal</th>
+                                <th>Interest</th>
+                                <th class="text-right">Remaining</th>
+                            </tr>
+                        </thead>
+                        <tbody id="payment-table-body">
+                            <!-- Populated by JS -->
+                            <tr>
+                                <td>Nov 2025</td>
+                                <td>$500</td>
+                                <td>$350</td>
+                                <td>$150</td>
+                                <td class="text-right">$14,650</td>
+                            </tr>
+                            <tr>
+                                <td>Dec 2025</td>
+                                <td>$500</td>
+                                <td>$355</td>
+                                <td>$145</td>
+                                <td class="text-right">$14,295</td>
+                            </tr>
+                            <tr>
+                                <td>Jan 2026</td>
+                                <td>$500</td>
+                                <td>$360</td>
+                                <td>$140</td>
+                                <td class="text-right">$13,935</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script src="/static/js/rotary.js"></script>
+    <script src="/static/js/spectra.js"></script>
+</body>
+
+</html>

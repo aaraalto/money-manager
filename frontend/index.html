@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wealth HQ</title>
+    <title>Radiant</title>
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,14 +12,44 @@
     
     <link rel="stylesheet" href="/static/css/variables.css">
     <link rel="stylesheet" href="/static/css/dashboard.css">
+    <link rel="stylesheet" href="/static/css/components.css">
 </head>
 <body>
     <div class="container">
-        <header>
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <h1>Wealth HQ</h1>
-                    <p>Private. Secure. Yours.</p>
+        <header class="app-header">
+            <div class="header-brand">
+                <h1>Radiant</h1>
+                <p class="tagline">Illuminate your financial future.</p>
+            </div>
+            <div class="header-controls">
+                <div class="density-control">
+                    <button class="density-btn" data-density="compact" title="Compact view">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="3" width="7" height="7"></rect>
+                            <rect x="3" y="14" width="7" height="7"></rect>
+                            <rect x="14" y="14" width="7" height="7"></rect>
+                        </svg>
+                        <span>Compact</span>
+                    </button>
+                    <button class="density-btn active" data-density="comfortable" title="Comfortable view">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="4" y="4" width="6" height="6"></rect>
+                            <rect x="14" y="4" width="6" height="6"></rect>
+                            <rect x="4" y="14" width="6" height="6"></rect>
+                            <rect x="14" y="14" width="6" height="6"></rect>
+                        </svg>
+                        <span>Comfortable</span>
+                    </button>
+                    <button class="density-btn" data-density="spacious" title="Spacious view">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="5" y="5" width="4" height="4"></rect>
+                            <rect x="15" y="5" width="4" height="4"></rect>
+                            <rect x="5" y="15" width="4" height="4"></rect>
+                            <rect x="15" y="15" width="4" height="4"></rect>
+                        </svg>
+                        <span>Spacious</span>
+                    </button>
                 </div>
                 <a href="/generative" class="btn-nav">
                     Future Simulator <span>&rarr;</span>
@@ -29,12 +59,56 @@
 
         <div id="loading">Crunching the numbers...</div>
 
-        <div id="dashboard" style="display:none;">
+        <div id="dashboard" class="hidden">
+            <!-- Dashboard Summary -->
+            <div class="dashboard-overview">
+                <div class="card">
+                    <h2>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
+                        Financial Health
+                    </h2>
+                    <div class="stat">
+                        <div class="stat-label">Monthly Savings Rate</div>
+                        <div class="stat-value" id="savings-rate">--</div>
+                        <div class="stat-change positive" id="savings-change">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="18 15 12 9 6 15"></polyline>
+                            </svg>
+                            <span>vs last month</span>
+                        </div>
+                    </div>
+                    <div class="separator"></div>
+                    <div class="stat">
+                        <div class="stat-label">Debt-to-Income Ratio</div>
+                        <div class="stat-value" id="debt-income-ratio">--</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+                        Quick Insights
+                    </h2>
+                    <div id="quick-insights">
+                        <div class="alert alert-info">
+                            <svg class="alert-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="16" x2="12" y2="12"></line>
+                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                            </svg>
+                            <div class="alert-content">
+                                <div class="alert-description" id="insight-text">Loading insights...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Net Worth Snapshot -->
             <div class="card">
                 <h2>
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
-                    Where You Stand
+                    Current Position
                 </h2>
                 <div class="kpi-row">
                     <div class="kpi">
@@ -82,6 +156,7 @@
     <script src="/static/gsap-public/minified/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script> <!-- Fallback -->
     <script src="/static/dashboard.js?v=3"></script>
+    <script src="/static/js/card-expand.js"></script>
+    <script src="/static/js/density-control.js"></script>
 </body>
 </html>
-

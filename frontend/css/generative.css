@@ -12,22 +12,26 @@ body {
     background: var(--bg-body);
     color: var(--text-primary);
     margin: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    padding: var(--space-6) 0;
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
 }
 
 .container {
     width: 100%;
-    max-width: var(--container-max);
-    padding: var(--space-10);
+    max-width: 940px;
+    padding: var(--space-5);
 }
 
-@media (max-width: 768px) {
+@media (min-width: 640px) {
     .container {
-        padding: var(--space-6);
+        padding: var(--space-8);
+    }
+}
+
+@media (min-width: 1024px) {
+    .container {
+        padding: var(--space-10);
     }
 }
 
@@ -35,13 +39,10 @@ h1 {
     font-weight: 600;
     font-size: clamp(2rem, 4vw, 2.5rem);
     text-align: center;
-    margin-bottom: var(--space-12);
+    margin-bottom: var(--space-8);
     margin-top: 0;
     letter-spacing: -0.02em;
-    background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: var(--text-primary);
     animation: fadeInDown 0.6s var(--ease-smooth);
 }
 
@@ -58,32 +59,31 @@ h1 {
 
 /* Layout Wrapper */
 .simulation-layout {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 1fr;
     width: 100%;
-    gap: var(--space-8);
+    gap: var(--space-6);
+    align-items: start;
 }
 
 @media (min-width: 1024px) {
     .simulation-layout {
-        flex-direction: row;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-10);
         align-items: center;
-        justify-content: center;
-        height: 80vh;
     }
 
     .rotary-section {
-        flex: 1;
         display: flex;
         justify-content: center;
         align-items: center;
-        min-width: 0;
+        min-height: 500px;
     }
 
     .results-section {
-        flex: 1;
-        min-width: 0;
-        max-width: 500px;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-6);
     }
 }
 
@@ -121,7 +121,7 @@ h1 {
     display: flex;
     justify-content: center;
     gap: var(--space-3);
-    margin-bottom: var(--space-16);
+    margin-bottom: var(--space-6);
 }
 
 button {
@@ -185,13 +185,12 @@ button.primary:hover {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-xl);
-    padding: var(--space-10);
-    opacity: 0;
-    transform: translateY(var(--space-8));
+    padding: var(--space-8);
+    opacity: 1;
+    transform: translateY(0);
     box-shadow: var(--shadow-lg);
     transition: all 0.5s var(--ease-smooth);
     margin-top: 0;
-    animation: fadeInUp 0.6s var(--ease-smooth) 0.2s forwards;
 }
 
 @keyframes fadeInUp {
@@ -207,22 +206,28 @@ button.primary:hover {
 
 @media (max-width: 768px) {
     .generated-card {
-        padding: var(--space-6);
+        padding: var(--space-5);
+    }
+}
+
+@media (min-width: 1024px) {
+    .generated-card {
+        padding: var(--space-10);
     }
 }
 
 .metrics-row {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: var(--space-6);
-    margin-bottom: var(--space-10);
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+    margin-bottom: var(--space-8);
     text-align: center;
 }
 
-@media (max-width: 640px) {
+@media (min-width: 640px) {
     .metrics-row {
-        grid-template-columns: 1fr;
-        gap: var(--space-4);
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--space-6);
     }
 }
 
@@ -264,6 +269,21 @@ button.primary:hover {
     padding: var(--space-4);
     margin-bottom: var(--space-4);
     border: 1px solid var(--border-subtle);
+    overflow: hidden;
+}
+
+/* Override for when chart is in card */
+.chart-card #chart-container {
+    background: transparent;
+    border: none;
+    margin-bottom: 0;
+    padding: 0;
+    height: 320px;
+}
+
+#chart-container svg {
+    max-width: 100%;
+    height: auto;
 }
 
 @media (max-width: 768px) {
@@ -280,6 +300,11 @@ button.primary:hover {
     gap: var(--space-2);
     margin-top: var(--space-8);
     margin-bottom: var(--space-6);
+}
+
+/* Override margins when inside card header */
+.card-header .filter-row {
+    margin: 0;
 }
 
 .filter-btn {
@@ -306,7 +331,41 @@ button.primary:hover {
     color: var(--primary);
 }
 
-/* Payment Table */
+/* Simulation Content Grid */
+.simulation-content-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-6);
+    margin-bottom: var(--space-8);
+}
+
+.card-header {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--space-6);
+    gap: var(--space-4);
+}
+
+@media (min-width: 640px) {
+    .card-header {
+        flex-direction: row;
+        align-items: center;
+    }
+}
+
+.card-title {
+    font-family: var(--font-body); /* Using standard font */
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+}
+
+/* Payment Table - using Bootstrap now */
+/*
 table {
     width: 100%;
     border-collapse: collapse;
@@ -348,6 +407,7 @@ tr:last-child td {
 tr:hover {
     background: var(--bg-subtle);
 }
+*/
 
 .strategy-tag {
     display: inline-block;
@@ -528,14 +588,21 @@ tr:hover {
 /* Rotary Dial */
 .rotary-container {
     position: relative;
-    width: min(70vmin, 500px);
-    height: min(70vmin, 500px);
+    width: min(80vw, 400px);
+    height: min(80vw, 400px);
     margin: 0 auto;
     user-select: none;
     display: flex;
     justify-content: center;
     align-items: center;
     animation: scaleIn 0.6s var(--ease-bounce);
+}
+
+@media (min-width: 1024px) {
+    .rotary-container {
+        width: min(70vh, 450px);
+        height: min(70vh, 450px);
+    }
 }
 
 @keyframes scaleIn {
@@ -824,15 +891,16 @@ a[href="/"] {
     font-size: 0.9rem;
     margin-bottom: var(--space-6);
     padding: var(--space-2) var(--space-4);
-    border-radius: var(--radius-md);
-    transition: all 0.2s ease;
+    border-radius: 100px;
+    transition: all 0.3s var(--ease-smooth);
     background: var(--bg-card);
-    border: 1px solid var(--border-subtle);
+    border: 1px solid var(--border-color);
 }
 
 a[href="/"]:hover {
-    color: var(--text-primary);
+    color: var(--primary);
     background: var(--bg-card-hover);
-    border-color: var(--border-color);
-    transform: translateX(-2px);
+    border-color: var(--primary);
+    transform: translateX(-4px);
+    box-shadow: var(--shadow-sm);
 }
