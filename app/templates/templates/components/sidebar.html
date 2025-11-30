@@ -1,0 +1,44 @@
+{% from "templates/components/atoms.html" import icon %}
+
+<aside class="app-sidebar">
+    <div class="sidebar-header">
+        <div class="brand-logo">
+            {{ icon("sparkles", 20, "text-primary-color") }}
+            <span class="brand-name">Radiant</span>
+        </div>
+    </div>
+
+    <nav class="sidebar-nav">
+        <a href="/" class="nav-item {% if request.url.path == '/' %}active{% endif %}">
+            {{ icon("home", 18) }}
+            <span>Dashboard</span>
+        </a>
+        <a href="/simulator" class="nav-item {% if 'simulator' in request.url.path %}active{% endif %}">
+            {{ icon("sliders", 18) }}
+            <span>Simulator</span>
+        </a>
+        <a href="/spending-editor" class="nav-item {% if 'spending-editor' in request.url.path %}active{% endif %}">
+            {{ icon("list", 18) }}
+            <span>Spending Plan</span>
+        </a>
+        <!-- 
+        <a href="/settings" class="nav-item {% if 'settings' in request.url.path %}active{% endif %}">
+            {{ icon("settings", 18) }}
+            <span>Settings</span>
+        </a> 
+        -->
+    </nav>
+
+    <div class="sidebar-footer">
+        <div class="user-profile">
+            <div class="avatar">
+                {{ icon("user", 16) }}
+            </div>
+            <div class="user-info">
+                <span class="user-name">My Finances</span>
+                <span class="user-level">Level {{ user.current_level if user else 0 }}</span>
+            </div>
+        </div>
+    </div>
+</aside>
+

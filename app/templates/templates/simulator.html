@@ -56,9 +56,10 @@
                 </div>
                 
                 <button id="commit-btn" class="btn btn-primary btn-lg btn-block" 
-                    hx-post="/api/save-scenario" 
+                    hx-post="/api/commit-scenario" 
                     hx-trigger="click"
                     hx-include="#sim-form"
+                    hx-on::after-request="if(event.detail.successful) window.location.href = '/'"
                     disabled>
                     Commit Strategy
                 </button>
@@ -82,15 +83,7 @@
             </div>
 
             <div class="simulation-content-grid">
-                <!-- Chart Card -->
-                <div class="generated-card chart-card">
-                    <h3 class="card-title">Wealth Trajectory</h3>
-                    <div id="chart-container">
-                        <!-- SVG Chart loads here via OOB -->
-                    </div>
-                </div>
-
-                <!-- Table Card -->
+                <!-- Table Card (Now Top Left) -->
                 <div class="generated-card table-card">
                     <div class="card-header">
                         <h3 class="card-title">Payment Plan</h3>
@@ -100,6 +93,14 @@
                     </div>
                     <div id="payment-table-container">
                         <!-- Table loads here via OOB -->
+                    </div>
+                </div>
+
+                <!-- Chart Card -->
+                <div class="generated-card chart-card">
+                    <h3 class="card-title">Wealth Trajectory</h3>
+                    <div id="chart-container">
+                        <!-- SVG Chart loads here via OOB -->
                     </div>
                 </div>
             </div>
@@ -114,6 +115,7 @@
 
         <!-- Hidden input for Filter State -->
         <input type="hidden" name="filter_tag" value="All">
+        <input type="hidden" name="strategy" value="avalanche">
     </form>
 
     <!-- Chat Widget -->
@@ -135,7 +137,6 @@
                 </form>
             </div>
         </div>
-        <button class="chat-fab" onclick="toggleChat()">{{ icon("message-circle", 24) }}</button>
     </div>
 {% endblock %}
 

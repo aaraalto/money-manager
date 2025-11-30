@@ -108,7 +108,7 @@
 <body class="dark-theme {% if request.query_params.get('mode') == 'slasher' %}slasher-mode{% endif %}">
     
     <div id="impact-toast" class="impact-badge">
-        <span class="icon">✂️</span>
+        <span class="icon"></span>
         <span id="impact-message">Cutting expense...</span>
     </div>
 
@@ -117,7 +117,7 @@
             <div class="slasher-header">
                 <h1>
                     {% if request.query_params.get('mode') == 'slasher' %}
-                        Expense Slasher ✂️
+                        Expense Slasher
                     {% else %}
                         Radiant / CSP
                     {% endif %}

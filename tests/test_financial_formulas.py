@@ -1,5 +1,5 @@
 import pytest
-from app.primitives.financial_formulas import (
+from app.domain.financial_formulas import (
     calculate_monthly_interest,
     calculate_compound_step,
     calculate_runway,

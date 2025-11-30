@@ -1,118 +1,52 @@
 {% extends "templates/layouts/base.html" %}
 {% from "templates/components/atoms.html" import button, icon %}
-{% from "templates/components/molecules.html" import card, stat, kpi_box, alert, page_header, dashboard_header %}
+{% from "templates/components/molecules.html" import card, stat, kpi_box, alert, dashboard_header %}
 
-{% block title %}Radiant - Safety Net{% endblock %}
-
-{% block extra_css %}
-<style>
-    .safety-net-header {
-        margin-bottom: 2rem;
-        border-bottom: 1px solid rgba(255,255,255,0.1);
-        padding-bottom: 1rem;
-    }
-    
-    .water-tank-container {
-        background: rgba(0,0,0,0.2);
-        border-radius: 16px;
-        padding: 2rem;
-        margin-bottom: 2rem;
-        text-align: center;
-        position: relative;
-        overflow: hidden;
-        border: 1px solid rgba(16, 185, 129, 0.2);
-    }
-    
-    .tank-visual {
-        height: 200px;
-        width: 200px;
-        margin: 0 auto 1.5rem;
-        background: rgba(255,255,255,0.05);
-        border-radius: 50%;
-        position: relative;
-        overflow: hidden;
-        border: 4px solid rgba(255,255,255,0.1);
-    }
-    
-    .water-level {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: linear-gradient(180deg, #34d399 0%, #059669 100%);
-        height: 0%; /* Animated */
-        transition: height 2s cubic-bezier(0.4, 0, 0.2, 1);
-        opacity: 0.8;
-    }
-    
-    .water-surface {
-        position: absolute;
-        top: -10px;
-        left: 0;
-        right: 0;
-        height: 20px;
-        background: #6ee7b7;
-        border-radius: 50%;
-        transform: scaleY(0.5);
-        opacity: 0.5;
-    }
-    
-    .tank-label {
-        font-size: 2.5rem;
-        font-weight: 700;
-        color: #34d399;
-        font-family: 'Outfit', sans-serif;
-    }
-</style>
-{% endblock %}
+{% block title %}Radiant - Stability{% endblock %}
 
 {% block extra_js %}
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        setTimeout(() => {
-            const water = document.querySelector('.water-level');
-            if(water) {
-                // Calculate % of 6 months expenses
-                // Logic: liquid_assets / (monthly_burn * 6)
-                // We'll inject this via template variable
-                const pct = Math.min(100, {{ (user.liquid_assets / (user.monthly_burn * 6) * 100) | round(1) }});
-                water.style.height = pct + '%';
-            }
-        }, 500);
-    });
-</script>
+<script type="module" src="/static/js/modules/main.js"></script>
 {% endblock %}
 
 {% block content %}
-    {% call dashboard_header("Level 2: Safety Net", "badge badge-success", "Build your fortress of solitude.", "safety-net-header") %}
-        {{ button("Add Funds", "#", "success", "plus") }}
+    {% call dashboard_header("Level 2: Stability", "badge badge-success", "Building the fortress.", "", "", "Review Budget", "list") %}
+        {{ button("Project Growth", "/simulator", "secondary", "trending-up") }}
     {% endcall %}
 
-    <div class="water-tank-container">
-        <div class="tank-visual">
-            <div class="water-level">
-                <div class="water-surface"></div>
-            </div>
-        </div>
-        
-        <div class="tank-label">{{ format_currency(user.liquid_assets) }}</div>
-        <div class="text-secondary" style="margin-top: 0.5rem;">
-            Target: {{ format_currency(user.monthly_burn * 6) }} (6 Months)
-        </div>
-    </div>
+    <div id="loading">Checking defenses...</div>
 
-    <div class="grid">
-        {% call card("Runway Status", "activity") %}
-            <p><strong>Current Runway:</strong> {{ (user.liquid_assets / user.monthly_burn) | round(1) }} Months</p>
-            <p class="text-secondary">You can survive for {{ (user.liquid_assets / user.monthly_burn) | round(1) }} months without income.</p>
-        {% endcall %}
-        
-        {% call card("Growth Engine (Locked)", "lock") %}
-            <div style="opacity: 0.5; text-align: center; padding: 2rem;">
-                <p>Unlock Level 3 by reaching 6 months of expenses.</p>
-                <div style="margin-top: 1rem; font-size: 2rem;">🔒</div>
-            </div>
-        {% endcall %}
+    <div id="dashboard" class="hidden">
+        <!-- Level 2 Focus: Emergency Fund & Security -->
+        <div class="dashboard-overview">
+             {% call card("Safety Net", "shield") %}
+                <div class="stat">
+                    <div class="stat-label">Emergency Fund</div>
+                    <div class="stat-value text-success" id="nw-liquid">--</div>
+                    <div class="stat-change">
+                        <span id="runway-months">--</span> months runway
+                    </div>
+                </div>
+                <div class="separator"></div>
+                <div class="progress" style="margin-top: 1rem;">
+                    <div class="progress-bar" style="width: 60%;"></div>
+                </div>
+                <p class="text-secondary" style="font-size: 0.85rem; margin-top: 0.5rem;">Goal: 6 Months Expenses</p>
+            {% endcall %}
+
+            {% call card("Net Worth Growth", "trending-up") %}
+                 <div class="kpi-row">
+                     {{ kpi_box("Total Net Worth", id="nw-total") }}
+                     {{ kpi_box("Savings Rate", id="savings-rate") }}
+                 </div>
+            {% endcall %}
+        </div>
+
+        <div class="grid">
+            <!-- Begin showing investment projection lightly -->
+            {% call card("Wealth Trajectory", "activity") %}
+                <div class="chart-container" id="chart-projection"></div>
+                <div class="reasoning" id="proj-context"></div>
+            {% endcall %}
+        </div>
     </div>
 {% endblock %}
-

@@ -4,41 +4,50 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Welcome to Radiant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;700&display=swap" rel="stylesheet">
+    
     <link rel="stylesheet" href="/static/css/variables.css">
-    <link rel="stylesheet" href="/static/css/spectra.css">
     <script src="/static/js/htmx.min.js"></script>
     <style>
+        :root {
+            --onboarding-bg: #121212;
+            --onboarding-card: #1e1e1e;
+        }
+        
         body {
-            background-color: var(--bg-deep);
+            background-color: var(--bg-body);
             color: var(--text-primary);
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
-            font-family: var(--font-sans, 'Inter', sans-serif);
+            font-family: var(--font-body);
         }
         
         .onboarding-container {
             width: 100%;
             max-width: 480px;
-            padding: 2rem;
+            padding: var(--space-6);
             text-align: center;
         }
 
         .card {
-            background: var(--surface-card);
-            border-radius: 24px;
-            padding: 3rem 2rem;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.1);
-            transition: all 0.3s ease;
+            background: var(--bg-card);
+            border-radius: var(--radius-xl);
+            padding: var(--space-10) var(--space-8);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s var(--ease-smooth);
         }
 
         h1 {
+            font-family: var(--font-heading);
             font-size: 2.5rem;
             font-weight: 700;
-            margin-bottom: 1rem;
+            margin-bottom: var(--space-4);
             background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -47,57 +56,62 @@
         p {
             color: var(--text-secondary);
             font-size: 1.1rem;
-            line-height: 1.5;
-            margin-bottom: 2rem;
+            line-height: 1.6;
+            margin-bottom: var(--space-8);
         }
 
         .input-group {
-            margin-bottom: 2rem;
+            margin-bottom: var(--space-8);
             text-align: left;
         }
 
         label {
             display: block;
-            margin-bottom: 0.5rem;
-            font-size: 0.9rem;
+            margin-bottom: var(--space-2);
+            font-size: 0.85rem;
             color: var(--text-tertiary);
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.05em;
+            font-weight: 600;
         }
 
         input[type="number"], input[type="text"] {
             width: 100%;
-            padding: 1rem;
-            font-size: 2rem;
-            background: rgba(0,0,0,0.2);
-            border: 2px solid var(--border-color, rgba(255,255,255,0.1));
-            border-radius: 12px;
-            color: white;
+            padding: var(--space-4);
+            font-size: 1.5rem;
+            background: var(--bg-subtle);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
             outline: none;
-            transition: border-color 0.2s;
-            font-family: 'Courier New', monospace;
+            transition: all 0.2s ease;
+            font-family: var(--font-mono);
+            box-sizing: border-box;
         }
 
         input:focus {
-            border-color: var(--primary-color, #6366f1);
+            border-color: var(--primary);
+            background: var(--bg-card-hover);
+            box-shadow: 0 0 0 2px var(--primary-dim);
         }
 
         .btn-primary {
-            background: var(--primary-color, #6366f1);
+            background: var(--primary);
             color: white;
             border: none;
-            padding: 1rem 2rem;
+            padding: var(--space-4) var(--space-6);
             font-size: 1.1rem;
             font-weight: 600;
-            border-radius: 50px;
+            border-radius: 100px;
             cursor: pointer;
             width: 100%;
-            transition: transform 0.1s;
+            transition: transform 0.1s, background 0.2s;
         }
 
         .btn-primary:hover {
+            background: var(--primary-hover);
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+            box-shadow: var(--shadow-md);
         }
         
         .btn-primary:active {
@@ -105,26 +119,26 @@
         }
 
         .btn-secondary {
-            background: rgba(255,255,255,0.05);
+            background: transparent;
             color: var(--text-secondary);
-            border: 1px solid rgba(255,255,255,0.1);
-            padding: 0.8rem 1.5rem;
+            border: 1px solid var(--border-color);
+            padding: var(--space-3) var(--space-6);
             font-size: 0.9rem;
             font-weight: 500;
-            border-radius: 50px;
+            border-radius: 100px;
             cursor: pointer;
             width: 100%;
             transition: all 0.2s;
         }
 
         .btn-secondary:hover {
-            background: rgba(255,255,255,0.1);
-            border-color: rgba(255,255,255,0.2);
-            color: white;
+            background: var(--bg-subtle);
+            color: var(--text-primary);
+            border-color: var(--text-tertiary);
         }
 
         .fade-in {
-            animation: fadeIn 0.5s ease-out forwards;
+            animation: fadeIn 0.5s var(--ease-smooth) forwards;
         }
 
         @keyframes fadeIn {
@@ -138,26 +152,32 @@
         
         .debt-toggle {
             display: flex;
-            gap: 1rem;
-            margin-bottom: 2rem;
+            gap: var(--space-4);
+            margin-bottom: var(--space-8);
         }
         
         .toggle-btn {
             flex: 1;
-            padding: 1.5rem;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 16px;
+            padding: var(--space-4);
+            background: var(--bg-subtle);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
             cursor: pointer;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             color: var(--text-secondary);
             transition: all 0.2s;
         }
         
+        .toggle-btn:hover {
+            background: var(--bg-card-hover);
+            color: var(--text-primary);
+        }
+        
         .toggle-btn.selected {
-            background: rgba(99, 102, 241, 0.2);
-            border-color: #6366f1;
-            color: white;
+            background: var(--primary-dim);
+            border-color: var(--primary);
+            color: var(--primary);
+            font-weight: 600;
         }
     </style>
 </head>
@@ -176,7 +196,7 @@
                 <button type="submit" class="btn-primary">Next</button>
             </form>
             
-            <div style="margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1.5rem;">
+            <div style="margin-top: 2rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
                 <p style="font-size: 0.9rem; margin-bottom: 1rem; color: var(--text-tertiary);">Already have data?</p>
                 <button class="btn-secondary" hx-post="/api/onboarding/import" hx-target="#onboarding-content" hx-swap="innerHTML">
                     Import from Data Folder

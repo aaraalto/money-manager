@@ -1,85 +1,51 @@
 {% extends "templates/layouts/base.html" %}
 {% from "templates/components/atoms.html" import button, icon %}
-{% from "templates/components/molecules.html" import card, stat, kpi_box, alert, page_header, dashboard_header %}
+{% from "templates/components/molecules.html" import card, stat, kpi_box, alert, dashboard_header %}
 
-{% block title %}Radiant - Dashboard{% endblock %}
+{% block title %}Radiant - Overview{% endblock %}
 
 {% block extra_js %}
 <script type="module" src="/static/js/modules/main.js"></script>
-<script src="/static/js/card-expand.js"></script>
 {% endblock %}
 
 {% block content %}
-    {% set level_text = "Level " ~ user.current_level if user else None %}
-    {% call dashboard_header(level_text, "badge badge-primary", "Illuminate your financial future.", "", "", "Expense Optimizer", "arrow-right") %}
-        {{ button("Future Simulator", "/simulator", "secondary", "arrow-right") }}
+    {% set level_text = "Level " ~ user.current_level if user else "Level 0" %}
+    {% call dashboard_header(level_text, "badge badge-danger", "Crisis Mode: Stop the bleeding.", "", "", "Cut Expenses", "list") %}
+        <!-- No extra actions for Level 0, focus on fixing cash flow -->
     {% endcall %}
 
-    <div id="loading">Crunching the numbers...</div>
+    <div id="loading">Analyzing cash flow...</div>
 
     <div id="dashboard" class="hidden">
-        <!-- Dashboard Summary: Level 0 Focus -->
+        <!-- Level 0 Focus: Cash Flow & Burn -->
         <div class="dashboard-overview">
-            {% call card("Monthly Pulse", "activity") %}
+            {% call card("Immediate Action Needed", "alert-triangle") %}
                 <div class="stat">
                     <div class="stat-label">
-                        <span class="term" data-tooltip="Money left after paying all monthly expenses.">Net Cash Flow</span>
+                        <span class="term" data-tooltip="Income minus Expenses. Must be positive.">Net Cash Flow</span>
                     </div>
-                    <div class="stat-value" id="savings-rate">--</div> <!-- Reusing ID for JS compatibility -->
-                    <div class="stat-change">vs last month</div>
+                    <div class="stat-value text-danger" id="savings-rate">--</div> 
+                    <div class="stat-change negative">You are burning cash</div>
                 </div>
                 <div class="separator"></div>
-                <div class="stat">
-                    <div class="stat-label">
-                        <span class="term" data-tooltip="Percentage of gross income that goes towards debt payments.">Debt-to-Income Ratio</span>
-                    </div>
-                    <div class="stat-value" id="debt-income-ratio">--</div>
-                </div>
+                {{ alert("Insolvency Detected", "Your expenses exceed your income. Use the Spending Plan to cut 'Wants' immediately.", "danger") }}
             {% endcall %}
 
-            {% call card("Quick Insights", "trending-up") %}
-                <div id="quick-insights">
-                    {{ alert("", "Loading insights...", "info", "info") }}
+            {% call card("Burn Rate Analysis", "activity") %}
+                <div class="kpi-row">
+                     {{ kpi_box("Monthly Burn", id="monthly-burn") }}
+                     {{ kpi_box("Runway (Months)", id="runway-months") }}
                 </div>
             {% endcall %}
         </div>
 
-        <!-- Net Worth Snapshot -->
-        {% call card("Current Position", "credit-card") %}
-            <div class="kpi-row">
-                <div class="kpi">
-                     <div class="kpi-label">
-                        <span class="term" data-tooltip="Total Assets minus Total Liabilities.">Net Worth</span>
-                     </div>
-                     <div class="kpi-value" id="nw-total">--</div>
-                </div>
-                <div class="kpi">
-                     <div class="kpi-label">
-                        <span class="term" data-tooltip="Cash or assets that can be quickly converted to cash.">Liquid Assets</span>
-                     </div>
-                     <div class="kpi-value" id="nw-liquid">--</div>
-                </div>
-                <div class="kpi">
-                     <div class="kpi-label">Total Debt</div>
-                     <div class="kpi-value" id="nw-debt">--</div>
-                </div>
-            </div>
-            <div class="reasoning" id="nw-reasoning"></div>
-        {% endcall %}
-
+        <!-- Only show essentials -->
         <div class="grid">
-            <!-- Projection Chart - Hidden for Level 0/1 to reduce noise -->
-            {% if user and user.current_level >= 2 %}
-            {% call card("Your Wealth Trajectory", "trending-up") %}
-                <div class="chart-container" id="chart-projection"></div>
-                <div class="reasoning" id="proj-context"></div>
-            {% endcall %}
-            {% endif %}
-
-            <!-- Debt Payoff Chart -->
-            {% call card("Debt Freedom Plan", "activity") %}
-                <div class="chart-container" id="chart-debt"></div>
-                <div class="reasoning" id="debt-reasoning"></div>
+             {% call card("Expense Breakdown", "pie-chart") %}
+                <div class="chart-container" id="chart-spending"></div>
+                <div class="reasoning">
+                    Identify the largest categories to cut.
+                </div>
             {% endcall %}
         </div>
     </div>

@@ -1,151 +1,15 @@
 import asyncio
-from functools import lru_cache
-from typing import Dict, Any, List, Optional
-
+from typing import List, Any, Dict
+from app.models import SpendingCategory, AssetType
+from app.domain.advisor import generate_insights
+from app.domain.net_worth import get_net_worth
+from app.domain.growth import project_compound_growth
+from app.domain.debt import simulate_debt_payoff
 from app.data.repository import FileRepository
-from app.models import Asset, Liability, IncomeSource, SpendingCategory
-from app.domain import (
-    get_net_worth,
-    simulate_debt_payoff,
-    project_compound_growth,
-    assess_affordability,
-    generate_insights,
-)
-from app.domain.metrics import calculate_metrics, calculate_financial_level, calculate_monthly_income
 
 class FinancialService:
-    def __init__(self, repository: FileRepository):
-        self.repo = repository
-
-    async def process_onboarding_import(self) -> Dict[str, Any]:
-        """
-        Calculates initial financial state from imported data and sets the user's level.
-        """
-        income_sources, spending_plan, liabilities, assets = await asyncio.gather(
-            self.repo.get_income(),
-            self.repo.get_spending_plan(),
-            self.repo.get_liabilities(),
-            self.repo.get_assets()
-        )
-        
-        monthly_income = calculate_monthly_income(income_sources)
-        monthly_burn = sum(s.amount for s in spending_plan)
-        total_debt = sum(l.balance for l in liabilities)
-        
-        # Calculate liquid assets (Cash + Liquid Investments)
-        liquid_assets = sum(
-            a.value for a in assets 
-            if a.liquidity == "liquid" or a.type == "cash"
-        )
-
-        profile = await self.repo.get_user_profile()
-        profile.monthly_income = monthly_income
-        profile.monthly_burn = monthly_burn
-        profile.total_debt = total_debt
-        profile.liquid_assets = liquid_assets
-        
-        level = calculate_financial_level(
-            monthly_income,
-            monthly_burn,
-            total_debt,
-            liquid_assets
-        )
-        profile.current_level = level
-        
-        await self.repo.save_user_profile(profile)
-        
-        return {
-            "level": level,
-            "profile": profile
-        }
-
-    async def get_dashboard_view(self, monthly_payment: float = 500.0, filter_tag: str = "All") -> Dict[str, Any]:
-        # Fetch data concurrently
-        assets, liabilities, income, spending = await asyncio.gather(
-            self.repo.get_assets(),
-            self.repo.get_liabilities(),
-            self.repo.get_income(),
-            self.repo.get_spending_plan()
-        )
-
-        # Calculate Metrics
-        metrics = calculate_metrics(income, spending, liabilities)
-        
-        total_monthly_income = metrics["monthly_gross_income"]
-        total_monthly_spending = metrics["monthly_expenses"]
-        total_min_debt_payments = metrics["monthly_debt_payments"]
-        
-        free_cash_flow = total_monthly_income - total_monthly_spending - total_min_debt_payments
-        
-        # Filter liabilities
-        filtered_liabilities = liabilities
-        if filter_tag != "All":
-            filtered_liabilities = [l for l in liabilities if filter_tag in l.tags]
-        
-        # Calculations
-        nw_context = get_net_worth(assets, filtered_liabilities)
-        passive_income_monthly = (nw_context.total * 0.04) / 12
-
-        # Projection (hardcoded params as per original, extended with dynamic inputs)
-        # Assuming default $1000 contribution if free cash flow is less, 
-        # or use free_cash_flow if positive? 
-        # For "Growth Engine", we assume free cash flow IS the contribution.
-        monthly_contribution = max(0, free_cash_flow)
-        
-        projection = project_compound_growth(
-            principal=nw_context.total, 
-            rate=0.07, 
-            years=10, 
-            monthly_contribution=monthly_contribution,
-            monthly_expenses_target=total_monthly_spending # Use current spending as target for crossover
-        )
-        
-        # Debt Payoff Simulations
-        # We can cache these if needed, but for now let's run them.
-        # To use lru_cache effectively, we'd need hashable arguments (lists aren't).
-        # Since the dataset is small, re-running might be fine. 
-        # If we wanted to use lru_cache, we'd wrap this in a helper that takes tuples.
-        snowball = simulate_debt_payoff(filtered_liabilities, "snowball", extra_monthly_payment=monthly_payment)
-        avalanche = simulate_debt_payoff(filtered_liabilities, "avalanche", extra_monthly_payment=monthly_payment)
-        
-        affordability = assess_affordability(cost=5000, liquidity=nw_context.liquid, monthly_burn=3000)
-        
-        insights = generate_insights(assets, liabilities, income, spending)
-
-        return {
-            "financial_health": {
-                "savings_rate": metrics["savings_rate"],
-                "debt_to_income_ratio": metrics["debt_to_income_ratio"],
-                "savings_rate_change": 0.02,  # Mock
-                "passive_income_monthly": passive_income_monthly
-            },
-            "insights": [i.dict() for i in insights],
-            "cash_flow": {
-                "income": total_monthly_income,
-                "spending": total_monthly_spending,
-                "debt_min": total_min_debt_payments,
-                "free": free_cash_flow
-            },
-            "net_worth": nw_context.dict(),
-            "liabilities": [l.dict() for l in filtered_liabilities],
-            "projection": projection.dict(),
-            "debt_payoff": {
-                "snowball": snowball.dict(),
-                "avalanche": avalanche.dict(),
-                "comparison": [
-                    f"Switching to Avalanche saves you ${(snowball.interest_paid - avalanche.interest_paid):,.0f} in interest.",
-                    f"Avalanche: Debt-free by {avalanche.date_free}",
-                    f"Snowball: Debt-free by {snowball.date_free}"
-                ]
-            },
-            "affordability_check": affordability.dict()
-        }
-
-    async def get_spending_plan(self) -> List[SpendingCategory]:
-        return await self.repo.get_spending_plan()
-
-    async def update_spending_plan(self, plan: List[SpendingCategory]):
-        await self.repo.save_spending_plan(plan)
+    def __init__(self, repo: FileRepository):
+        self.repo = repo
 
     async def get_insights(self) -> List[Any]:
         assets, liabilities, income, spending = await asyncio.gather(
@@ -155,3 +19,97 @@ class FinancialService:
             self.repo.get_spending_plan()
         )
         return generate_insights(assets, liabilities, income, spending)
+        
+    async def get_dashboard_data(self) -> Dict[str, Any]:
+        assets, liabilities, income_list, spending_list = await asyncio.gather(
+            self.repo.get_assets(),
+            self.repo.get_liabilities(),
+            self.repo.get_income(),
+            self.repo.get_spending_plan()
+        )
+        
+        # 1. Net Worth
+        net_worth_context = get_net_worth(assets, liabilities)
+        
+        # 2. Financial Health (Savings Rate & DTI)
+        total_monthly_income = 0
+        for i in income_list:
+            if i.frequency == "monthly": total_monthly_income += i.amount
+            elif i.frequency == "bi-weekly": total_monthly_income += i.amount * 26 / 12
+            elif i.frequency == "weekly": total_monthly_income += i.amount * 52 / 12
+            elif i.frequency == "annually": total_monthly_income += i.amount / 12
+
+        total_monthly_spending = sum(s.amount for s in spending_list)
+        min_debt_payments = sum(l.min_payment for l in liabilities)
+        
+        # Calculate Surplus / Savings
+        surplus = total_monthly_income - total_monthly_spending - min_debt_payments
+        savings_rate = surplus / total_monthly_income if total_monthly_income > 0 else 0
+        
+        # DTI (Debt Payments / Gross Income usually, but here using net income proxy or just income)
+        dti = min_debt_payments / total_monthly_income if total_monthly_income > 0 else 0
+        
+        financial_health = {
+            "savings_rate": savings_rate,
+            "debt_to_income_ratio": dti,
+            "savings_rate_change": 0.02 # Mock change for demo
+        }
+        
+        # 3. Projection (Wealth Growth)
+        investable_assets = sum(a.value for a in assets if a.type in [AssetType.EQUITY, AssetType.RETIREMENT, AssetType.CRYPTO])
+        # Assume we invest 50% of surplus + any existing "Savings" category
+        savings_category = sum(s.amount for s in spending_list if s.type == "Savings")
+        monthly_contribution = max(0, (surplus * 0.5) + savings_category)
+        
+        projection = project_compound_growth(
+            principal=investable_assets,
+            rate=0.07,
+            years=30,
+            monthly_contribution=monthly_contribution
+        )
+        
+        # 4. Debt Payoff
+        # Calculate potential extra payment from surplus
+        extra_payment = max(0, surplus * 0.5) # Use other half of surplus for debt
+        
+        snowball = simulate_debt_payoff(liabilities, "snowball", extra_payment)
+        avalanche = simulate_debt_payoff(liabilities, "avalanche", extra_payment)
+        
+        debt_payoff = {
+            "snowball": snowball.dict(),
+            "avalanche": avalanche.dict(),
+            "comparison": [
+                f"Strategy: paying ${extra_payment:,.0f} extra per month.",
+                f"Snowball free by {snowball.date_free.strftime('%b %Y')}",
+                f"Avalanche free by {avalanche.date_free.strftime('%b %Y')}",
+                f"Avalanche saves ${(snowball.interest_paid - avalanche.interest_paid):,.0f} in interest."
+            ]
+        }
+        
+        return {
+            "net_worth": net_worth_context.dict(),
+            "financial_health": financial_health,
+            "projection": projection.dict(),
+            "debt_payoff": debt_payoff
+        }
+
+    async def commit_scenario(self, monthly_payment: float) -> Dict[str, Any]:
+        """
+        Updates the 'Debt Repayment' spending category with the new committed amount.
+        """
+        plan = await self.repo.get_spending_plan()
+        
+        found = False
+        for category in plan:
+            if category.category == "Debt Repayment":
+                category.amount = monthly_payment
+                found = True
+                break
+        
+        if not found:
+            # If it doesn't exist, add it as a 'Savings' or 'Need' type
+            plan.append(SpendingCategory(category="Debt Repayment", amount=monthly_payment, type="Savings"))
+            
+        await self.repo.save_spending_plan(plan)
+        
+        return {"status": "success", "new_payment": monthly_payment}

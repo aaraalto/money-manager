@@ -52,7 +52,6 @@ class SpendingCategory(BaseModel):
     amount: float = Field(..., ge=0)
     type: str  # Need, Want, Savings
 
-
 class Transaction(BaseModel):
     date: date
     amount: float = Field(..., description="Positive for income, negative for expense")
@@ -82,3 +81,10 @@ class FinancialSnapshot(BaseModel):
     liabilities: list[Liability] = []
     transactions: list[Transaction] = []
     user: Optional[UserProfile] = None
+
+class Scenario(BaseModel):
+    id: UUID = Field(default_factory=uuid4)
+    name: str = "New Scenario"
+    monthly_payment: float = Field(..., ge=0)
+    strategy: str = "avalanche"
+    created_at: date = Field(default_factory=date.today)

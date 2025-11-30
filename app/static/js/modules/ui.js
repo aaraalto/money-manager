@@ -4,6 +4,7 @@ export function formatCurrency(value) {
 
 export function renderReasoning(elementId, lines) {
     const el = document.getElementById(elementId);
+    if (!el) return; // Safety check
     if (!lines || lines.length === 0) return;
 
     const ul = document.createElement("ul");
@@ -17,6 +18,9 @@ export function renderReasoning(elementId, lines) {
 }
 
 export function animateValue(elementId, endValue) {
+    const el = document.getElementById(elementId);
+    if (!el) return; // Safety check
+
     if (typeof gsap !== 'undefined') {
         const obj = { val: 0 };
         gsap.to(obj, {
@@ -24,11 +28,12 @@ export function animateValue(elementId, endValue) {
             duration: 2,
             ease: "power4.out",
             onUpdate: function () {
-                document.getElementById(elementId).textContent = formatCurrency(obj.val);
+                const updateEl = document.getElementById(elementId);
+                if(updateEl) updateEl.textContent = formatCurrency(obj.val);
             }
         });
     } else {
-        document.getElementById(elementId).textContent = formatCurrency(endValue);
+        el.textContent = formatCurrency(endValue);
     }
 }
 
@@ -44,24 +49,31 @@ export function renderFinancialHealth(data) {
     const savingsRatePct = (data.savings_rate * 100).toFixed(1) + "%";
     const dtiPct = (data.debt_to_income_ratio * 100).toFixed(1) + "%";
 
-    document.getElementById("savings-rate").textContent = savingsRatePct;
-    document.getElementById("debt-income-ratio").textContent = dtiPct;
+    const savingsEl = document.getElementById("savings-rate");
+    if (savingsEl) savingsEl.textContent = savingsRatePct;
+
+    const dtiEl = document.getElementById("debt-income-ratio");
+    if (dtiEl) dtiEl.textContent = dtiPct;
 
     // Savings Change
     if (data.savings_rate_change !== undefined) {
         const changeEl = document.getElementById("savings-change");
-        const changeVal = (data.savings_rate_change * 100).toFixed(1) + "%";
-        const isPositive = data.savings_rate_change >= 0;
+        if (changeEl) {
+            const changeVal = (data.savings_rate_change * 100).toFixed(1) + "%";
+            const isPositive = data.savings_rate_change >= 0;
 
-        changeEl.className = `stat-change ${isPositive ? 'positive' : 'negative'}`;
-        changeEl.querySelector("span").textContent = `vs last month (${isPositive ? '+' : ''}${changeVal})`;
+            changeEl.className = `stat-change ${isPositive ? 'positive' : 'negative'}`;
+            changeEl.querySelector("span").textContent = `vs last month (${isPositive ? '+' : ''}${changeVal})`;
 
-        // Update icon rotation if negative
-        const icon = changeEl.querySelector("svg");
-        if (!isPositive) {
-            icon.style.transform = "rotate(180deg)";
-        } else {
-            icon.style.transform = "none";
+            // Update icon rotation if negative
+            const icon = changeEl.querySelector("svg");
+            if (icon) {
+                if (!isPositive) {
+                    icon.style.transform = "rotate(180deg)";
+                } else {
+                    icon.style.transform = "none";
+                }
+            }
         }
     }
 }
@@ -106,12 +118,14 @@ export function setupInitialState() {
 export function showDashboard() {
     const loadingEl = document.getElementById("loading");
     const dashboardEl = document.getElementById("dashboard");
-    loadingEl.style.display = "none";
-    dashboardEl.classList.remove("hidden");
+    if (loadingEl) loadingEl.style.display = "none";
+    if (dashboardEl) dashboardEl.classList.remove("hidden");
 }
 
 export function showError(error) {
     const loadingEl = document.getElementById("loading");
+    if (!loadingEl) return;
+    
     console.error("Failed to load data:", error);
     loadingEl.innerHTML = `
         <div class="alert alert-danger" style="max-width: 400px; margin: 0 auto;">
@@ -123,4 +137,3 @@ export function showError(error) {
         </div>
     `;
 }
-

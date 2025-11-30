@@ -1,137 +1,51 @@
 {% extends "templates/layouts/base.html" %}
 {% from "templates/components/atoms.html" import button, icon %}
-{% from "templates/components/molecules.html" import card, stat, kpi_box, alert, page_header, dashboard_header %}
+{% from "templates/components/molecules.html" import card, stat, kpi_box, alert, dashboard_header %}
 
 {% block title %}Radiant - Debt Resolution{% endblock %}
 
-{% block extra_css %}
-<style>
-    .war-room-header {
-        margin-bottom: 2rem;
-        border-bottom: 1px solid rgba(255,255,255,0.1);
-        padding-bottom: 1rem;
-    }
-    
-    .debt-progress-container {
-        background: rgba(0,0,0,0.2);
-        border-radius: 16px;
-        padding: 2rem;
-        margin-bottom: 2rem;
-        text-align: center;
-    }
-    
-    .debt-total-display {
-        font-size: 3.5rem;
-        font-weight: 700;
-        color: var(--text-primary);
-        font-family: 'Outfit', sans-serif;
-        margin-bottom: 0.5rem;
-    }
-    
-    .debt-label {
-        color: var(--text-tertiary);
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        font-size: 0.9rem;
-        margin-bottom: 2rem;
-    }
-    
-    .progress-bar-wrapper {
-        height: 24px;
-        background: rgba(255,255,255,0.05);
-        border-radius: 12px;
-        overflow: hidden;
-        position: relative;
-        margin-bottom: 1rem;
-    }
-    
-    .progress-fill {
-        height: 100%;
-        background: linear-gradient(90deg, var(--primary), var(--success));
-        width: 0%; /* Animated via JS */
-        transition: width 1.5s cubic-bezier(0.22, 1, 0.36, 1);
-    }
-    
-    .strategy-card {
-        background: rgba(99, 102, 241, 0.05);
-        border: 1px solid rgba(99, 102, 241, 0.2);
-    }
-
-    /* Velocity Badge */
-    .velocity-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        background: rgba(16, 185, 129, 0.1);
-        color: #10b981;
-        padding: 0.5rem 1rem;
-        border-radius: 100px;
-        font-size: 0.9rem;
-        font-weight: 600;
-        border: 1px solid rgba(16, 185, 129, 0.2);
-        margin-top: 1rem;
-    }
-</style>
-{% endblock %}
-
 {% block extra_js %}
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        // Animate progress bar on load
-        setTimeout(() => {
-            const fill = document.querySelector('.progress-fill');
-            if(fill) {
-                // Mock progress for visualization
-                fill.style.width = '15%'; 
-            }
-        }, 500);
-    });
-</script>
+<script type="module" src="/static/js/modules/main.js"></script>
 {% endblock %}
 
 {% block content %}
-    {% call dashboard_header("Level 1: Focus Mode", "badge badge-primary", "Systematic elimination of liabilities.", "war-room-header") %}
+    {% call dashboard_header("Level 1: Focus Mode", "badge badge-warning", "Systematic elimination of liabilities.", "", "", "Adjust Strategy", "sliders") %}
         {{ button("Simulate Strategy", "/simulator", "primary", "crosshair") }}
     {% endcall %}
 
-    <div class="debt-progress-container">
-        <div class="debt-label">Liability Load</div>
-        <div class="debt-total-display">{{ format_currency(user.total_debt) }}</div>
-        
-        <div class="progress-bar-wrapper">
-            <div class="progress-fill"></div>
-        </div>
-        
-        <div class="velocity-badge">
-            {{ icon("zap", 16) }}
-            Payoff Velocity: $450/mo
-        </div>
-        
-        <p class="text-secondary" style="margin-top: 1rem;">Resolution Progress: 15%</p>
-    </div>
+    <div id="loading">Calculating payoff trajectory...</div>
 
-    <div class="grid">
-        <!-- Strategy Card -->
-        {% call card("Payoff Strategy", "shield", extra_classes="strategy-card") %}
-            <p>
-                <strong>Current Strategy:</strong> 
-                <span class="term" data-tooltip="Paying off debts with the highest interest rates first. This method saves the most money over time.">Avalanche Method</span>
-            </p>
-            <p class="text-secondary">Mathematically optimal. You are minimizing interest leakage.</p>
-            
-            <div style="margin-top: 2rem;">
-                {{ button("Execute Payment", "#", "primary", "zap") }}
-            </div>
-        {% endcall %}
+    <div id="dashboard" class="hidden">
+        <!-- Level 1 Focus: Debt Payoff -->
+        <div class="dashboard-overview">
+             {% call card("Debt Resolution Status", "shield") %}
+                <div class="stat">
+                    <div class="stat-label">Total Liabilities</div>
+                    <div class="stat-value" id="nw-debt">--</div>
+                </div>
+                <div class="separator"></div>
+                <div class="stat">
+                     <div class="stat-label">Payoff Velocity</div>
+                     <div class="stat-value text-success" id="payoff-velocity">--</div>
+                     <div class="stat-change positive">per month</div>
+                </div>
+            {% endcall %}
 
-        <!-- Payoff Simulator Chart (Simplified) -->
-        {% call card("Resolution Timeline", "calendar") %}
-             <div id="chart-debt" style="height: 200px; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.3);">
-                [Chart Placeholder]
-             </div>
-             <div class="reasoning">
-                Projected Freedom Date: <strong>Oct 2026</strong>
-             </div>
-        {% endcall %}
+            {% call card("Current Strategy", "crosshair") %}
+                 {{ alert("Avalanche Method", "Targeting highest interest rate (24.99%) first to minimize loss.", "info") }}
+                 <div class="kpi-row" style="margin-top: 1rem;">
+                     {{ kpi_box("Freedom Date", id="freedom-date") }}
+                     {{ kpi_box("Interest Saved", id="interest-saved") }}
+                 </div>
+            {% endcall %}
+        </div>
+
+        <div class="grid">
+            <!-- Debt Payoff Chart is the Hero here -->
+            {% call card("Freedom Trajectory", "trending-down") %}
+                <div class="chart-container" id="chart-debt"></div>
+                <div class="reasoning" id="debt-reasoning"></div>
+            {% endcall %}
+        </div>
     </div>
 {% endblock %}

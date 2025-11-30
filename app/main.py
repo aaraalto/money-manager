@@ -1,200 +1,60 @@
-import json
-from fastapi import FastAPI, HTTPException, Request, Form
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
+from fastapi import FastAPI, Request, Form
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from pathlib import Path
-from typing import Dict, Any, List, Optional
-import uvicorn
-from pydantic import BaseModel
-
+from fastapi.encoders import jsonable_encoder
+from app.models import Scenario, SpendingCategory
 from app.data.repository import FileRepository
 from app.services.financial import FinancialService
-from app.models import SpendingCategory
-from app.domain.svg_charts import generate_simple_line_chart_svg
 from app.chat_service import ChatService
-from app.domain.metrics import calculate_financial_level
+from app.domain.debt import simulate_debt_payoff
+from app.domain.svg_charts import generate_simple_line_chart_svg
+from typing import List
 
-app = FastAPI(title="Wealth OS API")
+app = FastAPI()
 
-# Enable CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Mount static files
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
-# Serve static frontend
-STATIC_DIR = Path("app/static")
-TEMPLATES_DIR = Path("app/templates")
-app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
-templates = Jinja2Templates(directory=TEMPLATES_DIR)
+# Templates
+templates = Jinja2Templates(directory="app/templates")
 
-# Initialize Services
+# Services
 repo = FileRepository()
 service = FinancialService(repo)
 chat_service = ChatService(templates)
 
-@app.get("/")
-async def read_root(request: Request):
-    # Check if user has completed onboarding
-    profile = await repo.get_user_profile()
-    if not profile.onboarding_completed:
-        return RedirectResponse(url="/onboarding")
-    
-    # Helper for currency formatting in templates
-    def format_currency(val):
-        return f"${val:,.0f}"
+@app.get("/", response_class=HTMLResponse)
+async def root(request: Request):
+    user = await repo.get_user_profile()
+    return templates.TemplateResponse("templates/dashboard.html", {"request": request, "user": user})
 
-    # Level-Specific Logic
-    dashboard_data = await service.get_dashboard_view()
-    
-    context = {
-        "request": request, 
-        "user": profile,
-        "format_currency": format_currency,
-    }
-    
-    if profile.current_level >= 3:
-        # Inject Level 3 specific data
-        context["projection_json"] = json.dumps(dashboard_data["projection"], default=str)
-        context["crossover_date"] = str(dashboard_data["projection"].get("crossover_date", "N/A"))
-        context["monthly_contribution"] = dashboard_data["projection"].get("monthly_contribution", 1000) 
-        context["passive_income"] = dashboard_data["financial_health"].get("passive_income_monthly", 0)
-
-    # Level-Specific Dashboard Routing
-    if profile.current_level == 1:
-        return templates.TemplateResponse("templates/dashboard_level_1.html", context)
-    elif profile.current_level == 2:
-        return templates.TemplateResponse("templates/dashboard_level_2.html", context)
-    elif profile.current_level == 3:
-        return templates.TemplateResponse("templates/dashboard_level_3.html", context)
-    elif profile.current_level == 5:
-        return templates.TemplateResponse("templates/dashboard_level_5.html", context)
-    else:
-        # Default / Level 0 / Level 4 (not yet spec'd) uses standard or prev level
-        return templates.TemplateResponse("templates/dashboard.html", context)
-
-@app.get("/simulator")
-async def read_simulator(request: Request):
+@app.get("/simulator", response_class=HTMLResponse)
+async def simulator(request: Request):
     return templates.TemplateResponse("templates/simulator.html", {"request": request})
 
-@app.get("/design-system")
-async def read_design_system(request: Request):
-    return templates.TemplateResponse("design_system.html", {"request": request})
-
-# --- Onboarding Endpoints ---
-
-@app.get("/onboarding")
-async def onboarding_page(request: Request):
-    profile = await repo.get_user_profile()
-    return templates.TemplateResponse("onboarding.html", {"request": request, "step": 1, "user": profile})
-
-@app.post("/api/onboarding/import", response_class=HTMLResponse)
-async def onboarding_import(request: Request):
-    result = await service.process_onboarding_import()
-    
-    return templates.TemplateResponse("partials/onboarding_result.html", {
-        "request": request, 
-        "level": result["level"], 
-        "profile": result["profile"]
-    })
-
-@app.post("/api/onboarding/step-1-income", response_class=HTMLResponse)
-async def onboarding_step_1(request: Request, income: float = Form(...)):
-    profile = await repo.get_user_profile()
-    profile.monthly_income = income
-    await repo.save_user_profile(profile)
-    return templates.TemplateResponse("partials/onboarding_step_2.html", {"request": request})
-
-@app.post("/api/onboarding/step-2-burn", response_class=HTMLResponse)
-async def onboarding_step_2(request: Request, burn: float = Form(...)):
-    profile = await repo.get_user_profile()
-    profile.monthly_burn = burn
-    await repo.save_user_profile(profile)
-    return templates.TemplateResponse("partials/onboarding_step_3.html", {"request": request})
-
-@app.post("/api/onboarding/step-3-debt", response_class=HTMLResponse)
-async def onboarding_step_3(request: Request, has_debt: str = Form(...), debt_amount: Optional[float] = Form(0.0)):
-    profile = await repo.get_user_profile()
-    
-    if has_debt == "no":
-        profile.total_debt = 0.0
-    else:
-        profile.total_debt = debt_amount
-        
-    await repo.save_user_profile(profile)
-    
-    if profile.total_debt == 0:
-         return templates.TemplateResponse("partials/onboarding_step_4_assets.html", {"request": request})
-    
-    # If we have debt, we go straight to calculation
-    level = calculate_financial_level(
-        profile.monthly_income,
-        profile.monthly_burn,
-        profile.total_debt,
-        0.0 
-    )
-    profile.current_level = level
-    await repo.save_user_profile(profile)
-
-    return templates.TemplateResponse("partials/onboarding_result.html", {"request": request, "level": level, "profile": profile})
-
-@app.post("/api/onboarding/step-4-assets", response_class=HTMLResponse)
-async def onboarding_step_4(request: Request, liquid_assets: float = Form(...)):
-    profile = await repo.get_user_profile()
-    profile.liquid_assets = liquid_assets
-    await repo.save_user_profile(profile)
-    
-    level = calculate_financial_level(
-        profile.monthly_income,
-        profile.monthly_burn,
-        profile.total_debt,
-        profile.liquid_assets
-    )
-    profile.current_level = level
-    await repo.save_user_profile(profile)
-    
-    return templates.TemplateResponse("partials/onboarding_result.html", {"request": request, "level": level, "profile": profile})
-
-
-@app.post("/api/onboarding/complete", response_class=HTMLResponse)
-async def onboarding_complete(request: Request):
-    profile = await repo.get_user_profile()
-    profile.onboarding_completed = True
-    await repo.save_user_profile(profile)
-    
-    response = HTMLResponse(content="")
-    response.headers["HX-Redirect"] = "/"
-    return response
-
-class Scenario(BaseModel):
-    query: str
-    monthly_payment: float
-    results: Dict[str, Any]
-
-SCENARIOS_FILE = Path("data/scenarios.json")
-
-@app.get("/spending-editor")
+@app.get("/spending-editor", response_class=HTMLResponse)
 async def spending_editor(request: Request):
     return templates.TemplateResponse("spending_editor.html", {"request": request})
 
 @app.get("/api/spending-plan", response_model=List[SpendingCategory])
 async def get_spending_plan():
-    return await service.get_spending_plan()
+    return await repo.get_spending_plan()
 
 @app.post("/api/spending-plan")
-async def update_spending_plan(plan: List[SpendingCategory]):
-    await service.update_spending_plan(plan)
-    return {"status": "success", "count": len(plan)}
+async def save_spending_plan(plan: List[SpendingCategory]):
+    await repo.save_spending_plan(plan)
+    return {"status": "success"}
+
+@app.get("/api/view")
+async def get_dashboard_data():
+    data = await service.get_dashboard_data()
+    return JSONResponse(content=jsonable_encoder(data))
 
 @app.post("/api/chat", response_class=HTMLResponse)
 async def chat_endpoint(request: Request):
     form = await request.form()
-    query = form.get("query", "")
+    query = str(form.get("query", ""))
     
     assets = await repo.get_assets()
     liabilities = await repo.get_liabilities()
@@ -208,97 +68,129 @@ async def chat_endpoint(request: Request):
     user_bubble = f'<div class="message user">{query}</div>'
     return user_bubble + response_html
 
+@app.post("/api/commit-scenario")
+async def commit_scenario_endpoint(monthly_payment: float = Form(...), strategy: str = Form("avalanche")):
+    result = await service.commit_scenario(monthly_payment)
+    # Return a redirect or success message
+    # HTMX can handle the redirect if we set HX-Redirect header
+    response =  {"status": "success", "new_payment": monthly_payment}
+    return response
+
 @app.post("/api/save-scenario")
 async def save_scenario(scenario: Scenario):
-    existing = []
-    if SCENARIOS_FILE.exists():
-        try:
-            with open(SCENARIOS_FILE, "r") as f:
-                existing = json.load(f)
-        except json.JSONDecodeError:
-            pass
-    
-    existing.append(scenario.dict())
-    
-    if len(existing) > 50:
-        existing = existing[-50:]
-        
-    with open(SCENARIOS_FILE, "w") as f:
-        json.dump(existing, f, indent=2, default=str)
-        
-    return {"status": "success", "count": len(existing)}
-
-@app.get("/api/view")
-async def get_dashboard_view(monthly_payment: float = 500.0, filter_tag: str = "All") -> Dict[str, Any]:
-    return await service.get_dashboard_view(monthly_payment, filter_tag)
-
-# --- HTMX Partials ---
+    # Placeholder for saving logic
+    return {"status": "success", "scenario": scenario}
 
 @app.get("/partials/calculate", response_class=HTMLResponse)
-async def calculate_partial(request: Request, monthly_payment: float = 500.0, filter_tag: str = "All"):
-    data = await service.get_dashboard_view(monthly_payment, filter_tag)
+async def calculate_partial(request: Request):
+    # Get params
+    params = request.query_params
+    try:
+        monthly_payment = float(params.get("monthly_payment", 500))
+    except ValueError:
+        monthly_payment = 500.0
+        
+    strategy = params.get("strategy", "avalanche")
+    
+    # Load Data
+    liabilities = await repo.get_liabilities()
+    income_list = await repo.get_income()
+    spending_list = await repo.get_spending_plan()
+    
+    # Calculate FCF
+    monthly_income = 0
+    for i in income_list:
+        if i.frequency == "monthly": monthly_income += i.amount
+        elif i.frequency == "bi-weekly": monthly_income += i.amount * 26 / 12
+        elif i.frequency == "weekly": monthly_income += i.amount * 52 / 12
+        elif i.frequency == "annually": monthly_income += i.amount / 12
+
+    monthly_spending = sum(s.amount for s in spending_list)
+    # Don't double count debt payment if it's in spending plan
+    # Usually debt payment in spending plan is the committed amount
+    # We are simulating a NEW amount 'monthly_payment'
+    
+    fcf = monthly_income - monthly_spending - monthly_payment
+    
+    # Run Simulation
+    context = simulate_debt_payoff(
+        liabilities=liabilities,
+        strategy=strategy,
+        extra_monthly_payment=monthly_payment
+    )
+    
+    # Format Results
+    payoff_date_str = context.date_free.strftime("%b %Y")
+    interest_paid = context.interest_paid
+    
+    # Generate Chart
+    # We need two series for comparison. For now, generate both strategies
+    context_snowball = simulate_debt_payoff(liabilities, "snowball", monthly_payment)
+    context_avalanche = simulate_debt_payoff(liabilities, "avalanche", monthly_payment)
     
     chart_svg = generate_simple_line_chart_svg(
-        data["debt_payoff"]["snowball"]["series"],
-        data["debt_payoff"]["avalanche"]["series"]
+        snowball_series=context_snowball.series,
+        avalanche_series=context_avalanche.series
     )
-
-    liabilities = data["liabilities"]
-    sorted_liabs = sorted(liabilities, key=lambda x: x["interest_rate"], reverse=True)
     
-    total_min = sum(l["min_payment"] for l in sorted_liabs)
-    extra = monthly_payment
+    # Construct OOB Response
+    # 1. FCF
+    fcf_class = "positive" if fcf >= 0 else "negative"
+    html = f'<span class="value {fcf_class}" id="metric-fcf" hx-swap-oob="true">${fcf:,.0f}</span>'
     
-    plan = []
-    for l in sorted_liabs:
-        row = l.copy()
-        row["pay"] = l["min_payment"]
-        row["extraAllocation"] = 0
-        if extra > 0 and l["balance"] > 0:
-            row["extraAllocation"] = extra
-            row["pay"] += extra
-            extra = 0
-        plan.append(row)
-
-    visible_total = sum(item["pay"] for item in plan)
+    # 2. Date
+    html += f'<div class="value date" id="metric-date" hx-swap-oob="true">{payoff_date_str}</div>'
     
-    def format_currency(val):
-        return f"${val:,.0f}"
+    # 3. Savings/Interest
+    # Maybe compare to minimums only? For now just show interest paid
+    html += f'<div class="value negative" id="metric-savings" hx-swap-oob="true">-${interest_paid:,.0f} Interest</div>'
     
-    def format_date(d):
-        return d.strftime("%b %Y") if hasattr(d, "strftime") else str(d)
-
-    context = {
-        "request": request,
-        "data": data,
-        "chart_svg": chart_svg,
-        "plan": plan,
-        "visible_total": visible_total,
-        "filter_tag": filter_tag,
-        "format_currency": format_currency,
-        "format_date": format_date
-    }
+    # 4. Chart
+    html += f'<div id="chart-container" hx-swap-oob="true">{chart_svg}</div>'
     
-    return templates.TemplateResponse("partials/generative_content.html", context)
-
-
-@app.get("/partials/insights", response_class=HTMLResponse)
-async def insights_partial(request: Request, index: int = 0):
-    insights = await service.get_insights()
+    # 5. Table (Simplified)
+    # Just showing list of debts and their order/payoff date from log
+    # Extract payoff dates per debt
+    payoff_dates = {}
+    for log in context.log:
+        if log.event == "PAID OFF":
+            payoff_dates[log.debt_name] = log.date
+            
+    table_rows = ""
+    # Sort liabilities by payoff date
+    sorted_debts = sorted(liabilities, key=lambda x: payoff_dates.get(x.name, context.date_free))
     
-    if not insights:
-        return ""
+    for l in sorted_debts:
+        p_date = payoff_dates.get(l.name, context.date_free).strftime("%b %Y")
+        table_rows += f"""
+        <tr>
+            <td class="cell-name">{l.name}</td>
+            <td class="cell-mono">${l.balance:,.0f}</td>
+            <td class="cell-mono text-right">{p_date}</td>
+        </tr>
+        """
         
-    safe_index = index % len(insights)
-    insight = insights[safe_index]
+    html += f"""
+    <div id="payment-table-container" hx-swap-oob="true">
+        <div class="sim-table-container">
+            <table class="sim-table">
+                <thead>
+                    <tr>
+                        <th class="text-left">Debt Name</th>
+                        <th class="text-left">Balance</th>
+                        <th class="text-right">Payoff Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {table_rows}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    """
     
-    context = {
-        "request": request,
-        "insight": insight,
-        "index": safe_index,
-        "total": len(insights)
-    }
-    return templates.TemplateResponse("partials/insight_card.html", context)
+    return html
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=8081)
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
