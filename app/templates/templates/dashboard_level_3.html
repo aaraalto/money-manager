@@ -1,6 +1,6 @@
 {% extends "templates/layouts/base.html" %}
 {% from "templates/components/atoms.html" import button, icon %}
-{% from "templates/components/molecules.html" import card, stat, kpi_box, alert, page_header %}
+{% from "templates/components/molecules.html" import card, stat, kpi_box, alert, page_header, dashboard_header %}
 
 {% block title %}Radiant - Growth Engine{% endblock %}
 
@@ -100,19 +100,9 @@
 {% endblock %}
 
 {% block content %}
-    <header class="app-header growth-header">
-        <div class="header-brand">
-            <h1 style="display: flex; align-items: center; gap: 1rem;">
-                Radiant 
-                <span class="badge badge-primary" style="font-size: 0.4em; vertical-align: middle;">Level 3: Growth Engine</span>
-            </h1>
-            <p class="tagline">Compound interest is your new best friend.</p>
-        </div>
-        <div class="header-controls">
-            {{ button("Adjust Spending", "/spending-editor", "secondary", "edit") }}
-            {{ button("New Scenario", "/simulator", "secondary", "plus") }}
-        </div>
-    </header>
+    {% call dashboard_header("Level 3: Growth Engine", "badge badge-primary", "Compound interest is your new best friend.", "growth-header") %}
+        {{ button("New Scenario", "/simulator", "secondary", "plus") }}
+    {% endcall %}
 
     <div class="chart-hero-container">
         <div class="hero-title">Wealth Trajectory</div>

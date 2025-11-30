@@ -1,4 +1,4 @@
-{% from "templates/components/atoms.html" import icon %}
+{% from "templates/components/atoms.html" import icon, button %}
 
 {# Card Component #}
 {% macro card(title, icon_name=None, id=None, extra_classes="") %}
@@ -69,3 +69,21 @@
 </header>
 {% endmacro %}
 
+{# Dashboard Header #}
+{% macro dashboard_header(level_text=None, level_badge_class="badge-primary", tagline="", extra_classes="", tagline_style="", adjust_label="Adjust Spending", adjust_icon="edit") %}
+<header class="app-header {{ extra_classes }}">
+    <div class="header-brand">
+        <h1 style="display: flex; align-items: center; gap: 1rem;">
+            Radiant 
+            {% if level_text %}
+            <span class="{{ level_badge_class }}" style="font-size: 0.4em; vertical-align: middle;">{{ level_text }}</span>
+            {% endif %}
+        </h1>
+        <p class="tagline" style="{{ tagline_style }}">{{ tagline }}</p>
+    </div>
+    <div class="header-controls">
+        {{ button(adjust_label, "/spending-editor", "secondary", adjust_icon) }}
+        {{ caller() }}
+    </div>
+</header>
+{% endmacro %}

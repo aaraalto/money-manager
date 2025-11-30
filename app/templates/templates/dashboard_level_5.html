@@ -1,6 +1,6 @@
 {% extends "templates/layouts/base.html" %}
 {% from "templates/components/atoms.html" import button, icon %}
-{% from "templates/components/molecules.html" import card, stat, kpi_box, alert, page_header %}
+{% from "templates/components/molecules.html" import card, stat, kpi_box, alert, page_header, dashboard_header %}
 
 {% block title %}Radiant - Legacy Builder{% endblock %}
 
@@ -68,19 +68,9 @@
 {% endblock %}
 
 {% block content %}
-    <header class="app-header legacy-header">
-        <div class="header-brand">
-            <h1 style="display: flex; align-items: center; gap: 1rem;">
-                Radiant 
-                <span class="infinite-runway-badge">Level 5: Abundance</span>
-            </h1>
-            <p class="tagline" style="color: #d4af37;">Your wealth is now a tool for impact.</p>
-        </div>
-        <div class="header-controls">
-            {{ button("Adjust Spending", "/spending-editor", "secondary", "edit") }}
-            {{ button("Estate Plan", "#", "secondary", "file-text") }}
-        </div>
-    </header>
+    {% call dashboard_header("Level 5: Abundance", "infinite-runway-badge", "Your wealth is now a tool for impact.", "legacy-header", "color: #d4af37;") %}
+        {{ button("Estate Plan", "#", "secondary", "file-text") }}
+    {% endcall %}
 
     <div class="impact-radius-container">
         <div class="impact-center"></div>
