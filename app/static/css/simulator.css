@@ -161,6 +161,13 @@ h1 {
     margin-bottom: var(--space-2);
 }
 
+.kpi-mini .term[data-tooltip]::before {
+    background: var(--bg-card); /* Ensure it's not transparent */
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    box-shadow: var(--shadow-md);
+}
+
 .kpi-mini .value {
     display: block;
     font-family: var(--font-mono);
@@ -229,29 +236,58 @@ h1 {
     margin: 0;
 }
 
-.filter-btn {
-    background: transparent;
+/* Filter Select Styling */
+.select-wrapper {
+    position: relative;
+    display: inline-block;
+    min-width: 150px;
+}
+
+.filter-select {
+    appearance: none;
+    -webkit-appearance: none;
+    background: var(--bg-subtle); /* Match button hover/active */
     border: 1px solid var(--border-color);
-    color: var(--text-secondary);
-    padding: var(--space-2) var(--space-3);
+    color: var(--text-primary);
+    padding: var(--space-2) var(--space-8) var(--space-2) var(--space-3);
     border-radius: 100px;
     font-size: 0.8rem;
     font-weight: 500;
     cursor: pointer;
+    width: 100%;
     transition: all 0.2s ease;
+    font-family: inherit;
 }
 
-.filter-btn:hover {
+.filter-select:hover {
     border-color: var(--border-color);
-    color: var(--text-primary);
-    background: var(--bg-subtle);
+    background: var(--bg-card);
 }
 
-.filter-btn.active {
-    background: var(--primary-dim);
+.filter-select:focus {
+    outline: none;
     border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary-dim);
+    background: var(--bg-card);
+}
+
+.select-arrow {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    color: var(--text-secondary);
+    pointer-events: none;
+    transition: color 0.2s ease;
+}
+
+.filter-select:hover + .select-arrow,
+.filter-select:focus + .select-arrow {
     color: var(--primary);
 }
+
 
 /* Simulation Content Grid */
 .simulation-content-grid {
@@ -300,7 +336,7 @@ h1 {
 
 .sim-table th {
     padding: var(--space-3) var(--space-4);
-    color: var(--text-tertiary);
+    color: var(--text-secondary); /* Softer header color */
     font-weight: 600;
     font-size: 0.75rem;
     text-transform: uppercase;
@@ -313,6 +349,7 @@ h1 {
     border-bottom: 1px solid var(--border-subtle);
     vertical-align: middle;
     transition: background-color 0.2s ease;
+    height: 3.5rem; /* Consistent row height */
 }
 
 .sim-table tr:last-child td {
@@ -362,6 +399,10 @@ h1 {
     opacity: 0.5;
 }
 
+.text-danger {
+    color: var(--danger);
+}
+
 /* Cell specific styling */
 .cell-extra {
     font-weight: 500;
@@ -387,6 +428,64 @@ h1 {
     background: var(--success);
     color: #fff;
     box-shadow: 0 2px 4px rgba(55, 167, 112, 0.3);
+}
+
+.badge-soft {
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-weight: 500;
+}
+
+.badge-soft.text-danger {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.2);
+    color: var(--danger);
+}
+
+/* Paid Off Row Styling */
+.row-paid-off td {
+    color: var(--text-tertiary);
+    opacity: 0.6;
+}
+
+.row-paid-off .cell-name {
+    color: var(--text-tertiary);
+    text-decoration: line-through;
+}
+
+/* Pay Link (Action) */
+.pay-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 4px 12px;
+    border-radius: 100px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s var(--ease-smooth);
+    white-space: nowrap;
+}
+
+.pay-link:hover {
+    background: var(--primary-dim);
+    color: var(--primary);
+    border-color: var(--primary);
+    transform: translateY(-1px);
+}
+
+.pay-link:active {
+    transform: translateY(0);
+}
+
+.cell-action {
+    width: 100px; /* Fixed width for button column */
+    white-space: nowrap;
 }
 
 /* Table Footer */
@@ -506,7 +605,15 @@ h1 {
 .knob-handle-inner {
     fill: rgba(255, 255, 255, 0.95);
     stroke: none;
-    transition: r 0.2s var(--ease-smooth);
+    transition: all 0.2s var(--ease-smooth);
+    opacity: 0; /* Hidden by default */
+    transform: scale(0.5);
+}
+
+/* Show inner handle on hover of the SVG container */
+.rotary-svg:hover .knob-handle-inner {
+    opacity: 1;
+    transform: scale(1);
 }
 
 .rotary-svg:active .knob-handle-inner {
@@ -529,7 +636,7 @@ h1 {
 }
 
 .rotary-value-display {
-    margin-bottom: var(--space-4);
+    margin-bottom: 0;
 }
 
 .rotary-currency {
@@ -550,17 +657,81 @@ h1 {
     font-family: var(--font-mono);
     display: inline-block;
     position: relative;
-    transition: none;
+    transition: color 0.3s var(--ease-smooth);
 }
 
 .rotary-label {
     display: block;
     font-size: clamp(0.75rem, 1.2vw, 0.9rem);
     color: var(--text-tertiary);
-    margin-top: var(--space-2);
+    margin-top: var(--space-1);
     text-transform: uppercase;
     letter-spacing: 3px;
     font-weight: 500;
+}
+
+/* Divider & Limit Display */
+.rotary-divider {
+    width: 40px;
+    height: 1px;
+    background: var(--border-color);
+    margin: var(--space-4) 0;
+    transition: background-color 0.3s var(--ease-smooth);
+}
+
+.rotary-limit-display {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.limit-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-tertiary);
+}
+
+.limit-value {
+    font-family: var(--font-mono);
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+/* Over Limit State */
+.is-over-limit .rotary-progress {
+    stroke: var(--danger);
+}
+
+.is-over-limit .knob-handle-outer {
+    fill: var(--danger);
+    filter: drop-shadow(0 4px 12px rgba(239, 68, 68, 0.4));
+}
+
+.is-over-limit .rotary-amount {
+    color: var(--danger);
+}
+
+.is-over-limit .rotary-divider {
+    background: var(--danger);
+    opacity: 0.5;
+}
+
+.is-over-limit .limit-value {
+    color: var(--danger);
+}
+
+/* Shake Animation */
+.shake {
+    animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+@keyframes shake {
+    10%, 90% { transform: translate3d(-1px, 0, 0); }
+    20%, 80% { transform: translate3d(2px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+    40%, 60% { transform: translate3d(4px, 0, 0); }
 }
 
 /* Commit Button Pulse */

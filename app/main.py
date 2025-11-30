@@ -1,12 +1,12 @@
+import asyncio
 from fastapi import FastAPI, Request, Form
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.encoders import jsonable_encoder
-from app.models import Scenario, SpendingCategory
+from app.models import Scenario, SpendingCategory, LiabilityTag
 from app.data.repository import FileRepository
 from app.services.financial import FinancialService
-from app.chat_service import ChatService
 from app.domain.debt import simulate_debt_payoff
 from app.domain.svg_charts import generate_simple_line_chart_svg
 from typing import List
@@ -22,7 +22,6 @@ templates = Jinja2Templates(directory="app/templates")
 # Services
 repo = FileRepository()
 service = FinancialService(repo)
-chat_service = ChatService(templates)
 
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
@@ -51,23 +50,6 @@ async def get_dashboard_data():
     data = await service.get_dashboard_data()
     return JSONResponse(content=jsonable_encoder(data))
 
-@app.post("/api/chat", response_class=HTMLResponse)
-async def chat_endpoint(request: Request):
-    form = await request.form()
-    query = str(form.get("query", ""))
-    
-    assets = await repo.get_assets()
-    liabilities = await repo.get_liabilities()
-    
-    context_data = {
-        "assets": [a.dict() for a in assets],
-        "liabilities": [l.dict() for l in liabilities]
-    }
-    
-    response_html = await chat_service.process_query(query, context_data)
-    user_bubble = f'<div class="message user">{query}</div>'
-    return user_bubble + response_html
-
 @app.post("/api/commit-scenario")
 async def commit_scenario_endpoint(monthly_payment: float = Form(...), strategy: str = Form("avalanche")):
     result = await service.commit_scenario(monthly_payment)
@@ -91,6 +73,7 @@ async def calculate_partial(request: Request):
         monthly_payment = 500.0
         
     strategy = params.get("strategy", "avalanche")
+    filter_tag = params.get("filter_tag", "All")
     
     # Load Data
     liabilities = await repo.get_liabilities()
@@ -105,14 +88,20 @@ async def calculate_partial(request: Request):
         elif i.frequency == "weekly": monthly_income += i.amount * 52 / 12
         elif i.frequency == "annually": monthly_income += i.amount / 12
 
-    monthly_spending = sum(s.amount for s in spending_list)
-    # Don't double count debt payment if it's in spending plan
-    # Usually debt payment in spending plan is the committed amount
-    # We are simulating a NEW amount 'monthly_payment'
+    # Exclude existing 'Debt Repayment' from spending to avoid double counting
+    monthly_spending = sum(s.amount for s in spending_list if s.category != "Debt Repayment")
     
     fcf = monthly_income - monthly_spending - monthly_payment
     
     # Run Simulation
+    # 1. Baseline (Minimum Payments Only)
+    context_baseline = simulate_debt_payoff(
+        liabilities=liabilities,
+        strategy=strategy,
+        extra_monthly_payment=0
+    )
+    
+    # 2. Current Scenario
     context = simulate_debt_payoff(
         liabilities=liabilities,
         strategy=strategy,
@@ -121,7 +110,9 @@ async def calculate_partial(request: Request):
     
     # Format Results
     payoff_date_str = context.date_free.strftime("%b %Y")
-    interest_paid = context.interest_paid
+    
+    # Calculate Savings (Baseline Interest - Scenario Interest)
+    interest_saved = context_baseline.interest_paid - context.interest_paid
     
     # Generate Chart
     # We need two series for comparison. For now, generate both strategies
@@ -142,31 +133,54 @@ async def calculate_partial(request: Request):
     html += f'<div class="value date" id="metric-date" hx-swap-oob="true">{payoff_date_str}</div>'
     
     # 3. Savings/Interest
-    # Maybe compare to minimums only? For now just show interest paid
-    html += f'<div class="value negative" id="metric-savings" hx-swap-oob="true">-${interest_paid:,.0f} <span style="font-size: 0.6em; opacity: 0.7;">Interest</span></div>'
+    # Show positive savings
+    html += f'<div class="value positive" id="metric-savings" hx-swap-oob="true">${interest_saved:,.0f}</div>'
     
     # 4. Chart
     html += f'<div id="chart-container" hx-swap-oob="true">{chart_svg}</div>'
     
-    # 5. Table (Simplified)
-    # Just showing list of debts and their order/payoff date from log
+    # 5. Table (With Filtering)
     # Extract payoff dates per debt
     payoff_dates = {}
     for log in context.log:
         if log.event == "PAID OFF":
             payoff_dates[log.debt_name] = log.date
             
+    # Apply Filter
+    if filter_tag and filter_tag != "All":
+        filtered_liabilities = [l for l in liabilities if filter_tag in l.tags]
+    else:
+        filtered_liabilities = liabilities
+
     table_rows = ""
     # Sort liabilities by payoff date
-    sorted_debts = sorted(liabilities, key=lambda x: payoff_dates.get(x.name, context.date_free))
+    sorted_debts = sorted(filtered_liabilities, key=lambda x: payoff_dates.get(x.name, context.date_free))
     
     for l in sorted_debts:
-        p_date = payoff_dates.get(l.name, context.date_free).strftime("%b %Y")
+        is_paid_off = l.balance <= 0
+        row_class = "row-paid-off" if is_paid_off else ""
+        
+        if is_paid_off:
+            p_date = "-"
+            pay_action = ""
+        else:
+            p_date = payoff_dates.get(l.name, context.date_free).strftime("%b %Y")
+            # Pay Link (Action) - visible on hover
+            if getattr(l, 'payment_url', None):
+                pay_action = f'<a href="{l.payment_url}" target="_blank" class="pay-link" title="Pay off {l.name}">Pay</a>'
+            else:
+                pay_action = f'<a href="/pay/{l.id}" class="pay-link" title="Pay off {l.name}">Pay</a>'
+            
+        apr = f"{l.interest_rate * 100:.1f}%"
+        apr_class = "text-danger" if l.interest_rate > 0.2 else ""
+        
         table_rows += f"""
-        <tr>
+        <tr class="{row_class}">
             <td class="cell-name">{l.name}</td>
+            <td class="text-right"><span class="badge badge-soft {apr_class}">{apr}</span></td>
             <td class="cell-mono">${l.balance:,.0f}</td>
             <td class="cell-mono text-right">{p_date}</td>
+            <td class="cell-action text-right">{pay_action}</td>
         </tr>
         """
         
@@ -177,8 +191,10 @@ async def calculate_partial(request: Request):
                 <thead>
                     <tr>
                         <th class="text-left">Debt Name</th>
+                        <th class="text-right">APR</th>
                         <th class="text-left">Balance</th>
                         <th class="text-right">Payoff Date</th>
+                        <th class="text-right">Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -188,6 +204,31 @@ async def calculate_partial(request: Request):
         </div>
     </div>
     """
+    
+    # 6. Filters (Dropdown)
+    # Generate filter dropdown dynamically
+    # Available tags: All, plus standard ones
+    tags = ["All"] + [t.value for t in LiabilityTag]
+    
+    options = ""
+    for tag in tags:
+        selected = "selected" if tag == filter_tag else ""
+        options += f'<option value="{tag}" {selected}>{tag}</option>'
+        
+    # Clean styled select component
+    filter_dropdown = f"""
+    <div class="select-wrapper">
+        <select class="filter-select" 
+                onchange="document.querySelector('[name=filter_tag]').value=this.value; htmx.trigger('#hidden-payment-input', 'change')">
+            {options}
+        </select>
+        <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+    </div>
+    """
+
+    html += f'<div id="filter-container" class="filter-row" hx-swap-oob="true">{filter_dropdown}</div>'
     
     return html
 

@@ -23,16 +23,19 @@ class RotaryKnob {
             initialValue: 500,
             inputSelector: null,
             displaySelector: null,
+            limitSelector: null, // New option for limit checking
             ...options
         };
 
         this.value = this.options.initialValue;
+        this.lastShakeTime = 0;
 
         // Elements
         this.knob = this.container.querySelector('.rotary-knob-group');
         this.progressPath = this.container.querySelector('.rotary-progress');
         this.hiddenInput = document.querySelector(this.options.inputSelector);
         this.display = document.querySelector(this.options.displaySelector);
+        this.limitDisplay = document.querySelector(this.options.limitSelector);
 
         if (!this.knob || !this.progressPath) {
             console.error("RotaryKnob: Missing SVG elements (.rotary-knob-group or .rotary-progress)");
@@ -73,6 +76,14 @@ class RotaryKnob {
                 self.commitValue();
             }
         });
+
+        // Listen for changes on limit display (e.g., via HTMX updates)
+        if (this.limitDisplay) {
+            const observer = new MutationObserver(() => {
+                this.checkLimit();
+            });
+            observer.observe(this.limitDisplay, { childList: true, characterData: true, subtree: true });
+        }
     }
 
     handleRotation(degrees) {
@@ -118,6 +129,41 @@ class RotaryKnob {
         if (this.display) {
             this.animateNumber(this.display, this.value);
         }
+
+        // Check Limit
+        this.checkLimit();
+    }
+
+    checkLimit() {
+        if (!this.limitDisplay) return;
+
+        // Parse limit value from text (remove non-numeric chars except decimal)
+        const limitText = this.limitDisplay.textContent;
+        const limitVal = parseFloat(limitText.replace(/[^0-9.-]+/g, ""));
+
+        if (isNaN(limitVal)) return;
+
+        const isOver = this.value > limitVal;
+
+        if (isOver) {
+            if (!this.container.classList.contains('is-over-limit')) {
+                this.container.classList.add('is-over-limit');
+                this.triggerShake();
+            }
+        } else {
+            this.container.classList.remove('is-over-limit');
+        }
+    }
+
+    triggerShake() {
+        const now = Date.now();
+        if (now - this.lastShakeTime < 500) return; // Throttle shake
+        
+        this.lastShakeTime = now;
+        this.container.classList.add('shake');
+        setTimeout(() => {
+            this.container.classList.remove('shake');
+        }, 500);
     }
 
     animateNumber(element, newValue) {
@@ -151,4 +197,3 @@ class RotaryKnob {
         }
     }
 }
-

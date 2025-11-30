@@ -35,7 +35,11 @@
                     </div>
                 </td>
                 <td class="text-right cell-mono">{{ format_currency(item.balance) }}</td>
-                <td class="text-right cell-mono text-secondary">{{ "%.1f"|format(item.interest_rate * 100) }}%</td>
+                <td class="text-right">
+                    <span class="badge badge-soft {% if item.interest_rate > 0.2 %}text-danger{% endif %}">
+                        {{ "%.1f"|format(item.interest_rate * 100) }}%
+                    </span>
+                </td>
                 <td class="text-right cell-mono">{{ format_currency(item.min_payment) }}</td>
                 <td class="text-right cell-mono cell-extra">
                     {% if item.extraAllocation > 0 %}

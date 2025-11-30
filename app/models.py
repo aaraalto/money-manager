@@ -39,6 +39,7 @@ class Liability(BaseModel):
     balance: float = Field(..., ge=0)
     interest_rate: float = Field(..., ge=0, description="Annual Interest Rate (e.g., 0.24 for 24%)")
     min_payment: float = Field(..., ge=0)
+    payment_url: Optional[str] = None
     credit_limit: Optional[float] = Field(None, ge=0, description="Total credit limit for the account")
     tags: list[LiabilityTag] = []
 
