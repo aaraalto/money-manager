@@ -46,17 +46,30 @@ def load_spending_plan() -> List[SpendingCategory]:
     items = []
     try:
         with open(SPENDING_FILE, "r") as f:
-            reader = csv.DictReader(f)
+            # Handle spaces after delimiters by skipinitialspace=True
+            reader = csv.DictReader(f, skipinitialspace=True)
             for row in reader:
-                if not row: continue
+                if not row or not row.get('category'): continue
                 try:
-                    items.append(SpendingCategory(**row))
+                    # Handle potential whitespace in values if manual spacing was used
+                    clean_row = {k: v.strip() if isinstance(v, str) else v for k, v in row.items()}
+                    items.append(SpendingCategory(**clean_row))
                 except Exception as e:
                     print(f"Skipping invalid spending row: {row} - {e}")
     except Exception as e:
         print(f"Error reading spending file: {e}")
         return []
     return items
+
+def save_spending_plan(items: List[SpendingCategory]):
+    SPENDING_FILE.parent.mkdir(exist_ok=True)
+    with open(SPENDING_FILE, "w", newline="") as f:
+        fieldnames = ["category", "amount", "type"]
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        for item in items:
+            writer.writerow(item.dict())
+
 
 def load_transactions() -> List[Transaction]:
     if not TRANSACTIONS_FILE.exists():

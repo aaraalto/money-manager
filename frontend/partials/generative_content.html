@@ -1,9 +1,9 @@
 {# frontend/partials/generative_content.html #}
 
 {# 1. Metrics #}
-<div id="metric-fcf" hx-swap-oob="true" style="color: #4a90e2">{{ format_currency(data.cash_flow.free) }}</div>
-<div id="metric-date" hx-swap-oob="true" class="date">{{ data.debt_payoff.avalanche.date_free }}</div>
-<div id="metric-savings" hx-swap-oob="true" class="saving">{{ format_currency(data.debt_payoff.snowball.interest_paid - data.debt_payoff.avalanche.interest_paid) }}</div>
+<div id="metric-fcf" hx-swap-oob="true" class="kpi-value text-primary-color">{{ format_currency(data.cash_flow.free) }}</div>
+<div id="metric-date" hx-swap-oob="true" class="kpi-value date">{{ data.debt_payoff.avalanche.date_free }}</div>
+<div id="metric-savings" hx-swap-oob="true" class="kpi-value">{{ format_currency(data.debt_payoff.snowball.interest_paid - data.debt_payoff.avalanche.interest_paid) }}</div>
 
 {# 2. Chart #}
 <div id="chart-container" hx-swap-oob="true">

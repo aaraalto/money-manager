@@ -1,0 +1,63 @@
+{% extends "layouts/base.html" %}
+{% from "components/atoms.html" import button, icon %}
+{% from "components/molecules.html" import card, stat, kpi_box, alert, page_header %}
+
+{% block title %}Radiant - Dashboard{% endblock %}
+
+{% block extra_js %}
+<script type="module" src="/static/js/modules/main.js"></script>
+<script src="/static/js/card-expand.js"></script>
+{% endblock %}
+
+{% block content %}
+    {% set header_actions %}
+        {{ button("Spending Plan", "/spending-editor", "secondary", "arrow-right") }}
+        {{ button("Future Simulator", "/generative", "secondary", "arrow-right") }}
+    {% endset %}
+
+    {{ page_header("Radiant", "Illuminate your financial future.", header_actions) }}
+
+    <div id="loading">Crunching the numbers...</div>
+
+    <div id="dashboard" class="hidden">
+        <!-- Dashboard Summary -->
+        <div class="dashboard-overview">
+            {% call card("Financial Health", "activity") %}
+                {{ stat("Monthly Savings Rate", "--", "savings-rate", "vs last month", True) }}
+                <div class="separator"></div>
+                {{ stat("Debt-to-Income Ratio", "--", "debt-income-ratio") }}
+            {% endcall %}
+
+            {% call card("Quick Insights", "trending-up") %}
+                <div id="quick-insights">
+                    {{ alert("", "Loading insights...", "info", "info") }}
+                </div>
+            {% endcall %}
+        </div>
+
+        <!-- Net Worth Snapshot -->
+        {% call card("Current Position", "credit-card") %}
+            <div class="kpi-row">
+                {{ kpi_box("Net Worth", "--", "nw-total") }}
+                {{ kpi_box("Liquid Assets", "--", "nw-liquid") }}
+                {{ kpi_box("Total Debt", "--", "nw-debt") }}
+            </div>
+            <div class="reasoning" id="nw-reasoning"></div>
+        {% endcall %}
+
+        <div class="grid">
+            <!-- Projection Chart -->
+            {% call card("Your Wealth Trajectory", "trending-up") %}
+                <div class="chart-container" id="chart-projection"></div>
+                <div class="reasoning" id="proj-context"></div>
+            {% endcall %}
+
+            <!-- Debt Payoff Chart -->
+            {% call card("Debt Freedom Plan", "activity") %}
+                <div class="chart-container" id="chart-debt"></div>
+                <div class="reasoning" id="debt-reasoning"></div>
+            {% endcall %}
+        </div>
+    </div>
+{% endblock %}
+

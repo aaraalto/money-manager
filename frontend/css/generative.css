@@ -4,7 +4,8 @@
     /* Animation Timing */
     --ease-smooth: cubic-bezier(0.4, 0.0, 0.2, 1);
     --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    --ease-out: cubic-bezier(0.0, 0.0, 0.2, 1);
+    --density-kpi-value-size: clamp(2.5rem, 6vw, 3.5rem);
+    --density-stat-value-size: 1.75rem;
 }
 
 body {
@@ -216,47 +217,96 @@ button.primary:hover {
     }
 }
 
-.metrics-row {
+.kpi-row {
     display: grid;
     grid-template-columns: 1fr;
-    gap: var(--space-4);
-    margin-bottom: var(--space-8);
-    text-align: center;
+    gap: var(--space-6);
+    margin-bottom: var(--space-10);
 }
 
-@media (min-width: 640px) {
-    .metrics-row {
-        grid-template-columns: repeat(3, 1fr);
-        gap: var(--space-6);
+@media (min-width: 480px) {
+    .kpi-row {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
-.metric-label {
+@media (min-width: 768px) {
+    .kpi-row {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.kpi {
+    text-align: left;
+    padding: var(--space-6);
+    background: var(--bg-subtle);
+    border-radius: var(--radius-lg);
+    border: 1px solid transparent;
+    transition: all 0.3s var(--ease-smooth);
+    position: relative;
+    overflow: hidden;
+}
+
+.kpi::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 100%;
+    background: var(--primary);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.kpi:hover {
+    background: var(--bg-card);
+    border-color: var(--border-color);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.kpi:hover::before {
+    opacity: 1;
+}
+
+.kpi-label {
     font-size: 0.85rem;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: var(--space-3);
-    font-weight: 500;
-}
-
-.metric-value {
-    font-size: clamp(2rem, 4vw, 2.5rem);
+    color: var(--text-tertiary);
     font-weight: 600;
-    letter-spacing: -0.5px;
-    font-family: var(--font-mono);
-    transition: transform 0.2s var(--ease-smooth);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: var(--space-3);
 }
 
-.metric-value:hover {
+.kpi-value {
+    font-family: var(--font-mono);
+    font-size: var(--density-kpi-value-size);
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: -1px;
+    transition: transform 0.2s var(--ease-smooth);
+    line-height: 1.1;
+}
+
+.kpi-value:hover {
     transform: scale(1.02);
 }
 
-.metric-value.saving {
+/* KPI variations for status */
+.kpi.positive .kpi-value {
     color: var(--success);
 }
 
-.metric-value.date {
+.kpi.negative .kpi-value {
+    color: var(--danger);
+}
+
+.kpi.neutral .kpi-value {
+    color: var(--text-primary);
+}
+
+.kpi-value.date {
     color: var(--text-primary);
 }
 

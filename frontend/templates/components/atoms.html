@@ -1,0 +1,38 @@
+{# Icon Component #}
+{% macro icon(name, size=24, class="") %}
+    {% if name == "activity" %}
+    <svg class="{{ class }}" width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+    {% elif name == "trending-up" %}
+    <svg class="{{ class }}" width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+    {% elif name == "credit-card" %}
+    <svg class="{{ class }}" width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+    {% elif name == "arrow-right" %}
+    <svg class="{{ class }}" width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+    {% else %}
+    {# Default fallback icon (Circle) #}
+    <svg class="{{ class }}" width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle></svg>
+    {% endif %}
+{% endmacro %}
+
+{# Badge Component #}
+{% macro badge(text, variant="default") %}
+<span class="badge badge-{{ variant }}">
+    {{ text }}
+</span>
+{% endmacro %}
+
+{# Button Component #}
+{% macro button(text, href="#", variant="primary", icon_name=None) %}
+<a href="{{ href }}" class="btn-nav">
+    {{ text }}
+    {% if icon_name %}
+        <span>&rarr;</span>
+    {% endif %}
+</a>
+{% endmacro %}
+
+{# Input Component #}
+{% macro input(name, value="", type="text", class="", readonly=False) %}
+<input type="{{ type }}" name="{{ name }}" value="{{ value }}" class="{{ class }}" {% if readonly %}readonly{% endif %}>
+{% endmacro %}
+

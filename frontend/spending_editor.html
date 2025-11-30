@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radiant / CSP Editor</title>
+    <link rel="stylesheet" href="/static/css/variables.css">
+    <link rel="stylesheet" href="/static/css/components.css">
+    <link rel="stylesheet" href="/static/css/spending_editor.css">
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <!-- Google Fonts for bold type -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+</head>
+<body class="dark-theme">
+    <div class="editor-container">
+        <header class="editor-header">
+            <h1>Radiant / CSP</h1>
+            <div id="save-status" class="status-indicator">All changes saved</div>
+        </header>
+
+        <main class="editor-main">
+            <form id="spending-form" class="spending-table-form">
+                <div class="table-header">
+                    <div class="col-category">Category</div>
+                    <div class="col-amount">Amount</div>
+                    <div class="col-type">Type</div>
+                </div>
+                <div id="spending-rows" class="spending-rows">
+                    <!-- Rows will be populated by JS -->
+                </div>
+            </form>
+
+            <div class="insights-panel">
+                <h2>Spending Insights</h2>
+                <div id="spending-insights-content" class="insights-content">
+                    <p class="placeholder-text">Loading insights...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSpendingData();
+            
+            // Auto-save on input change with debounce
+            let timeout = null;
+            document.getElementById('spending-form').addEventListener('input', (e) => {
+                const status = document.getElementById('save-status');
+                status.textContent = 'Saving...';
+                status.classList.add('saving');
+                
+                clearTimeout(timeout);
+                timeout = setTimeout(() => {
+                    saveSpendingData();
+                }, 1000);
+            });
+        });
+
+        async function loadSpendingData() {
+            try {
+                const response = await fetch('/api/spending-plan');
+                const data = await response.json();
+                renderRows(data);
+                updateInsights(data);
+            } catch (error) {
+                console.error('Error loading data:', error);
+            }
+        }
+
+        function renderRows(data) {
+            const container = document.getElementById('spending-rows');
+            container.innerHTML = '';
+            
+            data.forEach((item, index) => {
+                const row = document.createElement('div');
+                row.className = 'spending-row';
+                row.innerHTML = `
+                    <div class="col-category">
+                        <input type="text" name="category" value="${item.category}" readonly class="static-input">
+                    </div>
+                    <div class="col-amount">
+                        <span class="currency">$</span>
+                        <input type="number" name="amount" value="${item.amount}" class="bold-input" step="1">
+                    </div>
+                    <div class="col-type">
+                        <input type="text" name="type" value="${item.type}" readonly class="static-input type-tag">
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        async function saveSpendingData() {
+            const rows = document.querySelectorAll('.spending-row');
+            const data = Array.from(rows).map(row => {
+                return {
+                    category: row.querySelector('[name="category"]').value,
+                    amount: parseFloat(row.querySelector('[name="amount"]').value) || 0,
+                    type: row.querySelector('[name="type"]').value
+                };
+            });
+
+            try {
+                const response = await fetch('/api/spending-plan', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const status = document.getElementById('save-status');
+                if (response.ok) {
+                    status.textContent = 'All changes saved';
+                    status.classList.remove('saving');
+                    updateInsights(data);
+                } else {
+                    status.textContent = 'Error saving';
+                }
+            } catch (error) {
+                console.error('Error saving:', error);
+            }
+        }
+
+        function updateInsights(data) {
+            const total = data.reduce((sum, item) => sum + item.amount, 0);
+            const needs = data.filter(i => i.type === 'Need').reduce((sum, i) => sum + i.amount, 0);
+            const wants = data.filter(i => i.type === 'Want').reduce((sum, i) => sum + i.amount, 0);
+            
+            const insightsEl = document.getElementById('spending-insights-content');
+            insightsEl.innerHTML = `
+                <div class="insight-metric">
+                    <span class="label">Total Monthly Spending</span>
+                    <span class="value">$${total.toLocaleString()}</span>
+                </div>
+                <div class="insight-row">
+                    <div class="mini-metric">
+                        <span class="label">Needs</span>
+                        <span class="value">$${needs.toLocaleString()}</span>
+                        <span class="sub">${Math.round(needs/total*100)}%</span>
+                    </div>
+                    <div class="mini-metric">
+                        <span class="label">Wants</span>
+                        <span class="value">$${wants.toLocaleString()}</span>
+                        <span class="sub">${Math.round(wants/total*100)}%</span>
+                    </div>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
+

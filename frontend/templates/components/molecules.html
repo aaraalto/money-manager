@@ -1,0 +1,71 @@
+{% from "components/atoms.html" import icon %}
+
+{# Card Component #}
+{% macro card(title, icon_name=None, id=None, extra_classes="") %}
+<div class="card {{ extra_classes }}" {% if id %}id="{{ id }}"{% endif %}>
+    {% if title %}
+    <h2>
+        {% if icon_name %}
+            {{ icon(icon_name) }}
+        {% endif %}
+        {{ title }}
+    </h2>
+    {% endif %}
+    {{ caller() }}
+</div>
+{% endmacro %}
+
+{# Alert Component #}
+{% macro alert(title, description, variant="info", icon_name="info") %}
+<div class="alert alert-{{ variant }}">
+    <svg class="alert-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="16" x2="12" y2="12"></line>
+        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+    </svg>
+    <div class="alert-content">
+        {% if title %}<div class="alert-title">{{ title }}</div>{% endif %}
+        <div class="alert-description">{{ description }}</div>
+    </div>
+</div>
+{% endmacro %}
+
+{# Stat / KPI Component #}
+{% macro stat(label, value="--", id=None, change=None, change_positive=True) %}
+<div class="stat">
+    <div class="stat-label">{{ label }}</div>
+    <div class="stat-value" {% if id %}id="{{ id }}"{% endif %}>{{ value }}</div>
+    {% if change %}
+    <div class="stat-change {% if change_positive %}positive{% else %}negative{% endif %}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="18 15 12 9 6 15"></polyline>
+        </svg>
+        <span>{{ change }}</span>
+    </div>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{# KPI Box (Compact) #}
+{% macro kpi_box(label, value="--", id=None) %}
+<div class="kpi">
+    <div class="kpi-label">{{ label }}</div>
+    <div class="kpi-value" {% if id %}id="{{ id }}"{% endif %}>{{ value }}</div>
+</div>
+{% endmacro %}
+
+{# Page Header #}
+{% macro page_header(title, subtitle, actions=None) %}
+<header class="app-header">
+    <div class="header-brand">
+        <h1>{{ title }}</h1>
+        {% if subtitle %}<p class="tagline">{{ subtitle }}</p>{% endif %}
+    </div>
+    {% if actions %}
+    <div class="header-controls">
+        {{ actions }}
+    </div>
+    {% endif %}
+</header>
+{% endmacro %}
+

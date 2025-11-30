@@ -1,0 +1,211 @@
+:root {
+    --editor-bg: #0f0f12;
+    --editor-text: #ffffff;
+    --editor-accent: #4a4a55;
+    --editor-input-bg: transparent;
+    --editor-border: #2a2a30;
+}
+
+body.dark-theme {
+    background-color: var(--editor-bg);
+    color: var(--editor-text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+.editor-container {
+    width: 100%;
+    max-width: 900px;
+    padding: 40px 20px;
+    box-sizing: border-box;
+}
+
+.editor-header {
+    text-align: center;
+    margin-bottom: 60px;
+}
+
+.editor-header h1 {
+    font-size: 3rem;
+    font-weight: 900;
+    letter-spacing: -0.05em;
+    margin: 0;
+    background: linear-gradient(135deg, #fff 0%, #888 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-transform: uppercase;
+}
+
+.status-indicator {
+    margin-top: 10px;
+    font-size: 0.9rem;
+    color: #666;
+    transition: color 0.3s ease;
+}
+
+.status-indicator.saving {
+    color: #ffd700;
+}
+
+.spending-table-form {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 24px;
+    padding: 40px;
+    border: 1px solid var(--editor-border);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+}
+
+.table-header {
+    display: grid;
+    grid-template-columns: 2fr 1.5fr 1fr;
+    padding-bottom: 20px;
+    border-bottom: 2px solid var(--editor-border);
+    margin-bottom: 20px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #666;
+    font-size: 0.8rem;
+}
+
+.spending-row {
+    display: grid;
+    grid-template-columns: 2fr 1.5fr 1fr;
+    align-items: center;
+    padding: 20px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    transition: background 0.2s ease;
+}
+
+.spending-row:hover {
+    background: rgba(255,255,255,0.02);
+}
+
+.col-category {
+    text-align: left;
+}
+
+.col-amount {
+    text-align: left; /* Align left for numbers usually, but user asked for centered table like editing. Let's keep left for inputs but center container? */
+    display: flex;
+    align-items: center;
+}
+
+.col-type {
+    text-align: right;
+}
+
+input {
+    border: none;
+    background: transparent;
+    color: inherit;
+    font-family: inherit;
+    width: 100%;
+    outline: none;
+}
+
+.static-input {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: #aaa;
+    pointer-events: none;
+}
+
+.col-amount .currency {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #444;
+    margin-right: 4px;
+}
+
+.bold-input {
+    font-size: 2.5rem;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    color: #fff;
+    padding: 0;
+    width: 100%;
+}
+
+.bold-input:focus {
+    color: #4d9eff;
+}
+
+/* Hide number spinners */
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button { 
+  -webkit-appearance: none; 
+  margin: 0; 
+}
+
+.type-tag {
+    text-align: right;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    opacity: 0.5;
+}
+
+.insights-panel {
+    margin-top: 60px;
+    text-align: center;
+    padding-top: 40px;
+    border-top: 1px solid var(--editor-border);
+}
+
+.insights-panel h2 {
+    font-size: 1.2rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #666;
+    margin-bottom: 30px;
+}
+
+.insight-metric .label {
+    display: block;
+    font-size: 1rem;
+    color: #888;
+    margin-bottom: 10px;
+}
+
+.insight-metric .value {
+    font-size: 4rem;
+    font-weight: 900;
+    line-height: 1;
+    background: linear-gradient(90deg, #4d9eff, #a259ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.insight-row {
+    display: flex;
+    justify-content: center;
+    gap: 60px;
+    margin-top: 40px;
+}
+
+.mini-metric {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.mini-metric .label {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.mini-metric .value {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.mini-metric .sub {
+    font-size: 0.8rem;
+    color: #444;
+}
+

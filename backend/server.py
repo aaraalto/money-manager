@@ -7,17 +7,11 @@ from fastapi.templating import Jinja2Templates
 from pathlib import Path
 from typing import Dict, Any, List
 import uvicorn
+from pydantic import BaseModel
 
-from backend.manager import load_json, load_transactions, load_spending_plan, ASSETS_FILE, LIABILITIES_FILE, INCOME_FILE
-from backend.models import Asset, Liability, IncomeSource
-from backend.primitives import (
-    get_net_worth, 
-    simulate_debt_payoff, 
-    project_compound_growth, 
-    assess_affordability,
-    generate_insights
-)
-from backend.primitives.metrics import calculate_metrics
+from backend.data.repository import FileRepository
+from backend.services.financial import FinancialService
+from backend.models import SpendingCategory
 from backend.primitives.svg_charts import generate_simple_line_chart_svg
 from backend.chat_service import ChatService
 
@@ -36,17 +30,23 @@ app.add_middleware(
 FRONTEND_DIR = Path("frontend")
 app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
 templates = Jinja2Templates(directory=FRONTEND_DIR)
+
+# Initialize Services
+repo = FileRepository()
+service = FinancialService(repo)
 chat_service = ChatService(templates)
 
 @app.get("/")
-async def read_root():
-    return FileResponse(FRONTEND_DIR / "index.html")
+async def read_root(request: Request):
+    return templates.TemplateResponse("dashboard.html", {"request": request})
 
 @app.get("/generative")
 async def read_generative(request: Request):
     return templates.TemplateResponse("generative_example.html", {"request": request})
 
-from pydantic import BaseModel
+@app.get("/design-system")
+async def read_design_system(request: Request):
+    return templates.TemplateResponse("design_system.html", {"request": request})
 
 class Scenario(BaseModel):
     query: str
@@ -55,15 +55,29 @@ class Scenario(BaseModel):
 
 SCENARIOS_FILE = Path("data/scenarios.json")
 
+@app.get("/spending-editor")
+async def spending_editor(request: Request):
+    return templates.TemplateResponse("spending_editor.html", {"request": request})
+
+@app.get("/api/spending-plan", response_model=List[SpendingCategory])
+async def get_spending_plan():
+    return await service.get_spending_plan()
+
+@app.post("/api/spending-plan")
+async def update_spending_plan(plan: List[SpendingCategory]):
+    await service.update_spending_plan(plan)
+    return {"status": "success", "count": len(plan)}
+
 @app.post("/api/chat", response_class=HTMLResponse)
 async def chat_endpoint(request: Request):
     # Parse form data for hx-post
     form = await request.form()
     query = form.get("query", "")
     
-    # Get current context (simplified)
-    assets = load_json(ASSETS_FILE, Asset)
-    liabilities = load_json(LIABILITIES_FILE, Liability)
+    # Get current context
+    assets = await repo.get_assets()
+    liabilities = await repo.get_liabilities()
+    
     context_data = {
         "assets": [a.dict() for a in assets],
         "liabilities": [l.dict() for l in liabilities]
@@ -73,17 +87,12 @@ async def chat_endpoint(request: Request):
     response_html = await chat_service.process_query(query, context_data)
     
     # Return the user message first (echo) + AI response
-    # Since we used hx-swap="beforeend", we want to append the user's message AND the AI's.
-    # But the UI handles the user input clearing.
-    # Ideally, we return:
-    # 1. The User's message bubbles (optional, if we want server-side rendering of history)
-    # 2. The AI's response bubble
-    
     user_bubble = f'<div class="message user">{query}</div>'
     return user_bubble + response_html
 
 @app.post("/api/save-scenario")
 async def save_scenario(scenario: Scenario):
+    # This logic could be moved to repo, but leaving here as it's simple and tangential
     existing = []
     if SCENARIOS_FILE.exists():
         try:
@@ -105,85 +114,13 @@ async def save_scenario(scenario: Scenario):
 
 @app.get("/api/view")
 async def get_dashboard_view(monthly_payment: float = 500.0, filter_tag: str = "All") -> Dict[str, Any]:
-    assets = load_json(ASSETS_FILE, Asset)
-    liabilities = load_json(LIABILITIES_FILE, Liability)
-    income = load_json(INCOME_FILE, IncomeSource)
-    spending = load_spending_plan()
-    
-    # Calculate Metrics (Income, Spending, Savings Rate, DTI)
-    metrics = calculate_metrics(income, spending, liabilities)
-    
-    total_monthly_income = metrics["monthly_gross_income"]
-    total_monthly_spending = metrics["monthly_expenses"]
-    total_min_debt_payments = metrics["monthly_debt_payments"]
-    
-    # Free cash flow is (Income - Spending - Debt Min)
-    # Note: 'monthly_expenses' in metrics is just spending plan items.
-    free_cash_flow = total_monthly_income - total_monthly_spending - total_min_debt_payments
-    
-    # Filter liabilities if a specific tag is requested
-    if filter_tag != "All":
-        liabilities = [l for l in liabilities if filter_tag in l.tags]
-    
-    # 1. Net Worth
-    nw_context = get_net_worth(assets, liabilities)
-    
-    # 2. Projections (Assumption: $1000/mo contribution, 7% return for 10 years)
-    # In a real app, these params would come from the user/UI
-    projection = project_compound_growth(
-        principal=nw_context.total, 
-        rate=0.07, 
-        years=10, 
-        monthly_contribution=1000.0
-    )
-    
-    # 3. Debt Payoff (Snowball vs Avalanche)
-    # We simulate both to show comparison
-    snowball = simulate_debt_payoff(liabilities, "snowball", extra_monthly_payment=monthly_payment)
-    avalanche = simulate_debt_payoff(liabilities, "avalanche", extra_monthly_payment=monthly_payment)
-    
-    # 4. Affordability (Example check)
-    # Just a placeholder check for the dashboard
-    affordability = assess_affordability(cost=5000, liquidity=nw_context.liquid, monthly_burn=3000)
-
-    # 5. Algorithmic Insights
-    insights = generate_insights(assets, liabilities, income, spending)
-
-    return {
-        "financial_health": {
-            "savings_rate": metrics["savings_rate"],
-            "debt_to_income_ratio": metrics["debt_to_income_ratio"],
-            # We don't have historical data yet, so we mock "vs last month" change
-            # In a real app, this would come from a DB
-            "savings_rate_change": 0.02  # Mock: +2%
-        },
-        "insights": [i.dict() for i in insights],
-        "cash_flow": {
-            "income": total_monthly_income,
-            "spending": total_monthly_spending,
-            "debt_min": total_min_debt_payments,
-            "free": free_cash_flow
-        },
-        "net_worth": nw_context.dict(),
-        "liabilities": [l.dict() for l in liabilities],
-        "projection": projection.dict(),
-        "debt_payoff": {
-            "snowball": snowball.dict(),
-            "avalanche": avalanche.dict(),
-            "comparison": [
-                f"Switching to Avalanche saves you ${(snowball.interest_paid - avalanche.interest_paid):,.0f} in interest.",
-                f"Avalanche: Debt-free by {avalanche.date_free}",
-                f"Snowball: Debt-free by {snowball.date_free}"
-            ]
-        },
-        "affordability_check": affordability.dict()
-    }
+    return await service.get_dashboard_view(monthly_payment, filter_tag)
 
 # --- HTMX Partials ---
 
 @app.get("/partials/calculate", response_class=HTMLResponse)
 async def calculate_partial(request: Request, monthly_payment: float = 500.0, filter_tag: str = "All"):
-    data = await get_dashboard_view(monthly_payment, filter_tag)
+    data = await service.get_dashboard_view(monthly_payment, filter_tag)
     
     # Prepare Chart SVG
     chart_svg = generate_simple_line_chart_svg(
@@ -236,14 +173,7 @@ async def calculate_partial(request: Request, monthly_payment: float = 500.0, fi
 
 @app.get("/partials/insights", response_class=HTMLResponse)
 async def insights_partial(request: Request, index: int = 0):
-    # In a real scenario, we might cache insights or re-generate them. 
-    # For statelessness, let's re-generate them quickly.
-    assets = load_json(ASSETS_FILE, Asset)
-    liabilities = load_json(LIABILITIES_FILE, Liability)
-    income = load_json(INCOME_FILE, IncomeSource)
-    spending = load_spending_plan()
-    
-    insights = generate_insights(assets, liabilities, income, spending)
+    insights = await service.get_insights()
     
     if not insights:
         return ""

@@ -1,0 +1,69 @@
+{% extends "layouts/base.html" %}
+{% from "components/atoms.html" import button, badge, input, icon %}
+{% from "components/molecules.html" import card, alert, stat, kpi_box, page_header %}
+
+{% block title %}Radiant Design System{% endblock %}
+
+{% block content %}
+    {{ page_header("Design System", "Building blocks for Radiant UI") }}
+
+    <div class="grid" style="margin-top: 40px; grid-template-columns: 1fr;">
+        
+        {# Section: Colors #}
+        {% call card("Colors & Typography", "activity") %}
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 16px; margin-bottom: 32px;">
+                <div style="background: var(--primary); height: 80px; border-radius: 8px; padding: 12px; display: flex; align-items: end;">Primary</div>
+                <div style="background: var(--success); height: 80px; border-radius: 8px; padding: 12px; display: flex; align-items: end;">Success</div>
+                <div style="background: var(--warning); height: 80px; border-radius: 8px; padding: 12px; display: flex; align-items: end;">Warning</div>
+                <div style="background: var(--danger); height: 80px; border-radius: 8px; padding: 12px; display: flex; align-items: end;">Danger</div>
+                <div style="background: var(--bg-card); border: 1px solid var(--border-color); height: 80px; border-radius: 8px; padding: 12px; display: flex; align-items: end;">Card Bg</div>
+            </div>
+            <p style="color: var(--text-secondary);">Typography uses 'Outfit' for headings and 'Inter' for body text.</p>
+        {% endcall %}
+
+        {# Section: Atoms #}
+        {% call card("Atoms", "trending-up") %}
+            <h3>Buttons</h3>
+            <div style="display: flex; gap: 16px; margin-bottom: 32px;">
+                {{ button("Primary Action", "#", "primary") }}
+                {{ button("With Icon", "#", "primary", "arrow-right") }}
+            </div>
+
+            <h3>Badges</h3>
+            <div style="display: flex; gap: 16px; margin-bottom: 32px;">
+                {{ badge("Default") }}
+                {{ badge("Success", "success") }}
+                {{ badge("Warning", "warning") }}
+                {{ badge("Danger", "danger") }}
+                {{ badge("Primary", "primary") }}
+            </div>
+
+            <h3>Inputs</h3>
+            <div style="display: grid; gap: 16px; max-width: 400px;">
+                {{ input("demo1", "Standard Input", "text", "bold-input") }}
+                {{ input("demo2", "Readonly Input", "text", "static-input", readonly=True) }}
+            </div>
+        {% endcall %}
+
+        {# Section: Molecules #}
+        {% call card("Molecules", "credit-card") %}
+            <h3>Alerts</h3>
+            <div style="display: grid; gap: 16px; margin-bottom: 32px;">
+                {{ alert("Information", "This is an informational alert used for general updates.", "info") }}
+                {{ alert("Success", "Action completed successfully.", "success") }}
+                {{ alert("Warning", "Please review your spending plan.", "warning") }}
+            </div>
+
+            <h3>Stats & KPIs</h3>
+            <div class="kpi-row" style="margin-bottom: 32px;">
+                {{ kpi_box("Total Net Worth", "$1,250,000") }}
+                {{ kpi_box("Liquid Assets", "$45,000") }}
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 24px;">
+                {{ stat("Monthly Savings Rate", "24.5%", change="+2.1% vs last month") }}
+                {{ stat("Debt-to-Income", "12.0%", change="-0.5% vs last month", change_positive=True) }}
+            </div>
+        {% endcall %}
+    </div>
+{% endblock %}
+
