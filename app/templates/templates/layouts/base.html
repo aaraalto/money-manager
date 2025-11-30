@@ -73,6 +73,11 @@
     <nav class="top-nav">
         <a href="/" class="nav-brand">
             <span>Radiant</span>
+            {% if 'simulator' in request.url.path %}
+            <span style="font-weight: 400; opacity: 0.7; margin-left: 8px; font-size: 0.9em;">Simulator</span>
+            {% elif 'spending-editor' in request.url.path %}
+            <span style="font-weight: 400; opacity: 0.7; margin-left: 8px; font-size: 0.9em;">CSP</span>
+            {% endif %}
         </a>
         <div class="nav-links">
             <a href="/" class="nav-link {% if request.url.path == '/' %}active{% endif %}">Dashboard</a>

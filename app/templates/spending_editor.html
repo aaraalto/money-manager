@@ -1,18 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radiant / CSP Editor</title>
-    <link rel="stylesheet" href="/static/css/variables.css">
-    <link rel="stylesheet" href="/static/css/components.css">
+{% extends "templates/layouts/base.html" %}
+
+{% block title %}Radiant / CSP Editor{% endblock %}
+
+{% block extra_css %}
     <link rel="stylesheet" href="/static/css/spending_editor.css">
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-    <!-- Google Fonts for bold type -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Outfit:wght@700&display=swap" rel="stylesheet">
     <style>
         /* Slasher Mode Enhancements */
         body.slasher-mode {
@@ -87,52 +78,27 @@
         .amount-slider::-webkit-slider-thumb:hover {
             background: var(--primary-color);
         }
-        
-        .slasher-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
-        
-        .btn-back {
-            color: var(--text-secondary);
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.9rem;
-        }
     </style>
-</head>
-<body class="dark-theme {% if request.query_params.get('mode') == 'slasher' %}slasher-mode{% endif %}">
-    
+{% endblock %}
+
+{% block content %}
     <div id="impact-toast" class="impact-badge">
         <span class="icon"></span>
         <span id="impact-message">Cutting expense...</span>
     </div>
 
     <div class="editor-container">
+        {% if request.query_params.get('mode') == 'slasher' %}
         <header class="editor-header">
             <div class="slasher-header">
-                <h1>
-                    {% if request.query_params.get('mode') == 'slasher' %}
-                        Expense Slasher
-                    {% else %}
-                        Radiant / CSP
-                    {% endif %}
-                </h1>
-                <a href="/" class="btn-back">&larr; Back to Dashboard</a>
+                <h1>Expense Slasher</h1>
             </div>
             
-            {% if request.query_params.get('mode') == 'slasher' %}
             <div class="crossover-pill">
                 Current Crossover: <span id="current-crossover">Calculating...</span>
             </div>
-            {% else %}
-            <div id="save-status" class="status-indicator">All changes saved</div>
-            {% endif %}
         </header>
+        {% endif %}
 
         <main class="editor-main">
             <form id="spending-form" class="spending-table-form">
@@ -156,7 +122,9 @@
             </div>
         </main>
     </div>
+{% endblock %}
 
+{% block extra_js %}
     <script>
         // State
         let initialTotal = 0;
@@ -168,11 +136,8 @@
             // Auto-save on input change with debounce
             let timeout = null;
             document.getElementById('spending-form').addEventListener('input', (e) => {
-                const status = document.getElementById('save-status');
-                if(status) {
-                    status.textContent = 'Saving...';
-                    status.classList.add('saving');
-                }
+                // Saving logic visualization
+                const status = document.getElementById('save-status'); // Note: Removed from DOM, but leaving for safety or if we add it back
                 
                 // Slasher Impact logic
                 if (isSlasherMode && e.target.name === 'amount') {
@@ -228,9 +193,11 @@
                     `;
                 }
 
+                let typeClass = item.type === 'Need' ? 'tag-need' : 'tag-want';
                 let typeCol = `
                     <div class="col-type">
-                        <input type="text" name="type" value="${item.type}" readonly class="static-input type-tag">
+                        <span class="type-tag ${typeClass}">${item.type}</span>
+                        <input type="hidden" name="type" value="${item.type}">
                     </div>
                 `;
                 
@@ -268,12 +235,8 @@
                     body: JSON.stringify(data)
                 });
                 
-                const status = document.getElementById('save-status');
                 if (response.ok) {
-                    if(status) {
-                        status.textContent = 'All changes saved';
-                        status.classList.remove('saving');
-                    }
+                    showToast('All changes saved');
                     updateInsights(data);
                 }
             } catch (error) {
@@ -340,5 +303,4 @@
             }
         }
     </script>
-</body>
-</html>
+{% endblock %}

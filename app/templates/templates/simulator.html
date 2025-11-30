@@ -12,13 +12,7 @@
 {% endblock %}
 
 {% block content %}
-    <a href="/" class="back-link">
-        {{ icon("arrow-left", 16) }}
-        Back to Dashboard
-    </a>
     
-    <h1>Future Simulator</h1>
-
     <div class="simulation-layout">
         <!-- LEFT COLUMN: Controls -->
         <div class="controls-section">
@@ -54,15 +48,6 @@
                    <span class="term" data-tooltip="Money remaining after all expenses are paid.">Free Cash Flow</span>
                    <span class="value text-primary-color" id="metric-fcf">--</span>
                 </div>
-                
-                <button id="commit-btn" class="btn btn-primary btn-lg btn-block" 
-                    hx-post="/api/commit-scenario" 
-                    hx-trigger="click"
-                    hx-include="#sim-form"
-                    hx-on::after-request="if(event.detail.successful) window.location.href = '/'"
-                    disabled>
-                    Commit Strategy
-                </button>
             </div>
         </div>
 
@@ -78,7 +63,7 @@
                 </div>
                 <div class="hero-metric secondary">
                     <div class="label">Interest Savings</div>
-                    <div class="value positive" id="metric-savings">--</div>
+                    <div class="value positive" id="metric-savings">-- <span style="font-size: 0.6em; opacity: 0.7;">Interest</span></div>
                 </div>
             </div>
 
@@ -153,21 +138,6 @@
                 initialValue: 500,
                 inputSelector: '#hidden-payment-input',
                 displaySelector: '#rotary-display'
-            });
-            
-            // Commit Button Logic
-            const initialValue = 500;
-            const btn = document.getElementById('commit-btn');
-            const input = document.getElementById('hidden-payment-input');
-            
-            input.addEventListener('change', (e) => {
-                if (parseFloat(e.target.value) !== initialValue) {
-                    btn.removeAttribute('disabled');
-                    btn.classList.add('pulse');
-                } else {
-                    btn.setAttribute('disabled', 'true');
-                    btn.classList.remove('pulse');
-                }
             });
         });
 

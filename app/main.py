@@ -143,7 +143,7 @@ async def calculate_partial(request: Request):
     
     # 3. Savings/Interest
     # Maybe compare to minimums only? For now just show interest paid
-    html += f'<div class="value negative" id="metric-savings" hx-swap-oob="true">-${interest_paid:,.0f} Interest</div>'
+    html += f'<div class="value negative" id="metric-savings" hx-swap-oob="true">-${interest_paid:,.0f} <span style="font-size: 0.6em; opacity: 0.7;">Interest</span></div>'
     
     # 4. Chart
     html += f'<div id="chart-container" hx-swap-oob="true">{chart_svg}</div>'
