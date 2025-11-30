@@ -1,0 +1,147 @@
+{% extends "templates/layouts/base.html" %}
+{% from "templates/components/atoms.html" import button, icon %}
+{% from "templates/components/molecules.html" import card, stat, kpi_box, alert, page_header %}
+
+{% block title %}Radiant - Growth Engine{% endblock %}
+
+{% block extra_css %}
+<style>
+    .growth-header {
+        margin-bottom: 2rem;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        padding-bottom: 1rem;
+    }
+    
+    .chart-hero-container {
+        background: rgba(0,0,0,0.3);
+        border-radius: 24px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        min-height: 400px;
+        position: relative;
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .hero-title {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        color: #a5b4fc;
+    }
+    
+    .crossover-metric {
+        position: absolute;
+        top: 2rem;
+        right: 2rem;
+        text-align: right;
+    }
+    
+    .crossover-label {
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--text-secondary);
+    }
+    
+    .crossover-date {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #6366f1;
+        font-family: 'Outfit', sans-serif;
+    }
+    
+    .mini-game-trigger {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(99, 102, 241, 0.05) 100%);
+        border: 1px solid rgba(99, 102, 241, 0.2);
+        cursor: pointer;
+        transition: transform 0.2s, border-color 0.2s;
+    }
+    
+    .mini-game-trigger:hover {
+        transform: translateY(-2px);
+        border-color: #6366f1;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script type="module">
+    import { renderProjection } from '/static/js/modules/charts.js';
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        // We assume 'projection_data' is passed in context and serialized safely
+        // JSON serialization of dates fails by default in Jinja tojson, so we rely on 
+        // the server to have converted dates to strings or handle it here.
+        // We can assume the backend returns ISO strings or we need a custom serializer.
+        // Let's assume we fixed the backend to return strings for dates or rely on a smarter filter?
+        // No, standard tojson fails on dates.
+        // We should patch the backend or the template variable.
+        // But for now let's rely on the 'default=str' hack if we were using json.dumps manually, 
+        // but here we are using | tojson.
+        // The fix is in backend/server.py to convert projection dict to a json string manually or 
+        // use a helper that handles dates before passing to template.
+        // For now, we'll just use a simple variable injection if it was already a string, 
+        // OR we fix the server. 
+        // Since we can't fix server right now (tool lock), let's assume we will fix server.
+        
+        // Actually, I can fix the server. I will apply a fix to server.py to serialize the projection data properly.
+        
+        try {
+            const data = {{ projection_json | safe }};
+            if(data) {
+                renderProjection(data);
+            }
+        } catch(e) {
+            console.error("Failed to parse projection data", e);
+        }
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+    <header class="app-header growth-header">
+        <div class="header-brand">
+            <h1 style="display: flex; align-items: center; gap: 1rem;">
+                Radiant 
+                <span class="badge badge-primary" style="font-size: 0.4em; vertical-align: middle;">Level 3: Growth Engine</span>
+            </h1>
+            <p class="tagline">Compound interest is your new best friend.</p>
+        </div>
+        <div class="header-controls">
+            {{ button("New Scenario", "/generative", "secondary", "plus") }}
+        </div>
+    </header>
+
+    <div class="chart-hero-container">
+        <div class="hero-title">Wealth Trajectory</div>
+        <div class="crossover-metric">
+            <div class="crossover-label">Crossover Point</div>
+            <div class="crossover-date">{{ crossover_date }}</div>
+        </div>
+        <div id="chart-projection" style="flex: 1; width: 100%;"></div>
+    </div>
+
+    <div class="grid">
+        {% call card("Expense Slasher", "scissors", extra_classes="mini-game-trigger") %}
+            <p><strong>Mini-Game Available</strong></p>
+            <p class="text-secondary">Optimizing your burn rate could bring your Crossover Date forward by <strong>3 years</strong>.</p>
+            <div style="margin-top: 1.5rem;">
+                {{ button("Play Expense Slasher", "/spending-editor?mode=slasher", "primary", "play") }}
+            </div>
+        {% endcall %}
+        
+        {% call card("Key Metrics", "bar-chart") %}
+            {{ stat("Monthly Investment", format_currency(monthly_contribution), "monthly-invest", "Target: 20% of Income", True) }}
+            <div class="separator"></div>
+            {{ stat("Passive Income Potential", format_currency(passive_income), "passive-inc", "Based on 4% Rule") }}
+        {% endcall %}
+        
+        {% call card("Life Scenarios", "map") %}
+            <div style="display: grid; gap: 1rem;">
+                {{ button("Model Mini-Retirement", "#", "secondary", "coffee") }}
+                {{ button("Model Career Switch", "#", "secondary", "briefcase") }}
+            </div>
+        {% endcall %}
+    </div>
+{% endblock %}

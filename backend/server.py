@@ -48,20 +48,34 @@ async def read_root(request: Request):
     def format_currency(val):
         return f"${val:,.0f}"
 
+    # Level-Specific Logic
+    # If Level 3, we need projection data
+    # We fetch dashboard data using the service
+    dashboard_data = await service.get_dashboard_view()
+    
     context = {
         "request": request, 
         "user": profile,
-        "format_currency": format_currency
+        "format_currency": format_currency,
     }
+    
+    if profile.current_level >= 3:
+        # Inject Level 3 specific data
+        # Fix for Date serialization in template: pass raw JSON string using default=str
+        context["projection_json"] = json.dumps(dashboard_data["projection"], default=str)
+        context["crossover_date"] = str(dashboard_data["projection"].get("crossover_date", "N/A"))
+        context["monthly_contribution"] = dashboard_data["projection"].get("monthly_contribution", 1000) 
+        context["passive_income"] = (dashboard_data["net_worth"]["total"] * 0.04) / 12 
 
     # Level-Specific Dashboard Routing
     if profile.current_level == 1:
         return templates.TemplateResponse("templates/dashboard_level_1.html", context)
     elif profile.current_level == 2:
         return templates.TemplateResponse("templates/dashboard_level_2.html", context)
+    elif profile.current_level >= 3:
+        return templates.TemplateResponse("templates/dashboard_level_3.html", context)
     else:
-        # Default / Level 0 / Level 3+ uses the standard dashboard for now
-        # (Or we can map L0 -> Crisis Dashboard later)
+        # Default / Level 0
         return templates.TemplateResponse("templates/dashboard.html", context)
 
 @app.get("/generative")
@@ -97,20 +111,12 @@ async def onboarding_import(request: Request):
     monthly_income = calculate_monthly_income(income_sources)
     
     # Expenses (Burn) - Sum of spending plan categories
-    # We exclude "Savings" type if we want pure burn, but for Level 0 check, 
-    # burn usually means "Outflows required to live". 
-    # Let's sum everything except explicit savings/investments if possible, 
-    # or just sum everything for now as "Expenses".
-    # Looking at spending_plan.csv, it has a "type" column.
-    # Let's assume all spending plan items count as "burn" except maybe savings?
-    # For safety in L0 calculation, let's sum all.
     monthly_burn = sum(s.amount for s in spending_plan)
     
     # Debt
     total_debt = sum(l.balance for l in liabilities)
     
     # Liquid Assets
-    # Filter assets by liquidity="liquid"
     liquid_assets = sum(a.value for a in assets if a.liquidity == "liquid" or a.type == "cash")
 
     # 3. Update Profile
@@ -129,8 +135,6 @@ async def onboarding_import(request: Request):
     )
     profile.current_level = level
     
-    # Save profile (but don't mark complete yet, let them see the result)
-    # actually, if we import, we probably want to show the result card immediately.
     await repo.save_user_profile(profile)
     
     # 5. Return the Result Partial
@@ -145,8 +149,6 @@ async def onboarding_step_1(request: Request, income: float = Form(...)):
     profile = await repo.get_user_profile()
     profile.monthly_income = income
     await repo.save_user_profile(profile)
-    
-    # Return Step 2 HTML
     return templates.TemplateResponse("partials/onboarding_step_2.html", {"request": request})
 
 @app.post("/api/onboarding/step-2-burn", response_class=HTMLResponse)
@@ -154,8 +156,6 @@ async def onboarding_step_2(request: Request, burn: float = Form(...)):
     profile = await repo.get_user_profile()
     profile.monthly_burn = burn
     await repo.save_user_profile(profile)
-    
-    # Return Step 3 HTML
     return templates.TemplateResponse("partials/onboarding_step_3.html", {"request": request})
 
 @app.post("/api/onboarding/step-3-debt", response_class=HTMLResponse)
@@ -169,19 +169,6 @@ async def onboarding_step_3(request: Request, has_debt: str = Form(...), debt_am
         
     await repo.save_user_profile(profile)
     
-    # Calculate Level Preview
-    # Note: We are assuming liquid assets = 0 for now or we ask for it?
-    # The plan says: "If No: Skip to Liquid Assets check".
-    # Let's stick to the simpler flow in the plan spec:
-    # "If No: Skip to Liquid Assets check ('Do you have 6 months of expenses saved?')"
-    # But the plan implementation section 2.2 just says: Income -> Expenses -> Debt -> Result.
-    # Let's infer liquid assets is 0 for simplicity in this first pass, OR add a step if debt is 0.
-    
-    # For Euclid phase 1, let's keep it simple. 
-    # If debt > 0 -> Level 0 or 1.
-    # If debt == 0 -> Level 2 check requires liquid assets.
-    # Let's add a quick check for liquid assets if debt is 0, otherwise assume 0.
-    
     if profile.total_debt == 0:
          return templates.TemplateResponse("partials/onboarding_step_4_assets.html", {"request": request})
     
@@ -190,7 +177,7 @@ async def onboarding_step_3(request: Request, has_debt: str = Form(...), debt_am
         profile.monthly_income,
         profile.monthly_burn,
         profile.total_debt,
-        0.0 # liquid assets assumed 0 if in debt usually, or not relevant for L0/L1 distinction
+        0.0 
     )
     profile.current_level = level
     await repo.save_user_profile(profile)
@@ -221,8 +208,6 @@ async def onboarding_complete(request: Request):
     profile.onboarding_completed = True
     await repo.save_user_profile(profile)
     
-    # Client-side redirect via HX-Redirect or just return a script
-    # HTMX handles redirects if we use hx-target="body" or return a generic response with HX-Redirect header
     response = HTMLResponse(content="")
     response.headers["HX-Redirect"] = "/"
     return response
@@ -249,11 +234,9 @@ async def update_spending_plan(plan: List[SpendingCategory]):
 
 @app.post("/api/chat", response_class=HTMLResponse)
 async def chat_endpoint(request: Request):
-    # Parse form data for hx-post
     form = await request.form()
     query = form.get("query", "")
     
-    # Get current context
     assets = await repo.get_assets()
     liabilities = await repo.get_liabilities()
     
@@ -262,16 +245,12 @@ async def chat_endpoint(request: Request):
         "liabilities": [l.dict() for l in liabilities]
     }
     
-    # Get response (User message HTML + OOB swaps)
     response_html = await chat_service.process_query(query, context_data)
-    
-    # Return the user message first (echo) + AI response
     user_bubble = f'<div class="message user">{query}</div>'
     return user_bubble + response_html
 
 @app.post("/api/save-scenario")
 async def save_scenario(scenario: Scenario):
-    # This logic could be moved to repo, but leaving here as it's simple and tangential
     existing = []
     if SCENARIOS_FILE.exists():
         try:
@@ -282,7 +261,6 @@ async def save_scenario(scenario: Scenario):
     
     existing.append(scenario.dict())
     
-    # Limit to last 50 scenarios
     if len(existing) > 50:
         existing = existing[-50:]
         
@@ -301,16 +279,12 @@ async def get_dashboard_view(monthly_payment: float = 500.0, filter_tag: str = "
 async def calculate_partial(request: Request, monthly_payment: float = 500.0, filter_tag: str = "All"):
     data = await service.get_dashboard_view(monthly_payment, filter_tag)
     
-    # Prepare Chart SVG
     chart_svg = generate_simple_line_chart_svg(
         data["debt_payoff"]["snowball"]["series"],
         data["debt_payoff"]["avalanche"]["series"]
     )
 
-    # Prepare Payment Table Data
     liabilities = data["liabilities"]
-    # Re-calculate plan as simple list for template
-    # 1. Sort by rate (Avalanche logic)
     sorted_liabs = sorted(liabilities, key=lambda x: x["interest_rate"], reverse=True)
     
     total_min = sum(l["min_payment"] for l in sorted_liabs)
@@ -329,7 +303,6 @@ async def calculate_partial(request: Request, monthly_payment: float = 500.0, fi
 
     visible_total = sum(item["pay"] for item in plan)
     
-    # Format helpers for Jinja
     def format_currency(val):
         return f"${val:,.0f}"
     
@@ -357,7 +330,6 @@ async def insights_partial(request: Request, index: int = 0):
     if not insights:
         return ""
         
-    # Cycle index safely
     safe_index = index % len(insights)
     insight = insights[safe_index]
     

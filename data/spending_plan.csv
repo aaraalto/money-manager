@@ -1,14 +1,11 @@
 category,amount,type
-Rent,3420,Need
-Utilities,400,Need
-Groceries,1000,Need
-Transportation,500,Need
-CC Payments,1200,Need
-Software & Tech, 400, Need
-Tax Payments, 542, Need
-Misc, 1246, Need
-Personal Loans, 483, Need
-Credit Card Interest Fees, 600, Need
-
-
-
+Rent,3240.0,Want
+Utilities,400.0,Want
+Groceries,732.0,Want
+Transportation,500.0,Want
+CC Payments,1200.0,Want
+Software & Tech,400.0,Want
+Tax Payments,542.0,Want
+Misc,1246.0,Want
+Personal Loans,483.0,Want
+Credit Card Interest Fees,600.0,Want

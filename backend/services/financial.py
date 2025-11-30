@@ -43,12 +43,18 @@ class FinancialService:
         # Calculations
         nw_context = get_net_worth(assets, filtered_liabilities)
         
-        # Projection (hardcoded params as per original)
+        # Projection (hardcoded params as per original, extended with dynamic inputs)
+        # Assuming default $1000 contribution if free cash flow is less, 
+        # or use free_cash_flow if positive? 
+        # For "Growth Engine", we assume free cash flow IS the contribution.
+        monthly_contribution = max(0, free_cash_flow)
+        
         projection = project_compound_growth(
             principal=nw_context.total, 
             rate=0.07, 
             years=10, 
-            monthly_contribution=1000.0
+            monthly_contribution=monthly_contribution,
+            monthly_expenses_target=total_monthly_spending # Use current spending as target for crossover
         )
         
         # Debt Payoff Simulations

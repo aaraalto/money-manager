@@ -8,24 +8,140 @@
     <link rel="stylesheet" href="/static/css/components.css">
     <link rel="stylesheet" href="/static/css/spending_editor.css">
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <!-- Google Fonts for bold type -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Outfit:wght@700&display=swap" rel="stylesheet">
+    <style>
+        /* Slasher Mode Enhancements */
+        body.slasher-mode {
+            background: linear-gradient(180deg, var(--bg-deep) 0%, #1a1a2e 100%);
+        }
+        
+        .impact-badge {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+        
+        .impact-badge.visible {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        .impact-badge .icon {
+            font-size: 1.5rem;
+        }
+        
+        .crossover-pill {
+            background: rgba(255,255,255,0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            display: inline-block;
+            margin-bottom: 1rem;
+            font-family: 'Outfit', sans-serif;
+            color: #a5b4fc;
+        }
+        
+        /* Slider Styling for Amounts */
+        .amount-slider-container {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            gap: 1rem;
+        }
+        
+        .amount-slider {
+            flex: 1;
+            -webkit-appearance: none;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            outline: none;
+        }
+        
+        .amount-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: var(--text-primary);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .amount-slider::-webkit-slider-thumb:hover {
+            background: var(--primary-color);
+        }
+        
+        .slasher-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .btn-back {
+            color: var(--text-secondary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+    </style>
 </head>
-<body class="dark-theme">
+<body class="dark-theme {% if request.query_params.get('mode') == 'slasher' %}slasher-mode{% endif %}">
+    
+    <div id="impact-toast" class="impact-badge">
+        <span class="icon">✂️</span>
+        <span id="impact-message">Cutting expense...</span>
+    </div>
+
     <div class="editor-container">
         <header class="editor-header">
-            <h1>Radiant / CSP</h1>
+            <div class="slasher-header">
+                <h1>
+                    {% if request.query_params.get('mode') == 'slasher' %}
+                        Expense Slasher ✂️
+                    {% else %}
+                        Radiant / CSP
+                    {% endif %}
+                </h1>
+                <a href="/" class="btn-back">&larr; Back to Dashboard</a>
+            </div>
+            
+            {% if request.query_params.get('mode') == 'slasher' %}
+            <div class="crossover-pill">
+                Current Crossover: <span id="current-crossover">Calculating...</span>
+            </div>
+            {% else %}
             <div id="save-status" class="status-indicator">All changes saved</div>
+            {% endif %}
         </header>
 
         <main class="editor-main">
             <form id="spending-form" class="spending-table-form">
                 <div class="table-header">
                     <div class="col-category">Category</div>
-                    <div class="col-amount">Amount</div>
+                    <div class="col-amount">Monthly Cost</div>
+                    {% if request.query_params.get('mode') != 'slasher' %}
                     <div class="col-type">Type</div>
+                    {% endif %}
                 </div>
                 <div id="spending-rows" class="spending-rows">
                     <!-- Rows will be populated by JS -->
@@ -42,6 +158,10 @@
     </div>
 
     <script>
+        // State
+        let initialTotal = 0;
+        const isSlasherMode = {{ 'true' if request.query_params.get('mode') == 'slasher' else 'false' }};
+
         document.addEventListener('DOMContentLoaded', () => {
             loadSpendingData();
             
@@ -49,8 +169,15 @@
             let timeout = null;
             document.getElementById('spending-form').addEventListener('input', (e) => {
                 const status = document.getElementById('save-status');
-                status.textContent = 'Saving...';
-                status.classList.add('saving');
+                if(status) {
+                    status.textContent = 'Saving...';
+                    status.classList.add('saving');
+                }
+                
+                // Slasher Impact logic
+                if (isSlasherMode && e.target.name === 'amount') {
+                    calculateSimulatedImpact();
+                }
                 
                 clearTimeout(timeout);
                 timeout = setTimeout(() => {
@@ -63,8 +190,14 @@
             try {
                 const response = await fetch('/api/spending-plan');
                 const data = await response.json();
+                initialTotal = data.reduce((sum, i) => sum + i.amount, 0);
                 renderRows(data);
                 updateInsights(data);
+                
+                if(isSlasherMode) {
+                    // Initial crossover fetch could go here
+                    document.getElementById('current-crossover').innerText = "Oct 2032"; // Mock initial
+                }
             } catch (error) {
                 console.error('Error loading data:', error);
             }
@@ -77,17 +210,40 @@
             data.forEach((item, index) => {
                 const row = document.createElement('div');
                 row.className = 'spending-row';
+                
+                let amountInput = `
+                    <span class="currency">$</span>
+                    <input type="number" name="amount" value="${item.amount}" class="bold-input" step="1" data-initial="${item.amount}">
+                `;
+                
+                if (isSlasherMode) {
+                    // Add slider for Slasher Mode
+                    amountInput = `
+                        <div class="amount-slider-container">
+                            <input type="range" class="amount-slider" min="0" max="${Math.max(item.amount * 1.5, 100)}" value="${item.amount}" 
+                                oninput="this.nextElementSibling.value = this.value; this.dispatchEvent(new Event('input', {bubbles:true}));">
+                            <input type="number" name="amount" value="${item.amount}" class="bold-input" style="width: 80px;" 
+                                oninput="this.previousElementSibling.value = this.value" data-initial="${item.amount}">
+                        </div>
+                    `;
+                }
+
+                let typeCol = `
+                    <div class="col-type">
+                        <input type="text" name="type" value="${item.type}" readonly class="static-input type-tag">
+                    </div>
+                `;
+                
+                if (isSlasherMode) typeCol = ''; // Hide type in slasher mode to save space
+
                 row.innerHTML = `
                     <div class="col-category">
                         <input type="text" name="category" value="${item.category}" readonly class="static-input">
                     </div>
                     <div class="col-amount">
-                        <span class="currency">$</span>
-                        <input type="number" name="amount" value="${item.amount}" class="bold-input" step="1">
+                        ${amountInput}
                     </div>
-                    <div class="col-type">
-                        <input type="text" name="type" value="${item.type}" readonly class="static-input type-tag">
-                    </div>
+                    ${typeCol}
                 `;
                 container.appendChild(row);
             });
@@ -99,7 +255,7 @@
                 return {
                     category: row.querySelector('[name="category"]').value,
                     amount: parseFloat(row.querySelector('[name="amount"]').value) || 0,
-                    type: row.querySelector('[name="type"]').value
+                    type: row.querySelector('[name="type"]') ? row.querySelector('[name="type"]').value : 'Want' // Default if hidden
                 };
             });
 
@@ -114,11 +270,11 @@
                 
                 const status = document.getElementById('save-status');
                 if (response.ok) {
-                    status.textContent = 'All changes saved';
-                    status.classList.remove('saving');
+                    if(status) {
+                        status.textContent = 'All changes saved';
+                        status.classList.remove('saving');
+                    }
                     updateInsights(data);
-                } else {
-                    status.textContent = 'Error saving';
                 }
             } catch (error) {
                 console.error('Error saving:', error);
@@ -140,17 +296,49 @@
                     <div class="mini-metric">
                         <span class="label">Needs</span>
                         <span class="value">$${needs.toLocaleString()}</span>
-                        <span class="sub">${Math.round(needs/total*100)}%</span>
+                        <span class="sub">${total > 0 ? Math.round(needs/total*100) : 0}%</span>
                     </div>
                     <div class="mini-metric">
                         <span class="label">Wants</span>
                         <span class="value">$${wants.toLocaleString()}</span>
-                        <span class="sub">${Math.round(wants/total*100)}%</span>
+                        <span class="sub">${total > 0 ? Math.round(wants/total*100) : 0}%</span>
                     </div>
                 </div>
             `;
         }
+        
+        // Gamification Logic
+        let toastTimeout;
+        function showToast(message) {
+            const toast = document.getElementById('impact-toast');
+            document.getElementById('impact-message').innerText = message;
+            toast.classList.add('visible');
+            
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('visible');
+            }, 3000);
+        }
+        
+        async function calculateSimulatedImpact() {
+            // Calculate total reduction locally first for immediate feedback
+            const rows = document.querySelectorAll('.spending-row');
+            let currentTotal = 0;
+            rows.forEach(row => {
+                currentTotal += parseFloat(row.querySelector('[name="amount"]').value) || 0;
+            });
+            
+            const saved = initialTotal - currentTotal;
+            
+            if (saved > 0) {
+                // Simple heuristic feedback
+                const yearsSaved = (saved * 12 * 25) / 50000; // Example math: reduced burn reduces FI number
+                showToast(`Cutting $${Math.round(saved)}/mo saved you ~${Math.max(1, Math.round(saved/50))} days of work!`);
+                
+                // Animate crossover update (visual only for now)
+                // Ideally we fetch real simulation from backend here
+            }
+        }
     </script>
 </body>
 </html>
-
