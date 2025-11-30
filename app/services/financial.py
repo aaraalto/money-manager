@@ -2,20 +2,62 @@ import asyncio
 from functools import lru_cache
 from typing import Dict, Any, List, Optional
 
-from backend.data.repository import FileRepository
-from backend.models import Asset, Liability, IncomeSource, SpendingCategory
-from backend.primitives import (
+from app.data.repository import FileRepository
+from app.models import Asset, Liability, IncomeSource, SpendingCategory
+from app.domain import (
     get_net_worth,
     simulate_debt_payoff,
     project_compound_growth,
     assess_affordability,
     generate_insights,
 )
-from backend.primitives.metrics import calculate_metrics
+from app.domain.metrics import calculate_metrics, calculate_financial_level, calculate_monthly_income
 
 class FinancialService:
     def __init__(self, repository: FileRepository):
         self.repo = repository
+
+    async def process_onboarding_import(self) -> Dict[str, Any]:
+        """
+        Calculates initial financial state from imported data and sets the user's level.
+        """
+        income_sources, spending_plan, liabilities, assets = await asyncio.gather(
+            self.repo.get_income(),
+            self.repo.get_spending_plan(),
+            self.repo.get_liabilities(),
+            self.repo.get_assets()
+        )
+        
+        monthly_income = calculate_monthly_income(income_sources)
+        monthly_burn = sum(s.amount for s in spending_plan)
+        total_debt = sum(l.balance for l in liabilities)
+        
+        # Calculate liquid assets (Cash + Liquid Investments)
+        liquid_assets = sum(
+            a.value for a in assets 
+            if a.liquidity == "liquid" or a.type == "cash"
+        )
+
+        profile = await self.repo.get_user_profile()
+        profile.monthly_income = monthly_income
+        profile.monthly_burn = monthly_burn
+        profile.total_debt = total_debt
+        profile.liquid_assets = liquid_assets
+        
+        level = calculate_financial_level(
+            monthly_income,
+            monthly_burn,
+            total_debt,
+            liquid_assets
+        )
+        profile.current_level = level
+        
+        await self.repo.save_user_profile(profile)
+        
+        return {
+            "level": level,
+            "profile": profile
+        }
 
     async def get_dashboard_view(self, monthly_payment: float = 500.0, filter_tag: str = "All") -> Dict[str, Any]:
         # Fetch data concurrently
@@ -42,7 +84,8 @@ class FinancialService:
         
         # Calculations
         nw_context = get_net_worth(assets, filtered_liabilities)
-        
+        passive_income_monthly = (nw_context.total * 0.04) / 12
+
         # Projection (hardcoded params as per original, extended with dynamic inputs)
         # Assuming default $1000 contribution if free cash flow is less, 
         # or use free_cash_flow if positive? 
@@ -73,7 +116,8 @@ class FinancialService:
             "financial_health": {
                 "savings_rate": metrics["savings_rate"],
                 "debt_to_income_ratio": metrics["debt_to_income_ratio"],
-                "savings_rate_change": 0.02  # Mock
+                "savings_rate_change": 0.02,  # Mock
+                "passive_income_monthly": passive_income_monthly
             },
             "insights": [i.dict() for i in insights],
             "cash_flow": {

@@ -9,9 +9,9 @@ from typing import List, Type, TypeVar, Union
 from uuid import UUID
 
 # Add the project root to sys.path so imports work
-sys.path.append(str(Path(__file__).parent.parent))
+sys.path.append(str(Path(__file__).parent))
 
-from backend.models import Asset, Liability, Transaction, IncomeSource, SpendingCategory, AssetType, LiquidityStatus, LiabilityTag
+from app.models import Asset, Liability, Transaction, IncomeSource, SpendingCategory, AssetType, LiquidityStatus, LiabilityTag
 
 DATA_DIR = Path("data")
 ASSETS_FILE = DATA_DIR / "assets.json"
@@ -264,7 +264,7 @@ def serve(args):
     
     import uvicorn
     # Configure logging to be cleaner if possible, or just run
-    uvicorn.run("backend.server:app", host="0.0.0.0", port=8000, reload=True, log_level="info")
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True, log_level="info")
 
 def main():
     parser = argparse.ArgumentParser(description="Wealth OS CLI Manager")

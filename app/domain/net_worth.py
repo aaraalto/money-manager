@@ -1,6 +1,6 @@
 from typing import List
 from pydantic import BaseModel
-from backend.models import Asset, Liability, LiquidityStatus
+from app.models import Asset, Liability, LiquidityStatus
 
 class NetWorthContext(BaseModel):
     total: float

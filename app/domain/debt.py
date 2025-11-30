@@ -1,7 +1,7 @@
 from typing import List, Optional
 from datetime import date, timedelta
 from pydantic import BaseModel
-from backend.models import Liability
+from app.models import Liability
 from .types import TimeSeriesPoint
 from .financial_formulas import calculate_monthly_interest
 

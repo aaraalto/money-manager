@@ -319,3 +319,66 @@
     margin: 0 auto;
     line-height: 1.6;
 }
+
+/* Jargon Tooltip */
+.term {
+    border-bottom: 1px dashed var(--text-secondary);
+    cursor: help;
+    position: relative;
+    transition: border-color 0.2s ease;
+}
+
+.term:hover {
+    border-bottom-color: var(--primary);
+}
+
+.term[data-tooltip]::before {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    padding: 0.5rem 0.75rem;
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    white-space: normal;
+    width: max-content;
+    max-width: 250px;
+    text-align: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s var(--ease-smooth);
+    pointer-events: none;
+    z-index: 100;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.term[data-tooltip]:hover::before {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(-8px);
+}
+
+.term[data-tooltip]::after {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    border: 6px solid transparent;
+    border-top-color: var(--border-color);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s var(--ease-smooth);
+    pointer-events: none;
+    z-index: 100;
+}
+
+.term[data-tooltip]:hover::after {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}

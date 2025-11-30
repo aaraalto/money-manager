@@ -7,4 +7,4 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$DIR"
 
 # Execute the python script
-python3 backend/manager.py "$@"
+python3 manage.py "$@"

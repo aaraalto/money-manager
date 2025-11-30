@@ -1,6 +1,6 @@
 import pytest
-from backend.primitives.growth import project_compound_growth, simulate_monte_carlo_growth
-from backend.primitives.types import TimeSeriesPoint
+from app.primitives.growth import project_compound_growth, simulate_monte_carlo_growth
+from app.primitives.types import TimeSeriesPoint
 
 def test_project_compound_growth_simple():
     # 1000 start, 0% interest, 100/mo, 1 year

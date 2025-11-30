@@ -1,4 +1,4 @@
-from backend.primitives.types import TimeSeriesPoint
+from app.domain.types import TimeSeriesPoint
 from typing import List
 import math
 

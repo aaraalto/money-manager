@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Type, TypeVar, Union, Any
 from datetime import datetime
 
-from backend.models import Asset, Liability, IncomeSource, SpendingCategory, Transaction, UserProfile
+from app.models import Asset, Liability, IncomeSource, SpendingCategory, Transaction, UserProfile
 
 T = TypeVar("T", bound=Union[Asset, Liability, IncomeSource])
 

@@ -1,5 +1,5 @@
 from typing import List, Dict
-from backend.models import Asset, Liability, IncomeSource, SpendingCategory, AssetType
+from app.models import Asset, Liability, IncomeSource, SpendingCategory, AssetType
 
 class FinancialInsight:
     def __init__(self, title: str, description: str, severity: str = "info", action_item: str = None):

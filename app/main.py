@@ -9,12 +9,12 @@ from typing import Dict, Any, List, Optional
 import uvicorn
 from pydantic import BaseModel
 
-from backend.data.repository import FileRepository
-from backend.services.financial import FinancialService
-from backend.models import SpendingCategory
-from backend.primitives.svg_charts import generate_simple_line_chart_svg
-from backend.chat_service import ChatService
-from backend.primitives.metrics import calculate_financial_level, calculate_monthly_income
+from app.data.repository import FileRepository
+from app.services.financial import FinancialService
+from app.models import SpendingCategory
+from app.domain.svg_charts import generate_simple_line_chart_svg
+from app.chat_service import ChatService
+from app.domain.metrics import calculate_financial_level
 
 app = FastAPI(title="Wealth OS API")
 
@@ -28,9 +28,10 @@ app.add_middleware(
 )
 
 # Serve static frontend
-FRONTEND_DIR = Path("frontend")
-app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
-templates = Jinja2Templates(directory=FRONTEND_DIR)
+STATIC_DIR = Path("app/static")
+TEMPLATES_DIR = Path("app/templates")
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
 # Initialize Services
 repo = FileRepository()
@@ -62,7 +63,7 @@ async def read_root(request: Request):
         context["projection_json"] = json.dumps(dashboard_data["projection"], default=str)
         context["crossover_date"] = str(dashboard_data["projection"].get("crossover_date", "N/A"))
         context["monthly_contribution"] = dashboard_data["projection"].get("monthly_contribution", 1000) 
-        context["passive_income"] = (dashboard_data["net_worth"]["total"] * 0.04) / 12 
+        context["passive_income"] = dashboard_data["financial_health"].get("passive_income_monthly", 0)
 
     # Level-Specific Dashboard Routing
     if profile.current_level == 1:
@@ -94,36 +95,12 @@ async def onboarding_page(request: Request):
 
 @app.post("/api/onboarding/import", response_class=HTMLResponse)
 async def onboarding_import(request: Request):
-    income_sources = await repo.get_income()
-    spending_plan = await repo.get_spending_plan()
-    liabilities = await repo.get_liabilities()
-    assets = await repo.get_assets()
-    
-    monthly_income = calculate_monthly_income(income_sources)
-    monthly_burn = sum(s.amount for s in spending_plan)
-    total_debt = sum(l.balance for l in liabilities)
-    liquid_assets = sum(a.value for a in assets if a.liquidity == "liquid" or a.type == "cash")
-
-    profile = await repo.get_user_profile()
-    profile.monthly_income = monthly_income
-    profile.monthly_burn = monthly_burn
-    profile.total_debt = total_debt
-    profile.liquid_assets = liquid_assets
-    
-    level = calculate_financial_level(
-        monthly_income,
-        monthly_burn,
-        total_debt,
-        liquid_assets
-    )
-    profile.current_level = level
-    
-    await repo.save_user_profile(profile)
+    result = await service.process_onboarding_import()
     
     return templates.TemplateResponse("partials/onboarding_result.html", {
         "request": request, 
-        "level": level, 
-        "profile": profile
+        "level": result["level"], 
+        "profile": result["profile"]
     })
 
 @app.post("/api/onboarding/step-1-income", response_class=HTMLResponse)

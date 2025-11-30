@@ -1,5 +1,5 @@
 from typing import Dict, List
-from backend.models import Liability, LiabilityTag
+from app.models import Liability, LiabilityTag
 
 def group_liabilities_by_tag(liabilities: List[Liability]) -> Dict[LiabilityTag, List[Liability]]:
     """

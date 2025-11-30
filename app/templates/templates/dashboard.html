@@ -11,7 +11,7 @@
 
 {% block content %}
     {% set header_actions %}
-        {{ button("Spending Plan", "/spending-editor", "secondary", "arrow-right") }}
+        {{ button("Expense Optimizer", "/spending-editor", "secondary", "arrow-right") }}
         {{ button("Future Simulator", "/simulator", "secondary", "arrow-right") }}
     {% endset %}
 
@@ -33,12 +33,23 @@
     <div id="loading">Crunching the numbers...</div>
 
     <div id="dashboard" class="hidden">
-        <!-- Dashboard Summary -->
+        <!-- Dashboard Summary: Level 0 Focus -->
         <div class="dashboard-overview">
-            {% call card("Financial Health", "activity") %}
-                {{ stat("Monthly Savings Rate", "--", "savings-rate", "vs last month", True) }}
+            {% call card("Monthly Pulse", "activity") %}
+                <div class="stat">
+                    <div class="stat-label">
+                        <span class="term" data-tooltip="Money left after paying all monthly expenses.">Net Cash Flow</span>
+                    </div>
+                    <div class="stat-value" id="savings-rate">--</div> <!-- Reusing ID for JS compatibility -->
+                    <div class="stat-change">vs last month</div>
+                </div>
                 <div class="separator"></div>
-                {{ stat("Debt-to-Income Ratio", "--", "debt-income-ratio") }}
+                <div class="stat">
+                    <div class="stat-label">
+                        <span class="term" data-tooltip="Percentage of gross income that goes towards debt payments.">Debt-to-Income Ratio</span>
+                    </div>
+                    <div class="stat-value" id="debt-income-ratio">--</div>
+                </div>
             {% endcall %}
 
             {% call card("Quick Insights", "trending-up") %}
@@ -51,19 +62,34 @@
         <!-- Net Worth Snapshot -->
         {% call card("Current Position", "credit-card") %}
             <div class="kpi-row">
-                {{ kpi_box("Net Worth", "--", "nw-total") }}
-                {{ kpi_box("Liquid Assets", "--", "nw-liquid") }}
-                {{ kpi_box("Total Debt", "--", "nw-debt") }}
+                <div class="kpi">
+                     <div class="kpi-label">
+                        <span class="term" data-tooltip="Total Assets minus Total Liabilities.">Net Worth</span>
+                     </div>
+                     <div class="kpi-value" id="nw-total">--</div>
+                </div>
+                <div class="kpi">
+                     <div class="kpi-label">
+                        <span class="term" data-tooltip="Cash or assets that can be quickly converted to cash.">Liquid Assets</span>
+                     </div>
+                     <div class="kpi-value" id="nw-liquid">--</div>
+                </div>
+                <div class="kpi">
+                     <div class="kpi-label">Total Debt</div>
+                     <div class="kpi-value" id="nw-debt">--</div>
+                </div>
             </div>
             <div class="reasoning" id="nw-reasoning"></div>
         {% endcall %}
 
         <div class="grid">
-            <!-- Projection Chart -->
+            <!-- Projection Chart - Hidden for Level 0/1 to reduce noise -->
+            {% if user and user.current_level >= 2 %}
             {% call card("Your Wealth Trajectory", "trending-up") %}
                 <div class="chart-container" id="chart-projection"></div>
                 <div class="reasoning" id="proj-context"></div>
             {% endcall %}
+            {% endif %}
 
             <!-- Debt Payoff Chart -->
             {% call card("Debt Freedom Plan", "activity") %}
@@ -73,4 +99,3 @@
         </div>
     </div>
 {% endblock %}
-

@@ -1,6 +1,6 @@
 
 from typing import List
-from backend.models import IncomeSource, Liability, SpendingCategory
+from app.models import IncomeSource, Liability, SpendingCategory
 
 def calculate_monthly_income(income: List[IncomeSource]) -> float:
     total = 0.0

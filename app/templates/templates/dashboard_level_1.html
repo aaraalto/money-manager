@@ -2,7 +2,7 @@
 {% from "templates/components/atoms.html" import button, icon %}
 {% from "templates/components/molecules.html" import card, stat, kpi_box, alert, page_header %}
 
-{% block title %}Radiant - War Room{% endblock %}
+{% block title %}Radiant - Debt Resolution{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -47,23 +47,29 @@
     
     .progress-fill {
         height: 100%;
-        background: linear-gradient(90deg, #f43f5e 0%, #fb7185 100%);
+        background: linear-gradient(90deg, var(--primary), var(--success));
         width: 0%; /* Animated via JS */
         transition: width 1.5s cubic-bezier(0.22, 1, 0.36, 1);
     }
     
-    .milestone-marker {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        width: 2px;
-        background: rgba(255,255,255,0.2);
-        z-index: 2;
-    }
-    
     .strategy-card {
-        background: rgba(244, 63, 94, 0.05);
-        border: 1px solid rgba(244, 63, 94, 0.2);
+        background: rgba(99, 102, 241, 0.05);
+        border: 1px solid rgba(99, 102, 241, 0.2);
+    }
+
+    /* Velocity Badge */
+    .velocity-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+        padding: 0.5rem 1rem;
+        border-radius: 100px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        margin-top: 1rem;
     }
 </style>
 {% endblock %}
@@ -75,13 +81,7 @@
         setTimeout(() => {
             const fill = document.querySelector('.progress-fill');
             if(fill) {
-                // Calculate percentage: (Start Debt - Current Debt) / Start Debt
-                // For now, we mock a "start debt" or assume it's just current balance relative to a limit?
-                // Better: just show % paid off if we tracked history.
-                // Fallback: Show % of Credit Limit utilized?
-                // For Level 1 View: Let's visualize "Debt Free Journey". 
-                // Assuming we are at 0% progress of the *current* Payoff Plan for this session demo.
-                // Let's hardcode 15% for visual effect or pass it from backend if we had history.
+                // Mock progress for visualization
                 fill.style.width = '15%'; 
             }
         }, 500);
@@ -94,46 +94,53 @@
         <div class="header-brand">
             <h1 style="display: flex; align-items: center; gap: 1rem;">
                 Radiant 
-                <span class="badge badge-danger" style="font-size: 0.4em; vertical-align: middle;">Level 1: War Room</span>
+                <span class="badge badge-primary" style="font-size: 0.4em; vertical-align: middle;">Level 1: Focus Mode</span>
             </h1>
-            <p class="tagline">Your mission: Destroy the debt.</p>
+            <p class="tagline">Systematic elimination of liabilities.</p>
         </div>
         <div class="header-controls">
-            {{ button("Simulate Attack", "/simulator", "primary", "crosshair") }}
+            {{ button("Simulate Strategy", "/simulator", "primary", "crosshair") }}
         </div>
     </header>
 
     <div class="debt-progress-container">
-        <div class="debt-label">Total Enemy Strength (Debt)</div>
+        <div class="debt-label">Liability Load</div>
         <div class="debt-total-display">{{ format_currency(user.total_debt) }}</div>
         
         <div class="progress-bar-wrapper">
             <div class="progress-fill"></div>
-            <!-- Milestones could be added here -->
         </div>
-        <p class="text-secondary">You have paid off $0 this month. Time to strike.</p>
+        
+        <div class="velocity-badge">
+            {{ icon("zap", 16) }}
+            Payoff Velocity: $450/mo
+        </div>
+        
+        <p class="text-secondary" style="margin-top: 1rem;">Resolution Progress: 15%</p>
     </div>
 
     <div class="grid">
         <!-- Strategy Card -->
-        {% call card("Battle Plan", "shield", extra_classes="strategy-card") %}
-            <p><strong>Current Strategy:</strong> Avalanche (Highest Interest First)</p>
-            <p class="text-secondary">Paying off high interest debt first is mathematically optimal and will save you the most money.</p>
+        {% call card("Payoff Strategy", "shield", extra_classes="strategy-card") %}
+            <p>
+                <strong>Current Strategy:</strong> 
+                <span class="term" data-tooltip="Paying off debts with the highest interest rates first. This method saves the most money over time.">Avalanche Method</span>
+            </p>
+            <p class="text-secondary">Mathematically optimal. You are minimizing interest leakage.</p>
             
             <div style="margin-top: 2rem;">
-                {{ button("Execute Payment", "#", "danger", "zap") }}
+                {{ button("Execute Payment", "#", "primary", "zap") }}
             </div>
         {% endcall %}
 
         <!-- Payoff Simulator Chart (Simplified) -->
-        {% call card("Victory Timeline", "calendar") %}
+        {% call card("Resolution Timeline", "calendar") %}
              <div id="chart-debt" style="height: 200px; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.3);">
-                [Debt Payoff Chart Placeholder]
+                [Chart Placeholder]
              </div>
              <div class="reasoning">
-                Estimated Freedom Date: <strong>Oct 2026</strong>
+                Projected Freedom Date: <strong>Oct 2026</strong>
              </div>
         {% endcall %}
     </div>
 {% endblock %}
-
