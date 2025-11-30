@@ -46,3 +46,29 @@ def calculate_metrics(
         "debt_to_income_ratio": dti
     }
 
+def calculate_financial_level(
+    monthly_income: float,
+    monthly_burn: float,
+    total_debt: float,
+    liquid_assets: float
+) -> int:
+    """
+    Calculates the user's financial level based on inputs.
+    """
+    
+    # Level 0: Insolvency
+    if monthly_burn > monthly_income:
+        return 0
+        
+    # Level 1: Solvency but Indebted
+    if total_debt > 0:
+        return 1
+        
+    # Level 2: Stability Building (Debt free, building emergency fund)
+    six_months_expenses = monthly_burn * 6
+    if liquid_assets < six_months_expenses:
+        return 2
+        
+    # Default to Level 3 (Growth) if above conditions met
+    # (Plan focuses on 0-2, so returning 3 as "Graduated Phase 1")
+    return 3

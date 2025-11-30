@@ -66,9 +66,19 @@ class Transaction(BaseModel):
             return date.fromisoformat(v)
         return v
 
+class UserProfile(BaseModel):
+    id: UUID = Field(default_factory=uuid4)
+    name: str = "Euclid"
+    current_level: int = Field(0, ge=0, le=6)
+    onboarding_completed: bool = False
+    monthly_income: float = 0.0
+    monthly_burn: float = 0.0
+    total_debt: float = 0.0
+    liquid_assets: float = 0.0
+
 class FinancialSnapshot(BaseModel):
     """Represents the user's financial state at a point in time."""
     assets: list[Asset] = []
     liabilities: list[Liability] = []
     transactions: list[Transaction] = []
-
+    user: Optional[UserProfile] = None

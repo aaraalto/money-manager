@@ -1,0 +1,14 @@
+<!-- Step 2: Burn Rate -->
+<div class="card fade-in">
+    <h1>The Burn.</h1>
+    <p>Roughly how much do you spend in a month?<br>(Rent, bills, food, fun)</p>
+    
+    <form hx-post="/api/onboarding/step-2-burn" hx-target="#onboarding-content" hx-swap="innerHTML">
+        <div class="input-group">
+            <label for="burn">Monthly Spending</label>
+            <input type="number" id="burn" name="burn" placeholder="$0" required autofocus>
+        </div>
+        <button type="submit" class="btn-primary">Next</button>
+    </form>
+</div>
+

@@ -1,0 +1,48 @@
+<!-- Step 3: Debt Check -->
+<div class="card fade-in">
+    <h1>The Anchor.</h1>
+    <p>Do you have any credit card or high-interest debt?</p>
+    
+    <form hx-post="/api/onboarding/step-3-debt" hx-target="#onboarding-content" hx-swap="innerHTML">
+        <div class="debt-toggle">
+            <div class="toggle-btn" role="button" tabindex="0" onclick="selectDebt('yes')" onkeypress="if(event.key === 'Enter') selectDebt('yes')">Yes</div>
+            <div class="toggle-btn" role="button" tabindex="0" onclick="selectDebt('no')" onkeypress="if(event.key === 'Enter') selectDebt('no')">No</div>
+        </div>
+        
+        <input type="hidden" id="has_debt" name="has_debt" value="">
+        
+        <div id="debt-input-container" class="hidden">
+            <div class="input-group">
+                <label for="debt_amount">Total Balance</label>
+                <input type="number" id="debt_amount" name="debt_amount" placeholder="$0">
+            </div>
+        </div>
+        
+        <button type="submit" class="btn-primary" id="submit-btn" disabled>Next</button>
+    </form>
+    
+    <script>
+        function selectDebt(choice) {
+            document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('selected'));
+            event.target.classList.add('selected');
+            
+            document.getElementById('has_debt').value = choice;
+            const container = document.getElementById('debt-input-container');
+            const input = document.getElementById('debt_amount');
+            const btn = document.getElementById('submit-btn');
+            
+            btn.disabled = false;
+            
+            if (choice === 'yes') {
+                container.classList.remove('hidden');
+                input.required = true;
+                input.focus();
+            } else {
+                container.classList.add('hidden');
+                input.required = false;
+                input.value = 0;
+            }
+        }
+    </script>
+</div>
+

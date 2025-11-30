@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Radiant</title>
+    <link rel="stylesheet" href="/static/css/variables.css">
+    <link rel="stylesheet" href="/static/css/spectra.css">
+    <script src="/static/js/htmx.min.js"></script>
+    <style>
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: var(--font-sans, 'Inter', sans-serif);
+        }
+        
+        .onboarding-container {
+            width: 100%;
+            max-width: 480px;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .card {
+            background: var(--surface-card);
+            border-radius: 24px;
+            padding: 3rem 2rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s ease;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            line-height: 1.5;
+            margin-bottom: 2rem;
+        }
+
+        .input-group {
+            margin-bottom: 2rem;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input[type="number"], input[type="text"] {
+            width: 100%;
+            padding: 1rem;
+            font-size: 2rem;
+            background: rgba(0,0,0,0.2);
+            border: 2px solid var(--border-color, rgba(255,255,255,0.1));
+            border-radius: 12px;
+            color: white;
+            outline: none;
+            transition: border-color 0.2s;
+            font-family: 'Courier New', monospace;
+        }
+
+        input:focus {
+            border-color: var(--primary-color, #6366f1);
+        }
+
+        .btn-primary {
+            background: var(--primary-color, #6366f1);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.1s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.05);
+            color: var(--text-secondary);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 0.8rem 1.5rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border-radius: 50px;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .debt-toggle {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .toggle-btn {
+            flex: 1;
+            padding: 1.5rem;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+        }
+        
+        .toggle-btn.selected {
+            background: rgba(99, 102, 241, 0.2);
+            border-color: #6366f1;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="onboarding-container" id="onboarding-content">
+        <!-- Step 1: Welcome & Income -->
+        <div class="card fade-in">
+            <h1>Radiant.</h1>
+            <p>Illuminate your financial future.<br>Let's start by finding your footing.</p>
+            
+            <form hx-post="/api/onboarding/step-1-income" hx-target="#onboarding-content" hx-swap="innerHTML">
+                <div class="input-group">
+                    <label for="income">Monthly Take-Home Pay</label>
+                    <input type="number" id="income" name="income" placeholder="$0" required autofocus>
+                </div>
+                <button type="submit" class="btn-primary">Next</button>
+            </form>
+            
+            <div style="margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1.5rem;">
+                <p style="font-size: 0.9rem; margin-bottom: 1rem; color: var(--text-tertiary);">Already have data?</p>
+                <button class="btn-secondary" hx-post="/api/onboarding/import" hx-target="#onboarding-content" hx-swap="innerHTML">
+                    Import from Data Folder
+                </button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!-- Result: Level Assignment -->
+<div class="card fade-in">
+    <div style="margin-bottom: 2rem;">
+        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            {% if level == 0 %}
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            {% elif level == 1 %}
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                <path d="M9 12l2 2 4-4"></path>
+            {% elif level == 2 %}
+                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                 <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            {% else %}
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            {% endif %}
+        </svg>
+    </div>
+    
+    <h1 style="font-size: 2rem;">
+        {% if level == 0 %}
+            Crisis Mode
+        {% elif level == 1 %}
+            Solvency Seeker
+        {% elif level == 2 %}
+            Stability Builder
+        {% else %}
+            Growth Architect
+        {% endif %}
+    </h1>
+    
+    <div style="background: rgba(255,255,255,0.1); padding: 0.5rem 1rem; border-radius: 20px; display: inline-block; margin-bottom: 1.5rem; font-size: 0.9rem; font-weight: 600; color: #a5b4fc;">
+        LEVEL {{ level }}
+    </div>
+    
+    <p>
+        {% if level == 0 %}
+            Your expenses exceed your income. Immediate action is required to stop the bleeding.
+        {% elif level == 1 %}
+            You are solvent, but debt is weighing you down. Your mission is to destroy it.
+        {% elif level == 2 %}
+            You are debt-free! Now it's time to build a full 6-month safety net.
+        {% else %}
+            You have a strong foundation. It's time to optimize for wealth and freedom.
+        {% endif %}
+    </p>
+    
+    <form hx-post="/api/onboarding/complete" hx-target="body">
+        <button type="submit" class="btn-primary">Enter the War Room</button>
+    </form>
+</div>
+

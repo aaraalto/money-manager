@@ -255,9 +255,16 @@ def audit(args):
         print("\nPASSED: Data integrity verified.")
 
 def serve(args):
-    print("Starting Wealth OS Server...")
+    print(RADIANT_BANNER)
+    print("\n🚀 System Initialized. Starting Radiant Server...")
+    print("   • Dashboard:     http://localhost:8000")
+    print("   • API Docs:      http://localhost:8000/docs")
+    print("\n   Use 'Ctrl+C' to stop the server.")
+    print("-" * 60)
+    
     import uvicorn
-    uvicorn.run("backend.server:app", host="0.0.0.0", port=8000, reload=True)
+    # Configure logging to be cleaner if possible, or just run
+    uvicorn.run("backend.server:app", host="0.0.0.0", port=8000, reload=True, log_level="info")
 
 def main():
     parser = argparse.ArgumentParser(description="Wealth OS CLI Manager")
@@ -315,7 +322,19 @@ def main():
     if hasattr(args, "func"):
         args.func(args)
     else:
+        print(RADIANT_BANNER)
+        print("Welcome to Radiant - Your Personal Financial OS")
+        print("Use './manage.sh --help' to see available commands.\n")
         parser.print_help()
+
+RADIANT_BANNER = r"""
+██████╗  █████╗ ██████╗ ██╗ █████╗ ███╗   ██╗████████╗
+██╔══██╗██╔══██╗██╔══██╗██║██╔══██╗████╗  ██║╚══██╔══╝
+██████╔╝███████║██║  ██║██║███████║██╔██╗ ██║   ██║   
+██╔══██╗██╔══██║██║  ██║██║██╔══██║██║╚██╗██║   ██║   
+██║  ██║██║  ██║██████╔╝██║██║  ██║██║ ╚████║   ██║   
+╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝   ╚═╝   
+"""
 
 if __name__ == "__main__":
     main()

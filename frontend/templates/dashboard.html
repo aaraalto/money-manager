@@ -1,6 +1,6 @@
-{% extends "layouts/base.html" %}
-{% from "components/atoms.html" import button, icon %}
-{% from "components/molecules.html" import card, stat, kpi_box, alert, page_header %}
+{% extends "templates/layouts/base.html" %}
+{% from "templates/components/atoms.html" import button, icon %}
+{% from "templates/components/molecules.html" import card, stat, kpi_box, alert, page_header %}
 
 {% block title %}Radiant - Dashboard{% endblock %}
 
@@ -15,7 +15,20 @@
         {{ button("Future Simulator", "/generative", "secondary", "arrow-right") }}
     {% endset %}
 
-    {{ page_header("Radiant", "Illuminate your financial future.", header_actions) }}
+    <header class="app-header">
+        <div class="header-brand">
+            <h1 style="display: flex; align-items: center; gap: 1rem;">
+                Radiant 
+                {% if user %}
+                <span class="badge badge-primary" style="font-size: 0.4em; vertical-align: middle;">Level {{ user.current_level }}</span>
+                {% endif %}
+            </h1>
+            <p class="tagline">Illuminate your financial future.</p>
+        </div>
+        <div class="header-controls">
+            {{ header_actions }}
+        </div>
+    </header>
 
     <div id="loading">Crunching the numbers...</div>
 

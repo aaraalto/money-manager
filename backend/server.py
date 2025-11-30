@@ -1,11 +1,11 @@
 import json
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Form
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 import uvicorn
 from pydantic import BaseModel
 
@@ -14,6 +14,7 @@ from backend.services.financial import FinancialService
 from backend.models import SpendingCategory
 from backend.primitives.svg_charts import generate_simple_line_chart_svg
 from backend.chat_service import ChatService
+from backend.primitives.metrics import calculate_financial_level, calculate_monthly_income
 
 app = FastAPI(title="Wealth OS API")
 
@@ -38,7 +39,30 @@ chat_service = ChatService(templates)
 
 @app.get("/")
 async def read_root(request: Request):
-    return templates.TemplateResponse("dashboard.html", {"request": request})
+    # Check if user has completed onboarding
+    profile = await repo.get_user_profile()
+    if not profile.onboarding_completed:
+        return RedirectResponse(url="/onboarding")
+    
+    # Helper for currency formatting in templates
+    def format_currency(val):
+        return f"${val:,.0f}"
+
+    context = {
+        "request": request, 
+        "user": profile,
+        "format_currency": format_currency
+    }
+
+    # Level-Specific Dashboard Routing
+    if profile.current_level == 1:
+        return templates.TemplateResponse("templates/dashboard_level_1.html", context)
+    elif profile.current_level == 2:
+        return templates.TemplateResponse("templates/dashboard_level_2.html", context)
+    else:
+        # Default / Level 0 / Level 3+ uses the standard dashboard for now
+        # (Or we can map L0 -> Crisis Dashboard later)
+        return templates.TemplateResponse("templates/dashboard.html", context)
 
 @app.get("/generative")
 async def read_generative(request: Request):
@@ -47,6 +71,161 @@ async def read_generative(request: Request):
 @app.get("/design-system")
 async def read_design_system(request: Request):
     return templates.TemplateResponse("design_system.html", {"request": request})
+
+# --- Onboarding Endpoints ---
+
+@app.get("/onboarding")
+async def onboarding_page(request: Request):
+    # Reset profile if needed or just load current state
+    profile = await repo.get_user_profile()
+    # We always start at step 1 for now if they go to /onboarding
+    return templates.TemplateResponse("onboarding.html", {"request": request, "step": 1, "user": profile})
+
+@app.post("/api/onboarding/import", response_class=HTMLResponse)
+async def onboarding_import(request: Request):
+    """
+    Imports data from the JSON/CSV files in the data directory and auto-completes onboarding.
+    """
+    # 1. Fetch all data from repo
+    income_sources = await repo.get_income()
+    spending_plan = await repo.get_spending_plan()
+    liabilities = await repo.get_liabilities()
+    assets = await repo.get_assets()
+    
+    # 2. Calculate aggregates
+    # Income
+    monthly_income = calculate_monthly_income(income_sources)
+    
+    # Expenses (Burn) - Sum of spending plan categories
+    # We exclude "Savings" type if we want pure burn, but for Level 0 check, 
+    # burn usually means "Outflows required to live". 
+    # Let's sum everything except explicit savings/investments if possible, 
+    # or just sum everything for now as "Expenses".
+    # Looking at spending_plan.csv, it has a "type" column.
+    # Let's assume all spending plan items count as "burn" except maybe savings?
+    # For safety in L0 calculation, let's sum all.
+    monthly_burn = sum(s.amount for s in spending_plan)
+    
+    # Debt
+    total_debt = sum(l.balance for l in liabilities)
+    
+    # Liquid Assets
+    # Filter assets by liquidity="liquid"
+    liquid_assets = sum(a.value for a in assets if a.liquidity == "liquid" or a.type == "cash")
+
+    # 3. Update Profile
+    profile = await repo.get_user_profile()
+    profile.monthly_income = monthly_income
+    profile.monthly_burn = monthly_burn
+    profile.total_debt = total_debt
+    profile.liquid_assets = liquid_assets
+    
+    # 4. Calculate Level
+    level = calculate_financial_level(
+        monthly_income,
+        monthly_burn,
+        total_debt,
+        liquid_assets
+    )
+    profile.current_level = level
+    
+    # Save profile (but don't mark complete yet, let them see the result)
+    # actually, if we import, we probably want to show the result card immediately.
+    await repo.save_user_profile(profile)
+    
+    # 5. Return the Result Partial
+    return templates.TemplateResponse("partials/onboarding_result.html", {
+        "request": request, 
+        "level": level, 
+        "profile": profile
+    })
+
+@app.post("/api/onboarding/step-1-income", response_class=HTMLResponse)
+async def onboarding_step_1(request: Request, income: float = Form(...)):
+    profile = await repo.get_user_profile()
+    profile.monthly_income = income
+    await repo.save_user_profile(profile)
+    
+    # Return Step 2 HTML
+    return templates.TemplateResponse("partials/onboarding_step_2.html", {"request": request})
+
+@app.post("/api/onboarding/step-2-burn", response_class=HTMLResponse)
+async def onboarding_step_2(request: Request, burn: float = Form(...)):
+    profile = await repo.get_user_profile()
+    profile.monthly_burn = burn
+    await repo.save_user_profile(profile)
+    
+    # Return Step 3 HTML
+    return templates.TemplateResponse("partials/onboarding_step_3.html", {"request": request})
+
+@app.post("/api/onboarding/step-3-debt", response_class=HTMLResponse)
+async def onboarding_step_3(request: Request, has_debt: str = Form(...), debt_amount: Optional[float] = Form(0.0)):
+    profile = await repo.get_user_profile()
+    
+    if has_debt == "no":
+        profile.total_debt = 0.0
+    else:
+        profile.total_debt = debt_amount
+        
+    await repo.save_user_profile(profile)
+    
+    # Calculate Level Preview
+    # Note: We are assuming liquid assets = 0 for now or we ask for it?
+    # The plan says: "If No: Skip to Liquid Assets check".
+    # Let's stick to the simpler flow in the plan spec:
+    # "If No: Skip to Liquid Assets check ('Do you have 6 months of expenses saved?')"
+    # But the plan implementation section 2.2 just says: Income -> Expenses -> Debt -> Result.
+    # Let's infer liquid assets is 0 for simplicity in this first pass, OR add a step if debt is 0.
+    
+    # For Euclid phase 1, let's keep it simple. 
+    # If debt > 0 -> Level 0 or 1.
+    # If debt == 0 -> Level 2 check requires liquid assets.
+    # Let's add a quick check for liquid assets if debt is 0, otherwise assume 0.
+    
+    if profile.total_debt == 0:
+         return templates.TemplateResponse("partials/onboarding_step_4_assets.html", {"request": request})
+    
+    # If we have debt, we go straight to calculation
+    level = calculate_financial_level(
+        profile.monthly_income,
+        profile.monthly_burn,
+        profile.total_debt,
+        0.0 # liquid assets assumed 0 if in debt usually, or not relevant for L0/L1 distinction
+    )
+    profile.current_level = level
+    await repo.save_user_profile(profile)
+
+    return templates.TemplateResponse("partials/onboarding_result.html", {"request": request, "level": level, "profile": profile})
+
+@app.post("/api/onboarding/step-4-assets", response_class=HTMLResponse)
+async def onboarding_step_4(request: Request, liquid_assets: float = Form(...)):
+    profile = await repo.get_user_profile()
+    profile.liquid_assets = liquid_assets
+    await repo.save_user_profile(profile)
+    
+    level = calculate_financial_level(
+        profile.monthly_income,
+        profile.monthly_burn,
+        profile.total_debt,
+        profile.liquid_assets
+    )
+    profile.current_level = level
+    await repo.save_user_profile(profile)
+    
+    return templates.TemplateResponse("partials/onboarding_result.html", {"request": request, "level": level, "profile": profile})
+
+
+@app.post("/api/onboarding/complete", response_class=HTMLResponse)
+async def onboarding_complete(request: Request):
+    profile = await repo.get_user_profile()
+    profile.onboarding_completed = True
+    await repo.save_user_profile(profile)
+    
+    # Client-side redirect via HX-Redirect or just return a script
+    # HTMX handles redirects if we use hx-target="body" or return a generic response with HX-Redirect header
+    response = HTMLResponse(content="")
+    response.headers["HX-Redirect"] = "/"
+    return response
 
 class Scenario(BaseModel):
     query: str
@@ -191,4 +370,4 @@ async def insights_partial(request: Request, index: int = 0):
     return templates.TemplateResponse("partials/insight_card.html", context)
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8081)
+    uvicorn.run(app, host="127.0.0.1", port=8081)

@@ -3,10 +3,10 @@ import csv
 import json
 import os
 from pathlib import Path
-from typing import Dict, List, Optional, Type, TypeVar, Union
+from typing import Dict, List, Optional, Type, TypeVar, Union, Any
 from datetime import datetime
 
-from backend.models import Asset, Liability, IncomeSource, SpendingCategory, Transaction
+from backend.models import Asset, Liability, IncomeSource, SpendingCategory, Transaction, UserProfile
 
 T = TypeVar("T", bound=Union[Asset, Liability, IncomeSource])
 
@@ -16,6 +16,7 @@ LIABILITIES_FILE = DATA_DIR / "liabilities.json"
 INCOME_FILE = DATA_DIR / "income.json"
 SPENDING_FILE = DATA_DIR / "spending_plan.csv"
 TRANSACTIONS_FILE = DATA_DIR / "transactions.csv"
+USER_FILE = DATA_DIR / "user.json"
 
 class FileRepository:
     def __init__(self):
@@ -134,3 +135,61 @@ class FileRepository:
 
         return await asyncio.to_thread(read_transactions)
 
+    async def get_user_profile(self) -> UserProfile:
+        file_str = str(USER_FILE)
+        
+        # Check if file exists
+        if not await asyncio.to_thread(USER_FILE.exists):
+            # Create default profile if missing
+            default_profile = UserProfile(name="Euclid")
+            await self.save_user_profile(default_profile)
+            return default_profile
+
+        # Check modification time
+        stats = await asyncio.to_thread(USER_FILE.stat)
+        mtime = stats.st_mtime
+
+        # Return cached data if file hasn't changed
+        if file_str in self._cache and self._mtimes.get(file_str) == mtime:
+            return self._cache[file_str]
+
+        # Load data
+        try:
+            def read_json():
+                with open(USER_FILE, "r") as f:
+                    return json.load(f)
+
+            data = await asyncio.to_thread(read_json)
+            profile = UserProfile(**data)
+            
+            # Update cache
+            self._cache[file_str] = profile
+            self._mtimes[file_str] = mtime
+            return profile
+        except (json.JSONDecodeError, OSError) as e:
+            print(f"Error loading {USER_FILE}: {e}")
+            # Fallback to default in case of error
+            return UserProfile(name="Euclid")
+
+    async def save_user_profile(self, profile: UserProfile):
+        def write_json():
+            USER_FILE.parent.mkdir(exist_ok=True)
+            with open(USER_FILE, "w") as f:
+                # Use mode='json' (or model_dump for Pydantic v2) to serialize
+                # Since we might be on Pydantic v1 or v2, let's be safe. 
+                # Assuming Pydantic v1 based on existing code using .dict()
+                # If v2, use model_dump()
+                try:
+                    data = profile.model_dump()
+                except AttributeError:
+                    data = profile.dict()
+                # Handle UUID serialization
+                json.dump(data, f, indent=2, default=str)
+        
+        await asyncio.to_thread(write_json)
+        # Update cache immediately
+        file_str = str(USER_FILE)
+        if await asyncio.to_thread(USER_FILE.exists):
+            stats = await asyncio.to_thread(USER_FILE.stat)
+            self._mtimes[file_str] = stats.st_mtime
+            self._cache[file_str] = profile

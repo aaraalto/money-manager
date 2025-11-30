@@ -1,0 +1,14 @@
+<!-- Step 4: Liquid Assets (Only if No Debt) -->
+<div class="card fade-in">
+    <h1>The Safety Net.</h1>
+    <p>Since you're debt-free, let's check your stability.<br>How much cash do you have accessible?</p>
+    
+    <form hx-post="/api/onboarding/step-4-assets" hx-target="#onboarding-content" hx-swap="innerHTML">
+        <div class="input-group">
+            <label for="liquid_assets">Cash & Savings</label>
+            <input type="number" id="liquid_assets" name="liquid_assets" placeholder="$0" required autofocus>
+        </div>
+        <button type="submit" class="btn-primary">Calculate Level</button>
+    </form>
+</div>
+
