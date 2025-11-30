@@ -61,7 +61,7 @@
     {% for tag in tags %}
         <button 
             class="filter-btn {% if tag == filter_tag %}active{% endif %}"
-            onclick="document.querySelector('input[name=filter_tag]').value='{{ tag }}'; htmx.trigger('#query-input', 'change')"
+            onclick="document.querySelector('input[name=filter_tag]').value='{{ tag }}'; htmx.trigger('#hidden-payment-input', 'change')"
         >
             {{ tag }}
         </button>

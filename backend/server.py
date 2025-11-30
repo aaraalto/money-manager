@@ -49,8 +49,6 @@ async def read_root(request: Request):
         return f"${val:,.0f}"
 
     # Level-Specific Logic
-    # If Level 3, we need projection data
-    # We fetch dashboard data using the service
     dashboard_data = await service.get_dashboard_view()
     
     context = {
@@ -61,7 +59,6 @@ async def read_root(request: Request):
     
     if profile.current_level >= 3:
         # Inject Level 3 specific data
-        # Fix for Date serialization in template: pass raw JSON string using default=str
         context["projection_json"] = json.dumps(dashboard_data["projection"], default=str)
         context["crossover_date"] = str(dashboard_data["projection"].get("crossover_date", "N/A"))
         context["monthly_contribution"] = dashboard_data["projection"].get("monthly_contribution", 1000) 
@@ -72,15 +69,17 @@ async def read_root(request: Request):
         return templates.TemplateResponse("templates/dashboard_level_1.html", context)
     elif profile.current_level == 2:
         return templates.TemplateResponse("templates/dashboard_level_2.html", context)
-    elif profile.current_level >= 3:
+    elif profile.current_level == 3:
         return templates.TemplateResponse("templates/dashboard_level_3.html", context)
+    elif profile.current_level == 5:
+        return templates.TemplateResponse("templates/dashboard_level_5.html", context)
     else:
-        # Default / Level 0
+        # Default / Level 0 / Level 4 (not yet spec'd) uses standard or prev level
         return templates.TemplateResponse("templates/dashboard.html", context)
 
-@app.get("/generative")
-async def read_generative(request: Request):
-    return templates.TemplateResponse("generative_example.html", {"request": request})
+@app.get("/simulator")
+async def read_simulator(request: Request):
+    return templates.TemplateResponse("templates/simulator.html", {"request": request})
 
 @app.get("/design-system")
 async def read_design_system(request: Request):
@@ -90,43 +89,27 @@ async def read_design_system(request: Request):
 
 @app.get("/onboarding")
 async def onboarding_page(request: Request):
-    # Reset profile if needed or just load current state
     profile = await repo.get_user_profile()
-    # We always start at step 1 for now if they go to /onboarding
     return templates.TemplateResponse("onboarding.html", {"request": request, "step": 1, "user": profile})
 
 @app.post("/api/onboarding/import", response_class=HTMLResponse)
 async def onboarding_import(request: Request):
-    """
-    Imports data from the JSON/CSV files in the data directory and auto-completes onboarding.
-    """
-    # 1. Fetch all data from repo
     income_sources = await repo.get_income()
     spending_plan = await repo.get_spending_plan()
     liabilities = await repo.get_liabilities()
     assets = await repo.get_assets()
     
-    # 2. Calculate aggregates
-    # Income
     monthly_income = calculate_monthly_income(income_sources)
-    
-    # Expenses (Burn) - Sum of spending plan categories
     monthly_burn = sum(s.amount for s in spending_plan)
-    
-    # Debt
     total_debt = sum(l.balance for l in liabilities)
-    
-    # Liquid Assets
     liquid_assets = sum(a.value for a in assets if a.liquidity == "liquid" or a.type == "cash")
 
-    # 3. Update Profile
     profile = await repo.get_user_profile()
     profile.monthly_income = monthly_income
     profile.monthly_burn = monthly_burn
     profile.total_debt = total_debt
     profile.liquid_assets = liquid_assets
     
-    # 4. Calculate Level
     level = calculate_financial_level(
         monthly_income,
         monthly_burn,
@@ -137,7 +120,6 @@ async def onboarding_import(request: Request):
     
     await repo.save_user_profile(profile)
     
-    # 5. Return the Result Partial
     return templates.TemplateResponse("partials/onboarding_result.html", {
         "request": request, 
         "level": level, 

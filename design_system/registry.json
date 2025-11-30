@@ -5,14 +5,14 @@
             "description": "Primary interactive element for user actions.",
             "variants": ["primary", "secondary", "ghost"],
             "css_class": ".btn-nav, button, .filter-btn",
-            "files": ["frontend/css/dashboard.css", "frontend/css/generative.css"]
+            "files": ["frontend/css/dashboard.css", "frontend/css/simulator.css"]
         },
         "Card": {
             "status": "stable",
             "description": "Standard container for grouping related content.",
             "variants": ["default", "hover-effect"],
             "css_class": ".card, .generated-card",
-            "files": ["frontend/css/dashboard.css", "frontend/css/generative.css"]
+            "files": ["frontend/css/dashboard.css", "frontend/css/simulator.css"]
         },
         "KPI": {
             "status": "stable",
@@ -35,14 +35,14 @@
             "description": "Complex SVG-based input for adjusting numerical values.",
             "variants": ["default"],
             "css_class": ".rotary-container",
-            "files": ["frontend/css/generative.css", "frontend/js/rotary.js"]
+            "files": ["frontend/css/simulator.css", "frontend/js/rotary.js"]
         },
         "Chart": {
             "status": "stable",
             "description": "D3.js based data visualization.",
             "variants": ["line", "area"],
             "css_class": ".chart-container",
-            "files": ["frontend/css/dashboard.css", "frontend/css/generative.css"]
+            "files": ["frontend/css/dashboard.css", "frontend/css/simulator.css"]
         }
     },
     "version": "1.0.0"

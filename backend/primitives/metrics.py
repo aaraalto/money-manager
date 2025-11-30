@@ -68,7 +68,27 @@ def calculate_financial_level(
     six_months_expenses = monthly_burn * 6
     if liquid_assets < six_months_expenses:
         return 2
+    
+    # Level 3: Growth (Emergency fund full, investing < 25x expenses)
+    # Note: This logic assumes a standard "FIRE" number of 25x annual expenses for Level 4.
+    # Annual Burn = monthly_burn * 12
+    # FI Number = Annual Burn * 25 = monthly_burn * 300
+    fi_number = monthly_burn * 300
+    
+    # We check if liquid/invested assets are less than FI Number for Level 3.
+    # Assuming liquid_assets roughly tracks total invested assets for this check, 
+    # or we might need a separate 'net_worth' or 'invested_assets' param.
+    # For now, reusing liquid_assets as the main asset metric.
+    if liquid_assets < fi_number:
+        return 3
         
-    # Default to Level 3 (Growth) if above conditions met
-    # (Plan focuses on 0-2, so returning 3 as "Graduated Phase 1")
-    return 3
+    # Level 4: Independence (Assets >= 25x Annual Expenses)
+    # Basic FI achieved.
+    # Level 5 (Abundance) and 6 (Legacy) require significantly higher multiples or specific goals.
+    # Let's say Level 5 is 50x expenses (Fat FIRE).
+    fat_fire_number = monthly_burn * 600
+    if liquid_assets < fat_fire_number:
+        return 4
+        
+    # Level 5: Abundance
+    return 5

@@ -1,0 +1,120 @@
+{% extends "templates/layouts/base.html" %}
+{% from "templates/components/atoms.html" import button, icon %}
+{% from "templates/components/molecules.html" import card, stat, kpi_box, alert, page_header %}
+
+{% block title %}Radiant - Legacy Builder{% endblock %}
+
+{% block extra_css %}
+<style>
+    .legacy-header {
+        margin-bottom: 2rem;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        padding-bottom: 1rem;
+        background: linear-gradient(90deg, rgba(20,20,20,0) 0%, rgba(212, 175, 55, 0.1) 50%, rgba(20,20,20,0) 100%);
+    }
+    
+    .impact-radius-container {
+        background: rgba(0,0,0,0.4);
+        border-radius: 24px;
+        padding: 3rem;
+        margin-bottom: 2rem;
+        min-height: 500px;
+        position: relative;
+        border: 1px solid rgba(212, 175, 55, 0.3);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+    
+    .impact-circle {
+        position: absolute;
+        border-radius: 50%;
+        border: 1px solid rgba(212, 175, 55, 0.2);
+        box-shadow: 0 0 30px rgba(212, 175, 55, 0.05);
+        transition: all 1s ease-in-out;
+    }
+    
+    .impact-center {
+        width: 20px;
+        height: 20px;
+        background: #d4af37;
+        border-radius: 50%;
+        box-shadow: 0 0 20px #d4af37;
+        z-index: 10;
+    }
+    
+    .impact-label {
+        position: absolute;
+        color: rgba(255,255,255,0.5);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
+    
+    .infinite-runway-badge {
+        background: rgba(212, 175, 55, 0.2);
+        color: #d4af37;
+        border: 1px solid #d4af37;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-family: 'Outfit', sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-size: 0.8rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <header class="app-header legacy-header">
+        <div class="header-brand">
+            <h1 style="display: flex; align-items: center; gap: 1rem;">
+                Radiant 
+                <span class="infinite-runway-badge">Level 5: Abundance</span>
+            </h1>
+            <p class="tagline" style="color: #d4af37;">Your wealth is now a tool for impact.</p>
+        </div>
+        <div class="header-controls">
+            {{ button("Estate Plan", "#", "secondary", "file-text") }}
+        </div>
+    </header>
+
+    <div class="impact-radius-container">
+        <div class="impact-center"></div>
+        <!-- Concentric circles representing impact -->
+        <div class="impact-circle" style="width: 150px; height: 150px;"></div>
+        <div class="impact-label" style="top: 42%; right: 52%;">Family</div>
+        
+        <div class="impact-circle" style="width: 300px; height: 300px;"></div>
+        <div class="impact-label" style="top: 30%; right: 52%;">Community</div>
+        
+        <div class="impact-circle" style="width: 500px; height: 500px; border-style: dashed;"></div>
+        <div class="impact-label" style="top: 15%; right: 52%;">Global</div>
+        
+        <div style="position: absolute; bottom: 2rem; text-align: center;">
+            <h2 style="font-size: 2rem; color: #d4af37;">Infinite Runway Active</h2>
+            <p class="text-secondary">Annual Withdrawal Rate: <span style="color: white;">3.2%</span> (Safe)</p>
+        </div>
+    </div>
+
+    <div class="grid">
+        {% call card("Generational Wealth", "users") %}
+            {{ stat("Trust Fund", "$1,200,000", "trust-fund", "Projected 2040 Value: $4.5M") }}
+            <div class="separator"></div>
+            {{ stat("Charitable Giving", "$45,000/yr", "giving", "Tax Deductible") }}
+        {% endcall %}
+        
+        {% call card("Asset Allocation", "pie-chart") %}
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <span class="badge">Real Estate 40%</span>
+                <span class="badge">Equities 40%</span>
+                <span class="badge">Alt / Crypto 10%</span>
+                <span class="badge">Cash 10%</span>
+            </div>
+            <p class="text-secondary" style="margin-top: 1rem;">Rebalancing recommended in Q4.</p>
+        {% endcall %}
+    </div>
+{% endblock %}
+
