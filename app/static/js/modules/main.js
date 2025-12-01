@@ -1,6 +1,6 @@
 import { fetchDashboardData } from './api.js';
-import { renderNetWorth, renderFinancialHealth, animateEntry, setupInitialState, showDashboard, showError } from './ui.js';
-import { renderProjection, renderDebtPayoff } from './charts.js';
+import { renderNetWorth, renderFinancialHealth, renderDailyAllowance, renderSystemStatus, animateEntry, setupInitialState, showDashboard, showError } from './ui.js';
+import { renderProjection, renderDebtPayoff, renderSpendingBreakdown } from './charts.js';
 
 // Radiant Dashboard Logic
 console.log(`%c
@@ -35,11 +35,14 @@ async function init() {
         // Render Data First
         renderNetWorth(data.net_worth);
         renderFinancialHealth(data.financial_health);
+        renderDailyAllowance(data.daily_allowance);
+        renderSystemStatus(data.system_status);
         
         // Render Charts (wait for layout)
         requestAnimationFrame(() => {
              renderProjection(data.projection);
              renderDebtPayoff(data.debt_payoff);
+             renderSpendingBreakdown(data.spending_breakdown);
         });
 
         // Animate Entry
@@ -52,6 +55,7 @@ async function init() {
             resizeTimer = setTimeout(() => {
                  renderProjection(data.projection);
                  renderDebtPayoff(data.debt_payoff);
+                 renderSpendingBreakdown(data.spending_breakdown);
             }, 250);
         });
 

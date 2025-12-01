@@ -55,6 +55,11 @@ class RotaryKnob {
         // Set initial state
         this.updateFromValue(this.value);
 
+        // Setup manual input if display is an input element
+        if (this.display && (this.display.tagName === 'INPUT')) {
+            this.setupManualInput();
+        }
+
         // Make draggable
         // We rotate the group around the center of the SVG
         Draggable.create(this.knob, {
@@ -86,6 +91,33 @@ class RotaryKnob {
         }
     }
 
+    setupManualInput() {
+        // Update rotary when user types
+        this.display.addEventListener('input', (e) => {
+            const val = parseInt(e.target.value, 10);
+            if (!isNaN(val)) {
+                // Don't update visuals fully to avoid cursor jumping, just knob and internal value
+                // However, we need to clamp for the logic but maybe let user type freely until blur?
+                // Let's clamp for safety but maybe allow typing.
+                // For now, simple approach: update everything.
+                // To avoid cursor jumping, we might skip updating the input value in updateVisuals if it's the active element.
+                this.updateFromValue(val, true); // true = fromInput
+            }
+        });
+
+        // Commit on blur or enter
+        this.display.addEventListener('blur', () => {
+            this.updateFromValue(this.value); // Clamp and normalize
+            this.commitValue();
+        });
+
+        this.display.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                this.display.blur();
+            }
+        });
+    }
+
     handleRotation(degrees) {
         // Normalize to 0-360
         let rot = degrees % 360;
@@ -99,7 +131,7 @@ class RotaryKnob {
         this.updateVisuals(rot);
     }
 
-    updateFromValue(val) {
+    updateFromValue(val, fromInput = false) {
         // Clamp value
         val = Math.max(this.options.minValue, Math.min(this.options.maxValue, val));
         this.value = val;
@@ -110,10 +142,10 @@ class RotaryKnob {
         // Set Knob Rotation
         gsap.set(this.knob, { rotation: rot, transformOrigin: "center center" });
 
-        this.updateVisuals(rot);
+        this.updateVisuals(rot, fromInput);
     }
 
-    updateVisuals(rot) {
+    updateVisuals(rot, fromInput = false) {
         // Update Progress Arc
         // Stroke-dashoffset: pathLength * (1 - pct)
         const pct = rot / 360;
@@ -127,7 +159,13 @@ class RotaryKnob {
 
         // Update Display Text with flip animation
         if (this.display) {
-            this.animateNumber(this.display, this.value);
+            if (this.display.tagName === 'INPUT') {
+                if (!fromInput && document.activeElement !== this.display) {
+                    this.display.value = this.value;
+                }
+            } else {
+                this.animateNumber(this.display, this.value);
+            }
         }
 
         // Check Limit

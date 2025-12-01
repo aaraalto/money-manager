@@ -9,44 +9,27 @@
 {% endblock %}
 
 {% block content %}
-    {% set level_text = "Level " ~ user.current_level if user else "Level 0" %}
-    {% call dashboard_header(level_text, "badge badge-danger", "Crisis Mode: Stop the bleeding.", "", "", "Cut Expenses", "list") %}
-        <!-- No extra actions for Level 0, focus on fixing cash flow -->
-    {% endcall %}
-
     <div id="loading">Analyzing cash flow...</div>
 
     <div id="dashboard" class="hidden">
         <!-- Level 0 Focus: Cash Flow & Burn -->
         <div class="dashboard-overview">
-            {% call card("Immediate Action Needed", "alert-triangle") %}
-                <div class="stat">
-                    <div class="stat-label">
-                        <span class="term" data-tooltip="Income minus Expenses. Must be positive.">Net Cash Flow</span>
-                    </div>
-                    <div class="stat-value text-danger" id="savings-rate">--</div> 
-                    <div class="stat-change negative">You are burning cash</div>
-                </div>
-                <div class="separator"></div>
-                {{ alert("Insolvency Detected", "Your expenses exceed your income. Use the Spending Plan to cut 'Wants' immediately.", "danger") }}
+            {% call card("Expense Breakdown", "pie-chart") %}
+                 <div class="chart-container" id="chart-spending" style="height: 220px;"></div>
             {% endcall %}
 
             {% call card("Burn Rate Analysis", "activity") %}
-                <div class="kpi-row">
-                     {{ kpi_box("Monthly Burn", id="monthly-burn") }}
-                     {{ kpi_box("Runway (Months)", id="runway-months") }}
+                <div class="stat" style="text-align: center; padding: 1rem 0;">
+                    <div class="stat-label">Daily Allowance</div>
+                    <div class="stat-value" id="daily-allowance-value">--</div>
+                    <div class="stat-change">Safe to spend</div>
                 </div>
             {% endcall %}
         </div>
 
         <!-- Only show essentials -->
         <div class="grid">
-             {% call card("Expense Breakdown", "pie-chart") %}
-                <div class="chart-container" id="chart-spending"></div>
-                <div class="reasoning">
-                    Identify the largest categories to cut.
-                </div>
-            {% endcall %}
+             <!-- Projection -->
         </div>
     </div>
 {% endblock %}

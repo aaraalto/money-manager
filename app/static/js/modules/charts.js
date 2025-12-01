@@ -260,3 +260,114 @@ function drawMultiLineChart(selector, data1, data2) {
     }
 }
 
+export function renderSpendingBreakdown(data) {
+    const container = "#chart-spending";
+    drawPieChart(container, data);
+}
+
+function drawPieChart(selector, data) {
+    if (typeof d3 === 'undefined') return;
+
+    const container = d3.select(selector);
+    container.html("");
+
+    // Filter out zero values
+    const cleanData = data.filter(d => d.value > 0);
+    if (cleanData.length === 0) return;
+
+    // Only top 5 categories + Others
+    const topN = 5;
+    let displayData = cleanData.slice(0, topN);
+    const othersValue = cleanData.slice(topN).reduce((acc, curr) => acc + curr.value, 0);
+    if (othersValue > 0) {
+        displayData.push({ label: "Others", value: othersValue, type: "Mixed" });
+    }
+
+    const margin = { top: 10, right: 10, bottom: 10, left: 10 };
+    const containerNode = container.node();
+    if (!containerNode) return;
+    
+    const width = containerNode.getBoundingClientRect().width;
+    const height = (containerNode.getBoundingClientRect().height || 200);
+    const radius = Math.min(width, height) / 2 - margin.top;
+
+    const svg = container.append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .append("g")
+        .attr("transform", `translate(${width / 2},${height / 2})`);
+
+    // Palette
+    const color = d3.scaleOrdinal()
+        .domain(displayData.map(d => d.label))
+        .range(["#6366f1", "#f59e0b", "#10b981", "#ef4444", "#8b5cf6", "#64748b"]);
+
+    const pie = d3.pie()
+        .value(d => d.value)
+        .sort(null);
+
+    const arc = d3.arc()
+        .innerRadius(radius * 0.6) // Donut chart
+        .outerRadius(radius);
+
+    // Animation for arcs
+    const arcs = svg.selectAll("path")
+        .data(pie(displayData))
+        .enter()
+        .append("path")
+        .attr("d", arc)
+        .attr("fill", d => color(d.data.label))
+        .attr("stroke", "var(--surface-card)")
+        .style("stroke-width", "2px")
+        .style("opacity", 0.8);
+
+    // Tooltip integration
+    arcs.append("title")
+        .text(d => `${d.data.label}: $${d.data.value.toLocaleString()}`);
+
+    if (typeof gsap !== 'undefined') {
+        arcs.style("opacity", 0)
+            .attr("transform", "scale(0.8)");
+            
+        gsap.to(arcs.nodes(), {
+            opacity: 1,
+            scale: 1,
+            duration: 0.8,
+            stagger: 0.05,
+            ease: "back.out(1.7)",
+            delay: 0.2
+        });
+    }
+    
+    // Add center text (Total)
+    const total = displayData.reduce((acc, curr) => acc + curr.value, 0);
+    
+    const centerGroup = svg.append("g");
+    
+    centerGroup.append("text")
+        .attr("text-anchor", "middle")
+        .attr("dy", "-0.2em")
+        .style("font-size", "1.2em")
+        .style("font-weight", "bold")
+        .style("fill", "var(--text-primary)")
+        .style("font-family", "var(--font-body)")
+        .text(`$${(total/1000).toFixed(1)}k`);
+        
+    centerGroup.append("text")
+        .attr("text-anchor", "middle")
+        .attr("dy", "1.2em")
+        .style("font-size", "0.8em")
+        .style("fill", "var(--text-secondary)")
+        .style("font-family", "var(--font-body)")
+        .text("Total");
+
+    if (typeof gsap !== 'undefined') {
+        centerGroup.style("opacity", 0);
+        gsap.to(centerGroup.node(), {
+            opacity: 1,
+            duration: 0.5,
+            delay: 1
+        });
+    }
+}
+

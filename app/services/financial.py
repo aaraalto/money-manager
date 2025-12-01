@@ -42,8 +42,24 @@ class FinancialService:
         total_monthly_spending = sum(s.amount for s in spending_list)
         min_debt_payments = sum(l.min_payment for l in liabilities)
         
+        # Correctly handle Debt Repayment category to avoid double counting
+        debt_repayment_category = next((s for s in spending_list if s.category == "Debt Repayment"), None)
+        debt_outflow = min_debt_payments
+        
+        # If user has explicitly budgeted for debt, use that amount if it covers minimums
+        spending_for_surplus = total_monthly_spending
+        if debt_repayment_category:
+            if debt_repayment_category.amount >= min_debt_payments:
+                debt_outflow = debt_repayment_category.amount
+                # Don't double count debt in spending
+                spending_for_surplus -= debt_repayment_category.amount
+            else:
+                # If budgeted amount is less than min payments, we must use min payments
+                # and remove the insufficient budgeted amount from spending to avoid double counting
+                 spending_for_surplus -= debt_repayment_category.amount
+
         # Calculate Surplus / Savings
-        surplus = total_monthly_income - total_monthly_spending - min_debt_payments
+        surplus = total_monthly_income - spending_for_surplus - debt_outflow
         savings_rate = surplus / total_monthly_income if total_monthly_income > 0 else 0
         
         # DTI (Debt Payments / Gross Income usually, but here using net income proxy or just income)
@@ -86,11 +102,41 @@ class FinancialService:
             ]
         }
         
+        # 5. Spending Breakdown
+        spending_breakdown = [
+            {"label": s.category, "value": s.amount, "type": s.type}
+            for s in spending_list
+        ]
+        spending_breakdown.sort(key=lambda x: x["value"], reverse=True)
+
+        # 6. Daily Allowance (Safe to Spend)
+        # Formula: (Allocated 'Wants' + Unallocated Surplus) / 30
+        # This represents money that is NOT for Bills, Debt, or Savings.
+        allocated_wants = sum(s.amount for s in spending_list if s.type == "Want")
+        safe_to_spend_monthly = allocated_wants + max(0, surplus)
+        daily_allowance = safe_to_spend_monthly / 30
+        
+        # 7. System Status
+        # Determine if core obligations are met
+        fixed_costs = sum(s.amount for s in spending_list if s.type == "Need")
+        obligations = fixed_costs + debt_outflow
+        
+        system_status = {
+            "fixed_costs_covered": total_monthly_income >= obligations,
+            "debt_strategy_active": True, # Implicitly true as we have a strategy
+            "savings_automated": sum(s.amount for s in spending_list if s.type == "Savings") > 0,
+            "obligations_monthly": obligations,
+            "income_monthly": total_monthly_income
+        }
+        
         return {
             "net_worth": net_worth_context.dict(),
             "financial_health": financial_health,
             "projection": projection.dict(),
-            "debt_payoff": debt_payoff
+            "debt_payoff": debt_payoff,
+            "spending_breakdown": spending_breakdown,
+            "daily_allowance": daily_allowance,
+            "system_status": system_status
         }
 
     async def commit_scenario(self, monthly_payment: float) -> Dict[str, Any]:

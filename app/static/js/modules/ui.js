@@ -44,6 +44,30 @@ export function renderNetWorth(data) {
     renderReasoning("nw-reasoning", data.reasoning);
 }
 
+export function renderDailyAllowance(amount) {
+    animateValue("daily-allowance-value", amount);
+    animateValue("hero-safe-spend", amount);
+}
+
+export function renderSystemStatus(status) {
+    if (!status) return;
+
+    const updateStatus = (id, isOk) => {
+        const el = document.getElementById(id);
+        if (el) {
+            if (isOk) {
+                el.classList.add('active');
+            } else {
+                el.classList.remove('active');
+            }
+        }
+    };
+
+    updateStatus('status-fixed', status.fixed_costs_covered);
+    updateStatus('status-debt', status.debt_strategy_active);
+    updateStatus('status-savings', status.savings_automated);
+}
+
 export function renderFinancialHealth(data) {
     // Savings Rate (percentage)
     const savingsRatePct = (data.savings_rate * 100).toFixed(1) + "%";

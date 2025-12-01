@@ -1,9 +1,9 @@
 /* Scoped variables if needed, otherwise use base vars */
 .editor-container {
     width: 100%;
-    max-width: 900px;
+    max-width: 1200px; /* Increased max-width for side-by-side */
     margin: 0 auto;
-    padding: 20px 0;
+    padding: 20px 20px; /* Added horizontal padding */
     box-sizing: border-box;
 }
 
@@ -18,6 +18,28 @@
     letter-spacing: -0.02em;
     margin: 0;
     color: var(--text-primary);
+}
+
+/* New Split Layout */
+.editor-main {
+    display: grid;
+    grid-template-columns: 2fr 1fr; /* Inputs take 2/3, Insights take 1/3 */
+    gap: 40px;
+    align-items: start; /* Align to top */
+    position: relative;
+}
+
+@media (max-width: 900px) {
+    .editor-main {
+        grid-template-columns: 1fr; /* Stack on smaller screens */
+    }
+    
+    .insights-panel {
+        order: -1; /* Show insights on top on mobile? Or bottom? Let's keep bottom for flow, or stick to top. User asked for "right next to my inputs". */
+        position: static; /* Remove sticky on mobile */
+        margin-bottom: 20px;
+        margin-top: 0;
+    }
 }
 
 .status-indicator {
@@ -41,7 +63,7 @@
 
 .table-header {
     display: grid;
-    grid-template-columns: 2fr 1.5fr 1fr;
+    grid-template-columns: 2fr 1.5fr 1fr 40px; /* Added column for delete action */
     padding-bottom: 15px;
     border-bottom: 1px solid var(--border-color);
     margin-bottom: 20px;
@@ -54,7 +76,7 @@
 
 .spending-row {
     display: grid;
-    grid-template-columns: 2fr 1.5fr 1fr;
+    grid-template-columns: 2fr 1.5fr 1fr 40px; /* Match header */
     align-items: center;
     padding: 20px 0;
     border-bottom: 1px solid var(--border-subtle);
@@ -79,6 +101,34 @@
     text-align: right;
     display: flex;
     justify-content: flex-end;
+    align-items: center;
+}
+
+.col-action {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.delete-btn {
+    background: none;
+    border: none;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    font-size: 1.2rem;
+    opacity: 0;
+    transition: all 0.2s;
+    padding: 5px;
+    border-radius: 50%;
+}
+
+.delete-btn:hover {
+    color: var(--error, #ef4444);
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.spending-row:hover .delete-btn {
+    opacity: 1;
 }
 
 input {
@@ -88,9 +138,25 @@ input {
     font-family: inherit;
     width: 100%;
     outline: none;
+    transition: border-bottom 0.2s;
+}
+
+/* Editable category input */
+.category-input {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    border-bottom: 1px solid transparent;
+    padding-bottom: 2px;
+}
+
+.category-input:focus {
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--primary-color);
 }
 
 .static-input {
+    /* Deprecated in favor of editable, but keeping for compatibility if needed */
     font-size: 1.1rem;
     font-weight: 500;
     color: var(--text-secondary);
@@ -124,6 +190,27 @@ input[type=number]::-webkit-outer-spin-button {
   margin: 0; 
 }
 
+/* Type Select Styling */
+.type-select {
+    appearance: none;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.type-select:focus {
+    border-color: var(--primary-color);
+    outline: none;
+}
+
 .type-tag {
     display: inline-block;
     padding: 6px 16px;
@@ -148,11 +235,20 @@ input[type=number]::-webkit-outer-spin-button {
     border: 1px solid rgba(99, 102, 241, 0.2);
 }
 
+/* Sticky Insights Panel */
 .insights-panel {
-    margin-top: 60px;
+    position: sticky;
+    top: 40px; /* Stick to top of viewport with some gap */
+    background: var(--surface-card);
+    border-radius: var(--radius-xl);
+    padding: 40px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-lg);
     text-align: center;
-    padding-top: 40px;
-    border-top: 1px solid var(--border-color);
+    /* Removed margin-top and border-top from previous layout */
+    margin-top: 0; 
+    border-top: 1px solid var(--border-color); /* Keep border box style */
+    height: fit-content; /* Don't stretch */
 }
 
 .insights-panel h2 {
@@ -161,6 +257,7 @@ input[type=number]::-webkit-outer-spin-button {
     letter-spacing: 0.1em;
     color: var(--text-tertiary);
     margin-bottom: 30px;
+    margin-top: 0;
 }
 
 .insight-metric .label {
@@ -183,7 +280,7 @@ input[type=number]::-webkit-outer-spin-button {
 .insight-row {
     display: flex;
     justify-content: center;
-    gap: 60px;
+    gap: 30px;
     margin-top: 40px;
 }
 
@@ -209,4 +306,37 @@ input[type=number]::-webkit-outer-spin-button {
 .mini-metric .sub {
     font-size: 0.8rem;
     color: var(--text-tertiary);
+}
+
+/* Add Row Button */
+.add-row-container {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.add-row-btn {
+    background: transparent;
+    border: 2px dashed var(--border-color);
+    color: var(--text-tertiary);
+    padding: 12px 24px;
+    border-radius: var(--radius-lg);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    justify-content: center;
+}
+
+.add-row-btn:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    background: rgba(99, 102, 241, 0.05);
+}
+
+.add-row-btn .icon {
+    font-size: 1.2rem;
+    font-weight: bold;
 }

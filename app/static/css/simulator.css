@@ -72,6 +72,7 @@ h1 {
     width: 100%;
     gap: var(--space-6);
     align-items: start;
+    padding-bottom: var(--space-16); /* Ensure scroll space on mobile */
 }
 
 @media (min-width: 1024px) {
@@ -79,11 +80,14 @@ h1 {
         grid-template-columns: 40% 1fr; /* 40/60 Split */
         gap: var(--space-10);
         align-items: start; /* Align top */
+        padding-bottom: 0;
     }
 
     .controls-section {
         position: sticky;
         top: var(--space-8);
+        max-height: calc(100vh - var(--space-16));
+        overflow-y: auto; /* Allow scrolling within controls if needed */
     }
 }
 
@@ -92,7 +96,9 @@ h1 {
     display: flex;
     flex-direction: column;
     gap: var(--space-8);
-    }
+    /* Add padding to prevent edge touches from triggering drag accidentally */
+    padding: var(--space-4) 0; 
+}
 
 .control-panel {
     display: flex;
@@ -633,10 +639,18 @@ h1 {
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    z-index: 10;
 }
 
 .rotary-value-display {
     margin-bottom: 0;
+    pointer-events: none;
+}
+
+.value-group {
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .rotary-currency {
@@ -658,6 +672,40 @@ h1 {
     display: inline-block;
     position: relative;
     transition: color 0.3s var(--ease-smooth);
+}
+
+.rotary-amount-input {
+    font-size: var(--sim-rotary-size);
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: -1px;
+    line-height: 1;
+    font-family: var(--font-mono);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    width: 3.5ch;
+    text-align: center;
+    padding: 0;
+    margin: 0;
+    -moz-appearance: textfield;
+    appearance: none;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+    pointer-events: auto;
+    cursor: text;
+}
+
+.rotary-amount-input:focus {
+    outline: none;
+    border-bottom-color: var(--primary);
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px 4px 0 0;
+}
+
+.rotary-amount-input::-webkit-inner-spin-button,
+.rotary-amount-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
 }
 
 .rotary-label {
@@ -683,6 +731,7 @@ h1 {
     display: flex;
     flex-direction: column;
     gap: 2px;
+    pointer-events: auto; /* Allow tooltip hover */
 }
 
 .limit-label {
@@ -690,6 +739,7 @@ h1 {
     text-transform: uppercase;
     letter-spacing: 1px;
     color: var(--text-tertiary);
+    display: inline-block;
 }
 
 .limit-value {
