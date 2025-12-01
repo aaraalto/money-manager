@@ -37,8 +37,8 @@ def save_json(file_path: Path, items: List[T]):
     # Ensure directory exists
     file_path.parent.mkdir(exist_ok=True)
     with open(file_path, "w") as f:
-        # Use mode_dump or dict()
-        json.dump([json.loads(item.json()) for item in items], f, indent=2)
+        # Use model_dump with mode='json' for Pydantic V2 compatibility
+        json.dump([item.model_dump(mode='json') for item in items], f, indent=2)
 
 def load_spending_plan() -> List[SpendingCategory]:
     if not SPENDING_FILE.exists():
@@ -256,15 +256,16 @@ def audit(args):
 
 def serve(args):
     print(RADIANT_BANNER)
-    print("\n🚀 System Initialized. Starting Radiant Server...")
-    print("   • Dashboard:     http://localhost:8000")
-    print("   • API Docs:      http://localhost:8000/docs")
+    port = args.port
+    print(f"\n🚀 System Initialized. Starting Radiant Server...")
+    print(f"   • Dashboard:     http://localhost:{port}")
+    print(f"   • API Docs:      http://localhost:{port}/docs")
     print("\n   Use 'Ctrl+C' to stop the server.")
     print("-" * 60)
     
     import uvicorn
     # Configure logging to be cleaner if possible, or just run
-    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True, log_level="info")
+    uvicorn.run("app.main:app", host="127.0.0.1", port=port, reload=args.reload, log_level="info")
 
 def main():
     parser = argparse.ArgumentParser(description="Wealth OS CLI Manager")
@@ -316,6 +317,9 @@ def main():
     
     # Serve
     serve_parser = subparsers.add_parser("serve", help="Start the web server")
+    serve_parser.add_argument("--port", type=int, default=8000, help="Port to run the server on")
+    serve_parser.add_argument("--reload", action="store_true", default=True, help="Enable auto-reload")
+    serve_parser.add_argument("--no-reload", action="store_false", dest="reload", help="Disable auto-reload")
     serve_parser.set_defaults(func=serve)
 
     args = parser.parse_args()

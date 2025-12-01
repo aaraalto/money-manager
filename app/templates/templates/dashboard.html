@@ -1,6 +1,6 @@
 {% extends "templates/layouts/base.html" %}
 {% from "templates/components/atoms.html" import button, icon %}
-{% from "templates/components/molecules.html" import card, stat, kpi_box, alert, dashboard_header %}
+{% from "templates/components/molecules.html" import card, stat, kpi_box, alert, dashboard_header with context %}
 
 {% block title %}Radiant - Overview{% endblock %}
 
@@ -9,6 +9,8 @@
 {% endblock %}
 
 {% block content %}
+    {{ dashboard_header("Level 1: Clarity", "badge badge-info", "Understanding the flow.") }}
+
     <div id="loading">Analyzing cash flow...</div>
 
     <div id="dashboard" class="hidden">

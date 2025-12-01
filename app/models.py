@@ -47,11 +47,19 @@ class IncomeSource(BaseModel):
     source: str
     amount: float = Field(..., ge=0)
     frequency: str = "monthly"  # monthly, bi-weekly, etc.
+    
+    class Config:
+        extra = "ignore"  # Ignore extra fields like 'tags' if present
 
 class SpendingCategory(BaseModel):
+    id: UUID = Field(default_factory=uuid4)
     category: str
     amount: float = Field(..., ge=0)
     type: str  # Need, Want, Savings
+    owner: str = "Me"
+    description: Optional[str] = None
+    notes: Optional[str] = None
+    roi_potential: Optional[str] = None
 
 class Transaction(BaseModel):
     date: date

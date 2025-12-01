@@ -54,6 +54,34 @@
 </div>
 {% endmacro %}
 
+{# Navigation Dropdown #}
+{% macro nav_dropdown() %}
+<div class="nav-page-selector" id="navPageSelector">
+    <button class="nav-page-trigger" onclick="toggleNavDropdown()">
+        <span class="current-page-name">
+            {% if 'simulator' in request.url.path %}Simulator
+            {% elif 'spending-editor' in request.url.path %}Spending Plan
+            {% else %}Overview{% endif %}
+        </span>
+        <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+    </button>
+    
+    <div class="nav-dropdown-menu">
+        <a href="/" class="nav-dropdown-item {% if request.url.path == '/' %}active{% endif %}">
+            Overview <span class="check">✓</span>
+        </a>
+        <a href="/simulator" class="nav-dropdown-item {% if 'simulator' in request.url.path %}active{% endif %}">
+            Simulator <span class="check">✓</span>
+        </a>
+        <a href="/spending-editor" class="nav-dropdown-item {% if 'spending-editor' in request.url.path %}active{% endif %}">
+            Spending Plan <span class="check">✓</span>
+        </a>
+    </div>
+</div>
+{% endmacro %}
+
 {# Page Header #}
 {% macro page_header(title, subtitle, actions=None) %}
 <header class="app-header">
@@ -61,11 +89,9 @@
         <h1>{{ title }}</h1>
         {% if subtitle %}<p class="tagline">{{ subtitle }}</p>{% endif %}
     </div>
-    {% if actions %}
     <div class="header-controls">
-        {{ actions }}
+        {{ nav_dropdown() }}
     </div>
-    {% endif %}
 </header>
 {% endmacro %}
 
@@ -82,8 +108,7 @@
         <p class="tagline" style="{{ tagline_style }}">{{ tagline }}</p>
     </div>
     <div class="header-controls">
-        {{ button(adjust_label, "/spending-editor", "secondary", adjust_icon) }}
-        {{ caller() }}
+        {{ nav_dropdown() }}
     </div>
 </header>
 {% endmacro %}

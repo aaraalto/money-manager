@@ -394,3 +394,46 @@
     visibility: visible;
     transform: translateX(-50%) translateY(-8px);
 }
+
+/* Table Filter Selectors */
+.select-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.filter-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 0.5rem 2rem 0.5rem 0.5rem; /* Right padding for chevron */
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background 0.2s ease;
+}
+
+.filter-select:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.filter-select:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.select-arrow {
+    position: absolute;
+    right: 8px; /* 8px from the end edge, acting as padding-right margin */
+    top: 50%;
+    transform: translateY(-50%);
+    width: 12px;
+    height: 12px;
+    pointer-events: none;
+    color: var(--text-secondary);
+}

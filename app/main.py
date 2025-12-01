@@ -1,15 +1,17 @@
 import asyncio
-from fastapi import FastAPI, Request, Form
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi import FastAPI, Request, Form, Depends, Response
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.encoders import jsonable_encoder
+from pathlib import Path
+from typing import List
+
 from app.models import Scenario, SpendingCategory, LiabilityTag
 from app.data.repository import FileRepository
 from app.services.financial import FinancialService
 from app.domain.debt import simulate_debt_payoff
 from app.domain.svg_charts import generate_simple_line_chart_svg
-from typing import List
 
 app = FastAPI()
 
@@ -19,39 +21,75 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 # Templates
 templates = Jinja2Templates(directory="app/templates")
 
-# Services
-repo = FileRepository()
-service = FinancialService(repo)
+# Dependencies
+def get_repository(request: Request) -> FileRepository:
+    user_slug = request.cookies.get("demo_user")
+    if user_slug == "bill":
+        return FileRepository(root_dir=Path("data/bill"))
+    return FileRepository(root_dir=Path("data"))
+
+def get_service(repo: FileRepository = Depends(get_repository)) -> FinancialService:
+    return FinancialService(repo)
+
+@app.get("/demo", response_class=HTMLResponse)
+async def demo_page(request: Request):
+    return templates.TemplateResponse("select_user.html", {"request": request})
+
+@app.get("/demo-select")
+async def select_user(user: str, response: Response):
+    redirect = RedirectResponse(url="/", status_code=302)
+    redirect.set_cookie(key="demo_user", value=user)
+    return redirect
 
 @app.get("/", response_class=HTMLResponse)
-async def root(request: Request):
+async def root(request: Request, repo: FileRepository = Depends(get_repository)):
+    if not request.cookies.get("demo_user"):
+        return RedirectResponse(url="/demo")
+
     user = await repo.get_user_profile()
-    return templates.TemplateResponse("templates/dashboard.html", {"request": request, "user": user})
+    
+    template_name = "templates/dashboard.html"
+    if user.current_level == 2:
+        template_name = "templates/dashboard_level_2.html"
+    elif user.current_level == 3:
+         template_name = "templates/dashboard_level_3.html"
+    elif user.current_level == 5:
+         template_name = "templates/dashboard_level_5.html"
+
+    return templates.TemplateResponse(template_name, {"request": request, "user": user})
 
 @app.get("/simulator", response_class=HTMLResponse)
-async def simulator(request: Request):
-    return templates.TemplateResponse("templates/simulator.html", {"request": request})
+async def simulator(request: Request, repo: FileRepository = Depends(get_repository)):
+    user = await repo.get_user_profile()
+    return templates.TemplateResponse("templates/simulator.html", {"request": request, "user": user})
 
 @app.get("/spending-editor", response_class=HTMLResponse)
-async def spending_editor(request: Request):
-    return templates.TemplateResponse("spending_editor.html", {"request": request})
+async def spending_editor(request: Request, repo: FileRepository = Depends(get_repository)):
+    user = await repo.get_user_profile()
+    return templates.TemplateResponse("spending_editor.html", {"request": request, "user": user})
+
+@app.get("/assets", response_class=HTMLResponse)
+async def assets_page(request: Request, repo: FileRepository = Depends(get_repository), service: FinancialService = Depends(get_service)):
+    user = await repo.get_user_profile()
+    data = await service.get_assets_view()
+    return templates.TemplateResponse("assets.html", {"request": request, "data": data, "user": user})
 
 @app.get("/api/spending-plan", response_model=List[SpendingCategory])
-async def get_spending_plan():
+async def get_spending_plan(repo: FileRepository = Depends(get_repository)):
     return await repo.get_spending_plan()
 
 @app.post("/api/spending-plan")
-async def save_spending_plan(plan: List[SpendingCategory]):
+async def save_spending_plan(plan: List[SpendingCategory], repo: FileRepository = Depends(get_repository)):
     await repo.save_spending_plan(plan)
     return {"status": "success"}
 
 @app.get("/api/view")
-async def get_dashboard_data():
+async def get_dashboard_data(service: FinancialService = Depends(get_service)):
     data = await service.get_dashboard_data()
     return JSONResponse(content=jsonable_encoder(data))
 
 @app.post("/api/commit-scenario")
-async def commit_scenario_endpoint(monthly_payment: float = Form(...), strategy: str = Form("avalanche")):
+async def commit_scenario_endpoint(monthly_payment: float = Form(...), strategy: str = Form("avalanche"), service: FinancialService = Depends(get_service)):
     result = await service.commit_scenario(monthly_payment)
     # Return a redirect or success message
     # HTMX can handle the redirect if we set HX-Redirect header
@@ -64,7 +102,7 @@ async def save_scenario(scenario: Scenario):
     return {"status": "success", "scenario": scenario}
 
 @app.get("/partials/calculate", response_class=HTMLResponse)
-async def calculate_partial(request: Request):
+async def calculate_partial(request: Request, repo: FileRepository = Depends(get_repository)):
     # Get params
     params = request.query_params
     try:

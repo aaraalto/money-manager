@@ -1,6 +1,6 @@
 {% extends "templates/layouts/base.html" %}
 {% from "templates/components/atoms.html" import button, icon %}
-{% from "templates/components/molecules.html" import card, stat, kpi_box, alert, dashboard_header %}
+{% from "templates/components/molecules.html" import card, stat, kpi_box, alert, dashboard_header with context %}
 
 {% block title %}Radiant - Debt Resolution{% endblock %}
 
@@ -9,9 +9,7 @@
 {% endblock %}
 
     {% block content %}
-    {% call dashboard_header("Level 1: Focus Mode", "badge badge-warning", "Systematic elimination of liabilities.", "", "", "Adjust Strategy", "sliders") %}
-        {{ button("Simulate Strategy", "/simulator", "primary", "crosshair") }}
-    {% endcall %}
+    {{ dashboard_header("Level 1: Focus Mode", "badge badge-warning", "Systematic elimination of liabilities.", "", "", "Adjust Strategy", "sliders") }}
 
     <div id="loading">Calculating payoff trajectory...</div>
 

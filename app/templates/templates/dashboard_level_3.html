@@ -1,6 +1,6 @@
 {% extends "templates/layouts/base.html" %}
 {% from "templates/components/atoms.html" import button, icon %}
-{% from "templates/components/molecules.html" import card, stat, kpi_box, alert, dashboard_header %}
+{% from "templates/components/molecules.html" import card, stat, kpi_box, alert, dashboard_header with context %}
 
 {% block title %}Radiant - Accumulation{% endblock %}
 
@@ -9,9 +9,7 @@
 {% endblock %}
 
 {% block content %}
-    {% call dashboard_header("Level 3: Accumulation", "badge badge-primary", "Compounding your freedom.", "", "", "Optimize Portfolio", "sliders") %}
-        {{ button("Scenario Plan", "/simulator", "primary", "trending-up") }}
-    {% endcall %}
+    {{ dashboard_header("Level 3: Accumulation", "badge badge-primary", "Compounding your freedom.", "", "", "Optimize Portfolio", "sliders") }}
 
     <div id="loading">Projecting future value...</div>
 

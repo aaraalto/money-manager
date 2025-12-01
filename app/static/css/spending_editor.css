@@ -59,6 +59,7 @@
     padding: 40px;
     border: 1px solid var(--border-color);
     box-shadow: var(--shadow-lg);
+    overflow-x: auto; /* Handle horizontal scrolling */
 }
 
 .table-header {
@@ -72,6 +73,7 @@
     letter-spacing: 0.05em;
     color: var(--text-tertiary);
     font-size: 0.8rem;
+    min-width: 600px; /* Ensure minimum width to prevent squishing */
 }
 
 .spending-row {
@@ -81,6 +83,7 @@
     padding: 20px 0;
     border-bottom: 1px solid var(--border-subtle);
     transition: background 0.2s ease;
+    min-width: 600px; /* Ensure minimum width to prevent squishing */
 }
 
 .spending-row:hover {
@@ -98,9 +101,9 @@
 }
 
 .col-type {
-    text-align: right;
+    text-align: left; /* Fixed alignment: Changed from right to left */
     display: flex;
-    justify-content: flex-end;
+    justify-content: flex-start; /* Fixed alignment: Changed from flex-end to flex-start */
     align-items: center;
 }
 
@@ -244,7 +247,7 @@ input[type=number]::-webkit-outer-spin-button {
     padding: 40px;
     border: 1px solid var(--border-color);
     box-shadow: var(--shadow-lg);
-    text-align: center;
+    text-align: left; /* Changed to left align */
     /* Removed margin-top and border-top from previous layout */
     margin-top: 0; 
     border-top: 1px solid var(--border-color); /* Keep border box style */
@@ -275,37 +278,72 @@ input[type=number]::-webkit-outer-spin-button {
     background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    /* Provide fallback for browsers that don't support text-fill-color */
+    color: var(--text-primary);
 }
 
-.insight-row {
-    display: flex;
-    justify-content: center;
-    gap: 30px;
-    margin-top: 40px;
-}
-
-.mini-metric {
+/* Refactored List Layout for Insights */
+.insight-list {
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 20px;
+    margin-top: 30px;
 }
 
-.mini-metric .label {
-    font-size: 0.85rem;
-    color: var(--text-tertiary);
+.insight-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 0;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.insight-list-item:last-child {
+    border-bottom: none;
+}
+
+.insight-list-item .item-label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.mini-metric .value {
-    font-size: 1.5rem;
+.insight-list-item .item-values {
+    text-align: right;
+}
+
+.insight-list-item .item-amount {
+    display: block;
+    font-size: 1.2rem;
     font-weight: 600;
     color: var(--text-primary);
 }
 
-.mini-metric .sub {
+.insight-list-item .item-pct {
+    display: block;
     font-size: 0.8rem;
     color: var(--text-tertiary);
+}
+
+/* Dot indicators for list items */
+.dot-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.dot-need {
+    background-color: var(--primary-color);
+}
+
+.dot-want {
+    background-color: var(--text-tertiary);
 }
 
 /* Add Row Button */

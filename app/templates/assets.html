@@ -1,0 +1,267 @@
+{% extends "templates/layouts/base.html" %}
+{% from "templates/components/atoms.html" import button, icon %}
+{% from "templates/components/molecules.html" import card with context %}
+
+{% block title %}Radiant - Assets{% endblock %}
+
+{% block extra_css %}
+<style>
+    .assets-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 2rem;
+        margin-top: 1rem;
+    }
+    
+    @media (max-width: 900px) {
+        .assets-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .asset-group {
+        margin-bottom: 2rem;
+    }
+    
+    .asset-group-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--border-color);
+        margin-bottom: 1rem;
+    }
+    
+    .asset-group-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    .asset-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        margin-bottom: 0.8rem;
+        transition: transform 0.2s;
+    }
+    
+    .asset-row:hover {
+        transform: translateY(-2px);
+        border-color: var(--primary-color);
+    }
+    
+    .asset-info {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .asset-name {
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: var(--text-primary);
+    }
+    
+    .asset-meta {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        display: flex;
+        gap: 0.8rem;
+    }
+    
+    .asset-apy {
+        color: var(--success-color);
+    }
+    
+    .asset-value {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.2rem;
+        font-weight: 700;
+    }
+    
+    /* Idea Space */
+    .idea-card {
+        background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .idea-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: var(--primary-color);
+    }
+    
+    .idea-card.warning::before { background: var(--danger-color); }
+    .idea-card.optimization::before { background: var(--success-color); }
+    .idea-card.opportunity::before { background: var(--accent-color); }
+    
+    .idea-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+    }
+    
+    .idea-title {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+    
+    .idea-impact {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--success-color);
+        background: rgba(16, 185, 129, 0.1);
+        padding: 2px 8px;
+        border-radius: 4px;
+    }
+    
+    .idea-desc {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        line-height: 1.5;
+    }
+    
+    .net-worth-hero {
+        padding: 2rem;
+        background: var(--bg-card);
+        border-radius: 24px;
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        border: 1px solid var(--border-color);
+    }
+    
+    .nw-label {
+        font-size: 1rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+    }
+    
+    .nw-value {
+        font-size: 3rem;
+        font-weight: 700;
+        line-height: 1;
+        background: linear-gradient(90deg, #fff, #a5b4fc);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    
+    .nw-sub {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        margin-top: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <div class="net-worth-hero">
+        <div>
+            <div class="nw-label">Net Worth</div>
+            <div class="nw-value">${{ "{:,.0f}".format(data.net_worth) }}</div>
+            <div class="nw-sub">Assets: ${{ "{:,.0f}".format(data.total_assets) }} • Liabilities: ${{ "{:,.0f}".format(data.total_liabilities) }}</div>
+        </div>
+        <div>
+            <!-- Future: Chart sparkleline or trend -->
+        </div>
+    </div>
+
+    <div class="assets-grid">
+        <div class="assets-list">
+            {% for type, assets in data.grouped_assets.items() %}
+            <div class="asset-group">
+                <div class="asset-group-header">
+                    <span class="asset-group-title">{{ type | replace("_", " ") }}</span>
+                    <span>${{ "{:,.0f}".format(assets | sum(attribute='value')) }}</span>
+                </div>
+                
+                {% for asset in assets %}
+                <div class="asset-row">
+                    <div class="asset-info">
+                        <span class="asset-name">{{ asset.name }}</span>
+                        <div class="asset-meta">
+                            {% if asset.apy > 0 %}
+                            <span class="asset-apy">APY: {{ "{:.2f}".format(asset.apy * 100) }}%</span>
+                            {% endif %}
+                            <span class="asset-liquidity">{{ asset.liquidity }}</span>
+                        </div>
+                    </div>
+                    <div class="asset-value">
+                        ${{ "{:,.0f}".format(asset.value) }}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+            
+            {% if not data.grouped_assets %}
+            <div class="empty-state">
+                <p>No assets tracked yet.</p>
+                <!-- Placeholder for "Add Asset" button -->
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="insights-sidebar">
+            <h3>Idea Space</h3>
+            <p style="margin-bottom: 1.5rem; font-size: 0.9rem; color: var(--text-secondary);">
+                Systemic insights to optimize your wealth engine.
+            </p>
+            
+            {% for idea in data.ideas %}
+            <div class="idea-card {{ idea.type }}">
+                <div class="idea-header">
+                    <span class="idea-title">{{ idea.title }}</span>
+                    {% if idea.impact %}
+                    <span class="idea-impact">{{ idea.impact }}</span>
+                    {% endif %}
+                </div>
+                <div class="idea-desc">{{ idea.description }}</div>
+            </div>
+            {% endfor %}
+            
+            {% if not data.ideas %}
+            <div class="idea-card optimization">
+                <div class="idea-header">
+                    <span class="idea-title">All Systems Optimized</span>
+                </div>
+                <div class="idea-desc">Your asset allocation looks healthy. Keep maintaining your strategy.</div>
+            </div>
+            {% endif %}
+            
+            <!-- Static Projection Card -->
+            <div class="card" style="margin-top: 2rem;">
+                <div class="card-header">
+                    <h4>Projected Growth</h4>
+                </div>
+                <div class="card-body">
+                    <p>Based on current APYs, your passive income next year will be approximately:</p>
+                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--success-color); margin-top: 0.5rem;">
+                        {% set passive = namespace(value=0) %}
+                        {% for asset in data.assets %}
+                            {% set passive.value = passive.value + (asset.value * asset.apy) %}
+                        {% endfor %}
+                        ${{ "{:,.0f}".format(passive.value) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+

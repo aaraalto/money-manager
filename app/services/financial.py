@@ -68,7 +68,8 @@ class FinancialService:
         financial_health = {
             "savings_rate": savings_rate,
             "debt_to_income_ratio": dti,
-            "savings_rate_change": 0.02 # Mock change for demo
+            "savings_rate_change": 0.02, # Mock change for demo
+            "monthly_surplus": surplus
         }
         
         # 3. Projection (Wealth Growth)
@@ -159,3 +160,76 @@ class FinancialService:
         await self.repo.save_spending_plan(plan)
         
         return {"status": "success", "new_payment": monthly_payment}
+
+    async def get_assets_view(self) -> Dict[str, Any]:
+        assets = await self.repo.get_assets()
+        liabilities = await self.repo.get_liabilities()
+        spending = await self.repo.get_spending_plan()
+        
+        # Net Worth Logic
+        total_assets = sum(a.value for a in assets)
+        total_liabilities = sum(l.balance for l in liabilities)
+        net_worth = total_assets - total_liabilities
+        
+        # Ideas Logic
+        ideas = []
+        
+        # 1. Low Yield Cash
+        cash_assets = [a for a in assets if a.type == AssetType.CASH]
+        total_cash = sum(a.value for a in cash_assets)
+        for a in cash_assets:
+            if a.apy < 0.03 and a.value > 1000:
+                 ideas.append({
+                     "title": f"Optimize {a.name}",
+                     "description": f"Your cash in {a.name} is earning only {a.apy*100:.1f}%. Consider a HYSA earning ~4.5%.",
+                     "impact": f"+${a.value * (0.045 - a.apy):.0f}/yr",
+                     "type": "optimization"
+                 })
+
+        # 2. Emergency Fund Check
+        monthly_burn = sum(s.amount for s in spending)
+        months_of_runway = total_cash / monthly_burn if monthly_burn > 0 else 0
+        if months_of_runway < 3:
+             ideas.append({
+                 "title": "Build Emergency Fund",
+                 "description": f"You have {months_of_runway:.1f} months of liquid runway. Aim for 3-6 months.",
+                 "impact": "Security",
+                 "type": "warning"
+             })
+        elif months_of_runway > 12:
+              ideas.append({
+                 "title": "Excess Cash Drag",
+                 "description": f"You have {months_of_runway:.1f} months of cash. Inflation is eating it. Invest the excess.",
+                 "impact": "Growth",
+                 "type": "opportunity"
+             })
+
+        # 3. Concentration Risk
+        if total_assets > 0:
+            for a in assets:
+                if a.value / total_assets > 0.5 and len(assets) > 1:
+                     ideas.append({
+                         "title": f"Concentration in {a.name}",
+                         "description": f"{a.name} makes up {a.value/total_assets*100:.0f}% of your assets. Diversify to reduce risk.",
+                         "impact": "Risk Reduction",
+                         "type": "warning"
+                     })
+
+        # Group Assets by Type
+        grouped_assets = {}
+        for a in assets:
+            # Use value (string) of enum for template compatibility
+            t_val = a.type.value
+            if t_val not in grouped_assets:
+                grouped_assets[t_val] = []
+            # Convert Asset model to dict for template compatibility
+            grouped_assets[t_val].append(a.dict())
+
+        return {
+            "net_worth": net_worth,
+            "total_assets": total_assets,
+            "total_liabilities": total_liabilities,
+            "assets": [a.dict() for a in assets],
+            "grouped_assets": grouped_assets,
+            "ideas": ideas
+        }

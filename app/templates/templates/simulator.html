@@ -1,5 +1,6 @@
 {% extends "templates/layouts/base.html" %}
 {% from "templates/components/atoms.html" import icon %}
+{% from "templates/components/molecules.html" import page_header with context %}
 
 {% block title %}Radiant - Future Simulator{% endblock %}
 
@@ -11,6 +12,7 @@
 {% endblock %}
 
 {% block content %}
+    {{ page_header("Future Simulator", "Project your financial trajectory") }}
     
     <div class="simulation-layout">
         <!-- LEFT COLUMN: Controls -->

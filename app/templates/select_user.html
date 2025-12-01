@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select User - Money Manager</title>
+    <link rel="stylesheet" href="/static/css/variables.css">
+    <link rel="stylesheet" href="/static/css/components.css">
+    <style>
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            max-width: 600px;
+        }
+        .user-cards {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 40px;
+        }
+        .user-card {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 30px;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 200px;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .user-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary-color);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--bg-color);
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: bold;
+            border: 2px solid var(--border-color);
+        }
+        h2 { margin: 0 0 10px; font-size: 1.5rem;}
+        p { color: var(--text-muted); font-size: 0.9rem; margin: 0; line-height: 1.4; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Select Demo Persona</h1>
+        <p class="subtitle">Choose a user profile to explore the application</p>
+        
+        <div class="user-cards">
+            <a href="/demo-select?user=euclid" class="user-card">
+                <div class="avatar">E</div>
+                <h2>Euclid</h2>
+                <p>Level 1</p>
+                <p>Negative Net Worth</p>
+            </a>
+            <a href="/demo-select?user=bill" class="user-card">
+                <div class="avatar">B</div>
+                <h2>Bill</h2>
+                <p>Level 2</p>
+                <p>Positive Net Worth</p>
+            </a>
+        </div>
+    </div>
+</body>
+</html>

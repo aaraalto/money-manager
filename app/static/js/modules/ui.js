@@ -76,6 +76,14 @@ export function renderFinancialHealth(data) {
     const savingsEl = document.getElementById("savings-rate");
     if (savingsEl) savingsEl.textContent = savingsRatePct;
 
+    // Monthly Growth (Surplus)
+    if (data.monthly_surplus !== undefined) {
+        const growthEl = document.getElementById("nw-monthly-growth");
+        if (growthEl) {
+             growthEl.textContent = "+" + formatCurrency(data.monthly_surplus);
+        }
+    }
+
     const dtiEl = document.getElementById("debt-income-ratio");
     if (dtiEl) dtiEl.textContent = dtiPct;
 

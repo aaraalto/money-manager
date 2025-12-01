@@ -1,4 +1,5 @@
 {% extends "templates/layouts/base.html" %}
+{% from "templates/components/molecules.html" import page_header with context %}
 
 {% block title %}Radiant / CSP Editor{% endblock %}
 
@@ -78,13 +79,195 @@
         .amount-slider::-webkit-slider-thumb:hover {
             background: var(--primary-color);
         }
+
+        /* Detail Drawer Styling */
+        .drawer-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            backdrop-filter: blur(2px);
+        }
+        .drawer-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .detail-drawer {
+            position: fixed;
+            top: 0;
+            right: -500px;
+            width: 450px;
+            height: 100%;
+            background: var(--bg-card);
+            z-index: 2001;
+            transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: -10px 0 30px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid var(--border-color);
+        }
+        
+        .detail-drawer.open {
+            right: 0;
+        }
+        
+        .drawer-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .drawer-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0;
+            color: var(--text-primary);
+        }
+        
+        .close-drawer-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        }
+        
+        .drawer-content {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            padding: 0.8rem;
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .drawer-actions {
+            padding: 1.5rem;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+        
+        .btn-save {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .spending-row {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .spending-row:hover {
+            background-color: rgba(255,255,255,0.02);
+        }
+        .spending-row input, .spending-row select, .spending-row button {
+            /* Ensure inputs are clickable without triggering drawer */
+            position: relative;
+            z-index: 2;
+        }
     </style>
 {% endblock %}
 
 {% block content %}
+    {% if request.query_params.get('mode') != 'slasher' %}
+        {{ page_header("Spending Plan", "Design your money flow") }}
+    {% endif %}
+
     <div id="impact-toast" class="impact-badge">
         <span class="icon"></span>
         <span id="impact-message">Cutting expense...</span>
+    </div>
+
+    <!-- Detail Drawer -->
+    <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+    <div class="detail-drawer" id="detail-drawer">
+        <div class="drawer-header">
+            <h3 class="drawer-title">Expense Details</h3>
+            <button class="close-drawer-btn" onclick="closeDrawer()">&times;</button>
+        </div>
+        <div class="drawer-content">
+            <input type="hidden" id="drawer-id">
+            
+            <div class="form-group">
+                <label>The Math (How we arrived at this)</label>
+                <textarea id="drawer-description" placeholder="e.g. $50/week * 4 weeks..."></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>Owner</label>
+                <select id="drawer-owner">
+                    <option value="Me">Me</option>
+                    <option value="Partner">Partner</option>
+                    <option value="Business">Business</option>
+                    <option value="Joint">Joint</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>ROI / Intention</label>
+                <textarea id="drawer-roi" placeholder="Is this an investment? What is the return?"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>Notes</label>
+                <textarea id="drawer-notes" placeholder="Additional context..."></textarea>
+            </div>
+        </div>
+        <div class="drawer-actions">
+            <button class="btn-save" onclick="saveDrawer()">Save Changes</button>
+        </div>
     </div>
 
     <div class="editor-container">
@@ -100,27 +283,35 @@
         </header>
         {% endif %}
 
-        <main class="editor-main">
-            <form id="spending-form" class="spending-table-form">
-                <div class="table-header">
-                    <div class="col-category">Category</div>
-                    <div class="col-amount">Monthly Cost</div>
-                    {% if request.query_params.get('mode') != 'slasher' %}
-                    <div class="col-type">Type</div>
-                    {% endif %}
-                </div>
-                <div id="spending-rows" class="spending-rows">
-                    <!-- Rows will be populated by JS -->
-                </div>
-            </form>
+        <div class="editor-main">
+            <div class="inputs-column">
+                <form id="spending-form" class="spending-table-form">
+                    <div class="table-header">
+                        <div class="col-category">Category</div>
+                        <div class="col-amount">Monthly Cost</div>
+                        {% if request.query_params.get('mode') != 'slasher' %}
+                        <div class="col-type">Type</div>
+                        {% endif %}
+                        <div class="col-action"></div>
+                    </div>
+                    <div id="spending-rows" class="spending-rows">
+                        <!-- Rows will be populated by JS -->
+                    </div>
+                    <div class="add-row-container">
+                        <button type="button" class="add-row-btn" onclick="addNewRow()">
+                            <span class="icon">+</span> Add Expense Category
+                        </button>
+                    </div>
+                </form>
+            </div>
 
             <div class="insights-panel">
-                <h2>Spending Insights</h2>
+                <h2>Monthly Burn</h2>
                 <div id="spending-insights-content" class="insights-content">
                     <p class="placeholder-text">Loading insights...</p>
                 </div>
             </div>
-        </main>
+        </div>
     </div>
 {% endblock %}
 
@@ -129,6 +320,7 @@
         // State
         let initialTotal = 0;
         const isSlasherMode = {{ 'true' if request.query_params.get('mode') == 'slasher' else 'false' }};
+        let spendingData = []; // Store full data objects
 
         document.addEventListener('DOMContentLoaded', () => {
             loadSpendingData();
@@ -136,12 +328,20 @@
             // Auto-save on input change with debounce
             let timeout = null;
             document.getElementById('spending-form').addEventListener('input', (e) => {
+                // Update local data model immediately
+                updateLocalModel(e.target);
+
                 // Saving logic visualization
-                const status = document.getElementById('save-status'); // Note: Removed from DOM, but leaving for safety or if we add it back
+                // const status = document.getElementById('save-status'); 
                 
                 // Slasher Impact logic
                 if (isSlasherMode && e.target.name === 'amount') {
                     calculateSimulatedImpact();
+                }
+
+                // Re-calculate insights immediately for better responsiveness
+                if (e.target.name === 'amount' || e.target.name === 'type') {
+                     updateInsights(spendingData);
                 }
                 
                 clearTimeout(timeout);
@@ -155,12 +355,12 @@
             try {
                 const response = await fetch('/api/spending-plan');
                 const data = await response.json();
+                spendingData = data;
                 initialTotal = data.reduce((sum, i) => sum + i.amount, 0);
                 renderRows(data);
                 updateInsights(data);
                 
                 if(isSlasherMode) {
-                    // Initial crossover fetch could go here
                     document.getElementById('current-crossover').innerText = "Oct 2032"; // Mock initial
                 }
             } catch (error) {
@@ -173,74 +373,112 @@
             container.innerHTML = '';
             
             data.forEach((item, index) => {
-                const row = document.createElement('div');
-                row.className = 'spending-row';
-                
-                let amountInput = `
-                    <span class="currency">$</span>
-                    <input type="number" name="amount" value="${item.amount}" class="bold-input" step="1" data-initial="${item.amount}">
-                `;
-                
-                if (isSlasherMode) {
-                    // Add slider for Slasher Mode
-                    amountInput = `
-                        <div class="amount-slider-container">
-                            <input type="range" class="amount-slider" min="0" max="${Math.max(item.amount * 1.5, 100)}" value="${item.amount}" 
-                                oninput="this.nextElementSibling.value = this.value; this.dispatchEvent(new Event('input', {bubbles:true}));">
-                            <input type="number" name="amount" value="${item.amount}" class="bold-input" style="width: 80px;" 
-                                oninput="this.previousElementSibling.value = this.value" data-initial="${item.amount}">
-                        </div>
-                    `;
-                }
-
-                let typeClass = item.type === 'Need' ? 'tag-need' : 'tag-want';
-                let typeCol = `
-                    <div class="col-type">
-                        <span class="type-tag ${typeClass}">${item.type}</span>
-                        <input type="hidden" name="type" value="${item.type}">
-                    </div>
-                `;
-                
-                if (isSlasherMode) typeCol = ''; // Hide type in slasher mode to save space
-
-                row.innerHTML = `
-                    <div class="col-category">
-                        <input type="text" name="category" value="${item.category}" readonly class="static-input">
-                    </div>
-                    <div class="col-amount">
-                        ${amountInput}
-                    </div>
-                    ${typeCol}
-                `;
-                container.appendChild(row);
+                container.appendChild(createRowElement(item, index));
             });
         }
 
-        async function saveSpendingData() {
-            const rows = document.querySelectorAll('.spending-row');
-            const data = Array.from(rows).map(row => {
-                return {
-                    category: row.querySelector('[name="category"]').value,
-                    amount: parseFloat(row.querySelector('[name="amount"]').value) || 0,
-                    type: row.querySelector('[name="type"]') ? row.querySelector('[name="type"]').value : 'Want' // Default if hidden
-                };
-            });
+        function createRowElement(item, index) {
+            const row = document.createElement('div');
+            row.className = 'spending-row';
+            row.dataset.index = index;
+            row.dataset.id = item.id || '';
+            
+            // Click handler for drawer
+            row.onclick = (e) => {
+                // Ignore if clicking input, select, or button
+                if (['INPUT', 'SELECT', 'BUTTON'].includes(e.target.tagName)) return;
+                openDrawer(index);
+            };
+            
+            let amountInput = `
+                <span class="currency">$</span>
+                <input type="number" name="amount" value="${item.amount}" class="bold-input" step="1" placeholder="0" data-index="${index}">
+            `;
+            
+            if (isSlasherMode) {
+                // Add slider for Slasher Mode
+                amountInput = `
+                    <div class="amount-slider-container">
+                        <input type="range" class="amount-slider" min="0" max="${Math.max(item.amount * 1.5, 100)}" value="${item.amount}" 
+                            oninput="this.nextElementSibling.value = this.value; this.dispatchEvent(new Event('input', {bubbles:true}));">
+                        <input type="number" name="amount" value="${item.amount}" class="bold-input" style="width: 80px;" 
+                            oninput="this.previousElementSibling.value = this.value" data-index="${index}">
+                    </div>
+                `;
+            }
 
-            try {
-                const response = await fetch('/api/spending-plan', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                });
-                
-                if (response.ok) {
-                    showToast('All changes saved');
-                    updateInsights(data);
+            let typeControl = '';
+            if (!isSlasherMode) {
+                 typeControl = `
+                    <div class="col-type">
+                        <select name="type" class="type-select" data-index="${index}">
+                            <option value="Want" ${item.type === 'Want' ? 'selected' : ''}>Want</option>
+                            <option value="Need" ${item.type === 'Need' ? 'selected' : ''}>Need</option>
+                            <option value="Savings" ${item.type === 'Savings' ? 'selected' : ''}>Savings</option>
+                        </select>
+                    </div>
+                `;
+            } else {
+                 // Hidden input for slasher mode defaults
+                 typeControl = `<input type="hidden" name="type" value="${item.type || 'Want'}" data-index="${index}">`;
+            }
+
+            row.innerHTML = `
+                <div class="col-category">
+                    <input type="text" name="category" value="${item.category}" class="category-input" placeholder="Category Name" data-index="${index}">
+                </div>
+                <div class="col-amount">
+                    ${amountInput}
+                </div>
+                ${typeControl}
+                <div class="col-action">
+                    <button type="button" class="delete-btn" onclick="deleteRow(this)" title="Delete Expense">
+                        &times;
+                    </button>
+                </div>
+            `;
+            return row;
+        }
+
+        function updateLocalModel(input) {
+            const index = input.dataset.index;
+            if (index !== undefined && spendingData[index]) {
+                if (input.name === 'amount') {
+                    spendingData[index].amount = parseFloat(input.value) || 0;
+                } else {
+                    spendingData[index][input.name] = input.value;
                 }
-            } catch (error) {
-                console.error('Error saving:', error);
+            }
+        }
+
+        function addNewRow() {
+            const container = document.getElementById('spending-rows');
+            const newItem = { 
+                id: crypto.randomUUID(),
+                category: '', 
+                amount: 0, 
+                type: 'Want',
+                owner: 'Me'
+            };
+            spendingData.push(newItem);
+            const row = createRowElement(newItem, spendingData.length - 1);
+            container.appendChild(row);
+            
+            // Focus the new category input
+            row.querySelector('[name="category"]').focus();
+        }
+
+        function deleteRow(btn) {
+            if (confirm('Are you sure you want to delete this expense?')) {
+                const row = btn.closest('.spending-row');
+                const index = parseInt(row.dataset.index);
+                spendingData.splice(index, 1); // Remove from array
+                
+                // Re-render to update indices
+                renderRows(spendingData);
+                
+                saveSpendingData(); // Auto-save after delete
+                updateInsights(spendingData);
             }
         }
 
@@ -250,24 +488,87 @@
             const wants = data.filter(i => i.type === 'Want').reduce((sum, i) => sum + i.amount, 0);
             
             const insightsEl = document.getElementById('spending-insights-content');
+            
+            // Calculate percentages safely
+            const needPct = total > 0 ? Math.round(needs/total*100) : 0;
+            const wantPct = total > 0 ? Math.round(wants/total*100) : 0;
+            
             insightsEl.innerHTML = `
                 <div class="insight-metric">
-                    <span class="label">Total Monthly Spending</span>
+                    <span class="label">Monthly Burn Rate</span>
                     <span class="value">$${total.toLocaleString()}</span>
                 </div>
-                <div class="insight-row">
-                    <div class="mini-metric">
-                        <span class="label">Needs</span>
-                        <span class="value">$${needs.toLocaleString()}</span>
-                        <span class="sub">${total > 0 ? Math.round(needs/total*100) : 0}%</span>
+                <div class="insight-list">
+                    <div class="insight-list-item">
+                        <span class="item-label"><span class="dot-indicator dot-need"></span> Needs</span>
+                        <div class="item-values">
+                            <span class="item-amount">$${needs.toLocaleString()}</span>
+                            <span class="item-pct">${needPct}%</span>
+                        </div>
                     </div>
-                    <div class="mini-metric">
-                        <span class="label">Wants</span>
-                        <span class="value">$${wants.toLocaleString()}</span>
-                        <span class="sub">${total > 0 ? Math.round(wants/total*100) : 0}%</span>
+                    <div class="insight-list-item">
+                        <span class="item-label"><span class="dot-indicator dot-want"></span> Wants</span>
+                        <div class="item-values">
+                            <span class="item-amount">$${wants.toLocaleString()}</span>
+                            <span class="item-pct">${wantPct}%</span>
+                        </div>
                     </div>
                 </div>
             `;
+        }
+
+        async function saveSpendingData() {
+            try {
+                const response = await fetch('/api/spending-plan', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(spendingData)
+                });
+                
+                if (response.ok) {
+                    // Saved successfully
+                }
+            } catch (error) {
+                console.error('Error saving:', error);
+            }
+        }
+
+        // Drawer Logic
+        let currentDrawerIndex = -1;
+
+        function openDrawer(index) {
+            currentDrawerIndex = index;
+            const item = spendingData[index];
+            
+            document.getElementById('drawer-id').value = item.id || '';
+            document.getElementById('drawer-description').value = item.description || '';
+            document.getElementById('drawer-owner').value = item.owner || 'Me';
+            document.getElementById('drawer-roi').value = item.roi_potential || '';
+            document.getElementById('drawer-notes').value = item.notes || '';
+            
+            document.getElementById('detail-drawer').classList.add('open');
+            document.getElementById('drawer-overlay').classList.add('open');
+        }
+
+        function closeDrawer() {
+            document.getElementById('detail-drawer').classList.remove('open');
+            document.getElementById('drawer-overlay').classList.remove('open');
+        }
+
+        function saveDrawer() {
+            if (currentDrawerIndex === -1) return;
+            
+            const item = spendingData[currentDrawerIndex];
+            item.description = document.getElementById('drawer-description').value;
+            item.owner = document.getElementById('drawer-owner').value;
+            item.roi_potential = document.getElementById('drawer-roi').value;
+            item.notes = document.getElementById('drawer-notes').value;
+            
+            saveSpendingData();
+            closeDrawer();
+            showToast("Details saved");
         }
         
         // Gamification Logic
@@ -295,11 +596,7 @@
             
             if (saved > 0) {
                 // Simple heuristic feedback
-                const yearsSaved = (saved * 12 * 25) / 50000; // Example math: reduced burn reduces FI number
                 showToast(`Cutting $${Math.round(saved)}/mo saved you ~${Math.max(1, Math.round(saved/50))} days of work!`);
-                
-                // Animate crossover update (visual only for now)
-                // Ideally we fetch real simulation from backend here
             }
         }
     </script>

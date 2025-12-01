@@ -5,23 +5,45 @@ import os
 from pathlib import Path
 from typing import Dict, List, Optional, Type, TypeVar, Union, Any
 from datetime import datetime
+from uuid import UUID
 
 from app.models import Asset, Liability, IncomeSource, SpendingCategory, Transaction, UserProfile
 
 T = TypeVar("T", bound=Union[Asset, Liability, IncomeSource])
 
-DATA_DIR = Path("data")
-ASSETS_FILE = DATA_DIR / "assets.json"
-LIABILITIES_FILE = DATA_DIR / "liabilities.json"
-INCOME_FILE = DATA_DIR / "income.json"
-SPENDING_FILE = DATA_DIR / "spending_plan.csv"
-TRANSACTIONS_FILE = DATA_DIR / "transactions.csv"
-USER_FILE = DATA_DIR / "user.json"
-
 class FileRepository:
-    def __init__(self):
+    def __init__(self, root_dir: Path = Path("data")):
+        self.root_dir = root_dir
         self._cache: Dict[str, Any] = {}
         self._mtimes: Dict[str, float] = {}
+
+    @property
+    def assets_file(self) -> Path:
+        return self.root_dir / "assets.json"
+
+    @property
+    def liabilities_file(self) -> Path:
+        return self.root_dir / "liabilities.json"
+
+    @property
+    def income_file(self) -> Path:
+        return self.root_dir / "income.json"
+
+    @property
+    def spending_file(self) -> Path:
+        return self.root_dir / "spending_plan.json"
+
+    @property
+    def spending_csv_file(self) -> Path:
+        return self.root_dir / "spending_plan.csv"
+
+    @property
+    def transactions_file(self) -> Path:
+        return self.root_dir / "transactions.csv"
+
+    @property
+    def user_file(self) -> Path:
+        return self.root_dir / "user.json"
 
     async def _load_json_async(self, file_path: Path, model: Type[T]) -> List[T]:
         """
@@ -59,68 +81,85 @@ class FileRepository:
             return []
 
     async def get_assets(self) -> List[Asset]:
-        return await self._load_json_async(ASSETS_FILE, Asset)
+        return await self._load_json_async(self.assets_file, Asset)
 
     async def get_liabilities(self) -> List[Liability]:
-        return await self._load_json_async(LIABILITIES_FILE, Liability)
+        return await self._load_json_async(self.liabilities_file, Liability)
 
     async def get_income(self) -> List[IncomeSource]:
-        return await self._load_json_async(INCOME_FILE, IncomeSource)
+        return await self._load_json_async(self.income_file, IncomeSource)
 
     async def get_spending_plan(self) -> List[SpendingCategory]:
-        file_str = str(SPENDING_FILE)
+        file_str = str(self.spending_file)
         
-        if not await asyncio.to_thread(SPENDING_FILE.exists):
-            return []
+        # 1. Try loading JSON first
+        if await asyncio.to_thread(self.spending_file.exists):
+            stats = await asyncio.to_thread(self.spending_file.stat)
+            mtime = stats.st_mtime
 
-        stats = await asyncio.to_thread(SPENDING_FILE.stat)
-        mtime = stats.st_mtime
-
-        if file_str in self._cache and self._mtimes.get(file_str) == mtime:
-            return self._cache[file_str]
-
-        def read_csv():
-            items = []
-            try:
-                with open(SPENDING_FILE, "r") as f:
-                    reader = csv.DictReader(f, skipinitialspace=True)
-                    for row in reader:
-                        if not row or not row.get('category'): continue
-                        clean_row = {k: v.strip() if isinstance(v, str) else v for k, v in row.items()}
-                        items.append(SpendingCategory(**clean_row))
-            except Exception as e:
-                print(f"Error reading spending file: {e}")
+            if file_str in self._cache and self._mtimes.get(file_str) == mtime:
+                return self._cache[file_str]
+            
+            items = await self._load_json_async(self.spending_file, SpendingCategory)
+            self._cache[file_str] = items
+            self._mtimes[file_str] = mtime
             return items
 
-        items = await asyncio.to_thread(read_csv)
-        self._cache[file_str] = items
-        self._mtimes[file_str] = mtime
-        return items
+        # 2. Fallback to CSV migration
+        if await asyncio.to_thread(self.spending_csv_file.exists):
+             def read_csv():
+                items = []
+                try:
+                    with open(self.spending_csv_file, "r") as f:
+                        reader = csv.DictReader(f, skipinitialspace=True)
+                        for row in reader:
+                            if not row or not row.get('category'): continue
+                            clean_row = {k: v.strip() if isinstance(v, str) else v for k, v in row.items()}
+                            # Convert amount to float if it's a string
+                            if 'amount' in clean_row and isinstance(clean_row['amount'], str):
+                                try:
+                                    clean_row['amount'] = float(clean_row['amount'])
+                                except ValueError:
+                                    print(f"Warning: Could not convert amount '{clean_row['amount']}' to float, skipping row")
+                                    continue
+                            items.append(SpendingCategory(**clean_row))
+                except Exception as e:
+                    print(f"Error reading spending file: {e}")
+                return items
+             
+             items = await asyncio.to_thread(read_csv)
+             # Save as JSON to complete migration
+             await self.save_spending_plan(items)
+             return items
+
+        return []
 
     async def save_spending_plan(self, items: List[SpendingCategory]):
-        def write_csv():
-            SPENDING_FILE.parent.mkdir(exist_ok=True)
-            with open(SPENDING_FILE, "w", newline="") as f:
-                fieldnames = ["category", "amount", "type"]
-                writer = csv.DictWriter(f, fieldnames=fieldnames)
-                writer.writeheader()
-                for item in items:
-                    writer.writerow(item.dict())
+        def write_json():
+            self.spending_file.parent.mkdir(exist_ok=True)
+            with open(self.spending_file, "w") as f:
+                 # Handle serialization safely
+                data = [item.dict() for item in items]
+                # Convert UUIDs to strings for JSON
+                for d in data:
+                    if 'id' in d and isinstance(d['id'], UUID):
+                        d['id'] = str(d['id'])
+                json.dump(data, f, indent=2, default=str)
         
-        await asyncio.to_thread(write_csv)
+        await asyncio.to_thread(write_json)
         # Invalidate cache
-        if str(SPENDING_FILE) in self._mtimes:
-            del self._mtimes[str(SPENDING_FILE)]
+        if str(self.spending_file) in self._mtimes:
+            del self._mtimes[str(self.spending_file)]
 
     async def get_transactions(self) -> List[Transaction]:
         # Similar logic for transactions if needed
         # For now, implementing basic loading
         def read_transactions():
-            if not TRANSACTIONS_FILE.exists():
+            if not self.transactions_file.exists():
                 return []
             transactions = []
             try:
-                with open(TRANSACTIONS_FILE, "r") as f:
+                with open(self.transactions_file, "r") as f:
                     f.seek(0, os.SEEK_END)
                     if f.tell() == 0:
                         return []
@@ -136,17 +175,17 @@ class FileRepository:
         return await asyncio.to_thread(read_transactions)
 
     async def get_user_profile(self) -> UserProfile:
-        file_str = str(USER_FILE)
+        file_str = str(self.user_file)
         
         # Check if file exists
-        if not await asyncio.to_thread(USER_FILE.exists):
+        if not await asyncio.to_thread(self.user_file.exists):
             # Create default profile if missing
             default_profile = UserProfile(name="Euclid")
             await self.save_user_profile(default_profile)
             return default_profile
 
         # Check modification time
-        stats = await asyncio.to_thread(USER_FILE.stat)
+        stats = await asyncio.to_thread(self.user_file.stat)
         mtime = stats.st_mtime
 
         # Return cached data if file hasn't changed
@@ -156,7 +195,7 @@ class FileRepository:
         # Load data
         try:
             def read_json():
-                with open(USER_FILE, "r") as f:
+                with open(self.user_file, "r") as f:
                     return json.load(f)
 
             data = await asyncio.to_thread(read_json)
@@ -167,14 +206,14 @@ class FileRepository:
             self._mtimes[file_str] = mtime
             return profile
         except (json.JSONDecodeError, OSError) as e:
-            print(f"Error loading {USER_FILE}: {e}")
+            print(f"Error loading {self.user_file}: {e}")
             # Fallback to default in case of error
             return UserProfile(name="Euclid")
 
     async def save_user_profile(self, profile: UserProfile):
         def write_json():
-            USER_FILE.parent.mkdir(exist_ok=True)
-            with open(USER_FILE, "w") as f:
+            self.user_file.parent.mkdir(exist_ok=True)
+            with open(self.user_file, "w") as f:
                 # Use mode='json' (or model_dump for Pydantic v2) to serialize
                 # Since we might be on Pydantic v1 or v2, let's be safe. 
                 # Assuming Pydantic v1 based on existing code using .dict()
@@ -188,8 +227,8 @@ class FileRepository:
         
         await asyncio.to_thread(write_json)
         # Update cache immediately
-        file_str = str(USER_FILE)
-        if await asyncio.to_thread(USER_FILE.exists):
-            stats = await asyncio.to_thread(USER_FILE.stat)
+        file_str = str(self.user_file)
+        if await asyncio.to_thread(self.user_file.exists):
+            stats = await asyncio.to_thread(self.user_file.stat)
             self._mtimes[file_str] = stats.st_mtime
             self._cache[file_str] = profile
