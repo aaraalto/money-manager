@@ -86,7 +86,7 @@
 {% macro page_header(title, subtitle, actions=None) %}
 <header class="app-header">
     <div class="header-brand">
-        <div style="display: flex; align-items: center; gap: 1rem;">
+        <div class="flex-center-gap">
             <h1>{{ title }}</h1>
             {{ nav_dropdown() }}
         </div>
@@ -109,16 +109,12 @@
         {% if tagline and tagline.strip() %}<p class="tagline" style="{{ tagline_style }}">{{ tagline }}</p>{% endif %}
     </div>
     
-    <div class="header-center">
+    <div class="header-controls">
         {% if level_text %}
         <button class="level-pill {{ level_badge_class }}" onclick="document.getElementById('level-modal').showModal()">
             {{ level_text }}
         </button>
         {% endif %}
-    </div>
-
-    <div class="header-controls">
-        <!-- Placeholder for right aligned controls if any -->
     </div>
 </header>
 

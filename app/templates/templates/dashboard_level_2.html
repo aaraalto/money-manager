@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block content %}
-    {{ dashboard_header("Level 2: Stability", "badge badge-success", "", "", "", "Review Budget", "list") }}
+    {{ dashboard_header("Level 2: Stability", "badge-success", "", "", "", "Review Budget", "list") }}
 
     <div id="loading">Checking defenses...</div>
 
@@ -25,10 +25,10 @@
                     </div>
                 </div>
                 <div class="separator"></div>
-                <div class="progress" style="margin-top: 1rem;">
+                <div class="progress mt-4">
                     <div class="progress-bar" style="width: 60%;"></div>
                 </div>
-                <p class="text-secondary" style="font-size: 0.85rem; margin-top: 0.5rem;">Goal: 6 Months Expenses</p>
+                <p class="text-secondary text-sm mt-2">Goal: 6 Months Expenses</p>
             {% endcall %}
 
             {% call card("Net Worth Growth", "trending-up") %}

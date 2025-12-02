@@ -255,7 +255,7 @@ def audit(args):
         print("\nPASSED: Data integrity verified.")
 
 def serve(args):
-    print(RADIANT_BANNER)
+    print(f"\033[32m{RADIANT_BANNER}\033[0m")
     port = args.port
     print(f"\n🚀 System Initialized. Starting Radiant Server...")
     print(f"   • Dashboard:     http://localhost:{port}")
@@ -326,7 +326,7 @@ def main():
     if hasattr(args, "func"):
         args.func(args)
     else:
-        print(RADIANT_BANNER)
+        print(f"\033[32m{RADIANT_BANNER}\033[0m")
         print("Welcome to Radiant - Your Personal Financial OS")
         print("Use './manage.sh --help' to see available commands.\n")
         parser.print_help()

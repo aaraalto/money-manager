@@ -9,7 +9,7 @@
 {% endblock %}
 
     {% block content %}
-    {{ dashboard_header("Level 1: Focus Mode", "badge badge-warning", "", "", "", "Adjust Strategy", "sliders") }}
+    {{ dashboard_header("Level 1: Focus Mode", "badge-warning", "", "", "", "Adjust Strategy", "sliders") }}
 
     <div id="loading">Calculating payoff trajectory...</div>
 
@@ -62,7 +62,7 @@
 
             {% call card("Current Strategy", "crosshair") %}
                  {{ alert("Avalanche Method", "Targeting highest interest rate (24.99%) first to minimize loss.", "info") }}
-                 <div class="kpi-row" style="margin-top: 1rem;">
+                 <div class="kpi-row mt-4">
                      {{ kpi_box("Freedom Date", id="freedom-date") }}
                      {{ kpi_box("Interest Saved", id="interest-saved") }}
                  </div>

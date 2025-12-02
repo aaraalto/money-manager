@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block content %}
-    {{ dashboard_header("Level 1: Clarity", "badge badge-info", "") }}
+    {{ dashboard_header("Level 1: Clarity", "badge-info", "") }}
 
     <div id="loading">Analyzing cash flow...</div>
 
@@ -48,8 +48,8 @@
 
             <!-- 2. Expense Breakdown -->
             {% call card("Expense Composition", "flame") %}
-                 <div class="expense-composition-wrapper" style="display: flex; flex-direction: column; align-items: center; height: 100%;">
-                    <div class="chart-container" id="chart-spending" style="width: 100%; height: 400px;"></div>
+                 <div class="expense-composition-wrapper h-full flex-col-center">
+                    <div class="chart-container w-full h-400" id="chart-spending"></div>
                  </div>
             {% endcall %}
         </div>

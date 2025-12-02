@@ -8,12 +8,16 @@ venv/
 *.log
 .cursor/
 
-# Data files (optional, depending on if you want to commit your personal data)
-data/liabilities.json
-data/assets.json
-data/transactions.csv
-data/scenarios.json
-fin-advice/ramit_sethi_assessment.md
+# Data files (sensitive user data)
+data/*.json
+data/*.csv
+data/bill/
+docs/fin-advice/ramit_sethi_assessment.md
+
+# Python caches
+.pytest_cache/
+.mypy_cache/
+
 
 # Frontend dependencies if installed via npm (though current setup is manual)
 node_modules/

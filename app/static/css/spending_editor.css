@@ -3,7 +3,6 @@
     width: 100%;
     max-width: 1200px; /* Increased max-width for side-by-side */
     margin: 0 auto;
-    padding: 20px 20px; /* Added horizontal padding */
     box-sizing: border-box;
 }
 
@@ -204,15 +203,6 @@ input {
 .bold-input:focus {
     color: var(--primary-color);
 }
-    letter-spacing: -0.02em;
-    color: var(--text-primary);
-    padding: 0;
-    width: 100%;
-}
-
-.bold-input:focus {
-    color: var(--primary-color);
-}
 
 /* Hide number spinners */
 input[type=number]::-webkit-inner-spin-button, 
@@ -402,7 +392,7 @@ input[type=number]::-webkit-outer-spin-button {
 }
 
 .dot-need {
-    background-color: var(--primary-color);
+    background-color: var(--text-tertiary);
 }
 
 .dot-want {
