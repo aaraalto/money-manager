@@ -35,6 +35,10 @@ def get_service(repo: FileRepository = Depends(get_repository)) -> FinancialServ
 async def demo_page(request: Request):
     return templates.TemplateResponse("select_user.html", {"request": request})
 
+@app.get("/demo/burn-rate", response_class=HTMLResponse)
+async def demo_burn_rate(request: Request):
+    return templates.TemplateResponse("demo/burn-rate.html", {"request": request})
+
 @app.get("/demo-select")
 async def select_user(user: str, response: Response):
     redirect = RedirectResponse(url="/", status_code=302)

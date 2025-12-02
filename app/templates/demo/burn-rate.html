@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monthly Burn Rate Demo</title>
+    <!-- Import fonts if used in main app, assuming standard fonts for now or import if known -->
+    <style>
+        :root {
+            /* Basic variables extracted/assumed from design system */
+            --primary-color: #6366f1;
+            --text-primary: #ffffff;
+            --text-secondary: #94a3b8;
+            --text-tertiary: #64748b;
+            --bg-card: #1e293b;
+            --surface-card: #1e293b;
+            --bg-subtle: #334155;
+            --border-color: #334155;
+            --border-subtle: #334155;
+            --radius-xl: 16px;
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0f172a; /* Dark background */
+            color: var(--text-primary);
+            font-family: var(--font-family);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Isolated Component Styles */
+        .card-container {
+            width: 350px; /* Fixed width for demo */
+            background: var(--surface-card);
+            border-radius: var(--radius-xl);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-lg);
+            overflow: hidden; /* For burn effect if added */
+            position: relative;
+        }
+
+        .insights-track {
+            position: relative;
+            padding: 32px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .insight-metric {
+            margin-bottom: 24px;
+        }
+
+        .insight-metric .label {
+            display: block;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-tertiary);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .insight-metric .value {
+            font-size: 3rem;
+            font-weight: 700;
+            line-height: 1;
+            letter-spacing: -2px;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: var(--text-primary);
+        }
+
+        .insight-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .insight-list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .insight-list-item:last-child {
+            border-bottom: none;
+        }
+
+        .insight-list-item .item-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .insight-list-item .item-values {
+            text-align: right;
+        }
+
+        .insight-list-item .item-amount {
+            display: block;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .insight-list-item .item-pct {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-tertiary);
+        }
+
+        .dot-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .dot-need {
+            background-color: var(--primary-color);
+        }
+
+        .dot-want {
+            background-color: var(--text-tertiary);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card-container">
+        <div class="insights-track">
+            <div class="insight-metric">
+                <span class="label">Monthly Burn Rate</span>
+                <span class="value">$8,711</span>
+            </div>
+            <div class="insight-list">
+                <div class="insight-list-item">
+                    <div class="item-label">
+                        <span class="dot-indicator dot-need"></span>
+                        Fixed
+                    </div>
+                    <div class="item-values">
+                        <span class="item-amount">$8,711</span>
+                        <span class="item-pct">100%</span>
+                    </div>
+                </div>
+                <div class="insight-list-item">
+                    <div class="item-label">
+                        <span class="dot-indicator dot-want"></span>
+                        Flexible
+                    </div>
+                    <div class="item-values">
+                        <span class="item-amount">$0</span>
+                        <span class="item-pct">0%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
+

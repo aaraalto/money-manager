@@ -267,11 +267,6 @@ body {
     display: flex;
     gap: var(--space-3);
     align-items: center;
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 102;
 }
 
 .btn-nav {
@@ -1115,9 +1110,9 @@ body {
 
 .spend-value {
     font-family: var(--font-mono);
-    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    font-size: clamp(3.5rem, 6vw, 5rem);
     font-weight: 700;
-    color: #4ade80; /* Lighter green */
+    color: var(--success);
     line-height: 1;
     letter-spacing: -1px;
 }

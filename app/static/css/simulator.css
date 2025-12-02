@@ -83,26 +83,30 @@ h1 {
     grid-template-columns: 1fr;
     width: 100%;
     gap: var(--space-6);
-    align-items: start;
+    align-items: stretch; /* Changed from start to stretch for full height */
     padding-bottom: var(--space-16); /* Ensure scroll space on mobile */
+    min-height: calc(100vh - 140px); /* Minimum height */
 }
 
 @media (min-width: 1024px) {
     .simulation-layout {
         grid-template-columns: 40% 1fr; /* 40/60 Split */
         gap: var(--space-8); /* Slightly tighter gap */
-        align-items: stretch; /* Align top */
+        align-items: stretch; /* Ensure full height columns */
         padding-bottom: 0;
     }
 
     .controls-section {
-        position: sticky;
-        top: var(--space-6);
-        height: calc(100vh - var(--space-12));
-        padding: 0;
-        overflow-y: auto; /* Safety scroll */
-        justify-content: center; /* Equal space top/bottom */
-        align-items: center;
+        position: relative; /* Changed from sticky to relative */
+        /* Removed max-height and top to allow flex centering */
+        padding-top: 0; 
+        padding-bottom: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center; /* Center vertically */
+        align-items: center; /* Center horizontally */
+        height: 100%; /* Full height */
+        min-height: 600px; /* Ensure enough height for graph */
     }
 }
 
@@ -113,6 +117,16 @@ h1 {
     gap: var(--space-6);
     /* Add padding to prevent edge touches from triggering drag accidentally */
     padding: var(--space-4) 0; 
+}
+
+/* Wrapper for Rotary to center it */
+.rotary-container-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    flex: 1;
 }
 
 .control-panel {

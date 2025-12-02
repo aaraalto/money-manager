@@ -100,7 +100,7 @@
 
 {# Dashboard Header #}
 {% macro dashboard_header(level_text=None, level_badge_class="badge-primary", tagline="", extra_classes="", tagline_style="", adjust_label="Adjust Spending", adjust_icon="edit") %}
-<header class="app-header {{ extra_classes }}">
+<header class="app-header {{ extra_classes }}" style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 1rem;">
     <div class="header-brand">
         <div style="display: flex; align-items: center; gap: 1rem;">
             <h1 style="display: flex; align-items: center; gap: 1rem; margin: 0;">
@@ -110,12 +110,17 @@
         </div>
         {% if tagline and tagline.strip() %}<p class="tagline" style="{{ tagline_style }}">{{ tagline }}</p>{% endif %}
     </div>
-    <div class="header-controls">
+    
+    <div class="header-center" style="text-align: center;">
         {% if level_text %}
         <button class="level-pill {{ level_badge_class }}" onclick="document.getElementById('level-modal').showModal()">
             {{ level_text }}
         </button>
         {% endif %}
+    </div>
+
+    <div class="header-controls" style="justify-self: end;">
+        <!-- Placeholder for right aligned controls if any -->
     </div>
 </header>
 

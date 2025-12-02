@@ -302,26 +302,24 @@ function drawPieChart(selector, data) {
         displayData.push({ label: "Others", value: othersValue, type: "Mixed" });
     }
 
-    // Use flex column for layout (Pie + Grid Legend)
+    // Use flex column for layout, remove Grid Legend
     container.style("display", "flex")
-             .style("flex-direction", "column")
+             .style("justify-content", "center")
              .style("align-items", "center")
-             .style("gap", "1rem")
-             .style("height", "auto") // Allow height to grow
-             .style("padding-bottom", "1rem");
+             .style("height", "100%"); // Fill parent
 
     const containerNode = container.node();
     const width = containerNode.getBoundingClientRect().width || 300;
-    const chartHeight = 240; // Fixed height for the pie part
+    const height = containerNode.getBoundingClientRect().height || 300;
     
-    // FIX: Radius is half of the smallest dimension
-    const radius = Math.min(width, chartHeight) / 2 - 10;
+    // Maximize radius within container
+    const radius = Math.min(width, height) / 2 - 20;
 
     const svg = container.append("svg")
         .attr("width", width)
-        .attr("height", chartHeight)
+        .attr("height", height)
         .append("g")
-        .attr("transform", `translate(${width / 2},${chartHeight / 2})`);
+        .attr("transform", `translate(${width / 2},${height / 2})`);
 
     // Use design system colors with semantic mapping
     const colorPalette = [
@@ -342,7 +340,7 @@ function drawPieChart(selector, data) {
         .sort((a, b) => b.value - a.value); // Sort descending
 
     const arc = d3.arc()
-        .innerRadius(radius * 0.65) // Slightly thicker donut
+        .innerRadius(radius * 0.7) // Thicker donut
         .outerRadius(radius)
         .padAngle(0.02);
 
@@ -372,102 +370,66 @@ function drawPieChart(selector, data) {
             };
         });
 
-    // Add center text (Total) with proper typography
-    const total = displayData.reduce((acc, curr) => acc + curr.value, 0);
-    
+    // Center Text Group
     const centerGroup = svg.append("g")
         .attr("class", "center-text");
     
-    centerGroup.append("text")
+    // Value Text
+    const valueText = centerGroup.append("text")
         .attr("text-anchor", "middle")
-        .attr("dy", "-0.2em")
-        .style("font-size", "clamp(1.5rem, 3vw, 2.5rem)")
+        .attr("dy", "0") // Vertically centered
+        .style("font-size", "1.75rem") // Smaller, fit nicely
         .style("font-weight", "700")
         .style("fill", textPrimary)
         .style("font-family", fontMono)
         .style("opacity", 0)
-        .text(`$${(total/1000).toFixed(1)}k`)
-        .transition()
-        .delay(1000)
-        .duration(500)
-        .style("opacity", 1);
-        
-    centerGroup.append("text")
+        .text(`$${(total/1000).toFixed(1)}k`);
+
+    // Label Text
+    const labelText = centerGroup.append("text")
         .attr("text-anchor", "middle")
-        .attr("dy", "1.4em")
-        .style("font-size", "0.85rem")
+        .attr("dy", "1.5em")
+        .style("font-size", "0.75rem")
         .style("fill", textSecondary)
         .style("font-family", fontBody)
+        .style("text-transform", "uppercase")
+        .style("letter-spacing", "0.05em")
         .style("opacity", 0)
-        .text("Total")
-        .transition()
-        .delay(1000)
-        .duration(500)
-        .style("opacity", 1);
+        .text("Total Spending");
 
-    // Add HTML Grid Legend
-    const legendContainer = container.append("div")
-        .style("width", "100%")
-        .style("display", "grid")
-        .style("grid-template-columns", "repeat(auto-fit, minmax(110px, 1fr))")
-        .style("gap", "0.75rem")
-        .style("padding", "0 0.5rem");
-
-    const legendItems = legendContainer.selectAll(".legend-item")
-        .data(displayData)
-        .enter()
-        .append("div")
-        .attr("class", "legend-item")
-        .style("display", "flex")
-        .style("align-items", "center")
-        .style("gap", "0.5rem")
-        .style("cursor", "pointer")
-        .style("padding", "0.25rem")
-        .style("border-radius", "4px")
-        .style("transition", "background 0.2s ease");
-
-    legendItems.append("div")
-        .style("width", "10px")
-        .style("height", "10px")
-        .style("border-radius", "2px")
-        .style("background-color", d => color(d.label))
-        .style("flex-shrink", "0");
-
-    legendItems.append("div")
-        .style("font-size", "0.75rem")
-        .style("color", textSecondary)
-        .style("font-family", fontBody)
-        .style("line-height", "1.2")
-        .html(d => {
-            const pct = ((d.value / total) * 100).toFixed(0);
-            return `<span style="color:${textPrimary}; font-weight:500;">${pct}%</span> ${d.label}`;
-        });
+    // Reveal Animation
+    valueText.transition().delay(1000).duration(500).style("opacity", 1);
+    labelText.transition().delay(1000).duration(500).style("opacity", 1);
 
     // Interactions
-    const highlight = (label) => {
-        path.filter(p => p.data.label === label)
+    path.on("mouseover", function(event, d) {
+        // Highlight Arc
+        d3.select(this)
             .transition().duration(200)
             .attr("transform", "scale(1.05)")
             .style("opacity", 1);
+
+        // Update Center Text
+        const val = d.data.value;
+        const pct = ((val / total) * 100).toFixed(0);
+        
+        valueText.text(`${pct}%`)
+            .style("fill", color(d.data.label)); // Match slice color
             
-        legendItems.filter(d => d.label === label)
-            .style("background", "rgba(255,255,255,0.05)");
-    };
-    
-    const unhighlight = (label) => {
-        path.filter(p => p.data.label === label)
+        labelText.text(d.data.label);
+    })
+    .on("mouseout", function(event, d) {
+        // Reset Arc
+        d3.select(this)
             .transition().duration(200)
             .attr("transform", "scale(1)")
             .style("opacity", 0.9);
+
+        // Reset Center Text
+        valueText.text(`$${(total/1000).toFixed(1)}k`)
+            .style("fill", textPrimary);
             
-        legendItems.filter(d => d.label === label)
-            .style("background", "transparent");
-    };
-
-    path.on("mouseover", (e, d) => highlight(d.data.label))
-        .on("mouseout", (e, d) => unhighlight(d.data.label));
-
-    legendItems.on("mouseover", (e, d) => highlight(d.label))
-               .on("mouseout", (e, d) => unhighlight(d.label));
+        labelText.text("Total Spending");
+    });
 }
 
