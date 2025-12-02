@@ -182,7 +182,11 @@ export function animateEntry() {
         ".simulation-layout .results-section",
         ".visualization-panel",
         ".spending-summary",
-        ".spending-category"
+        ".spending-category",
+        ".spending-row",
+        ".editor-header",
+        ".insights-panel",
+        ".spending-table-form"
     ];
     
     const contentElements = document.querySelectorAll(contentSelectors.join(", "));
@@ -210,6 +214,13 @@ export function setupInitialState() {
          gsap.set(".visualization-panel", { y: 15, opacity: 0 });
          gsap.set(".spending-summary", { y: 15, opacity: 0 });
          gsap.set(".spending-category", { y: 15, opacity: 0 });
+         
+         // Spending Editor Targets
+         gsap.set(".editor-header", { y: 15, opacity: 0 });
+         gsap.set(".insights-panel", { y: 15, opacity: 0 });
+         gsap.set(".spending-table-form", { y: 15, opacity: 0 });
+         // Rows are dynamic, but we can set them if they exist (e.g. static ones)
+         gsap.set(".spending-row", { y: 15, opacity: 0 });
     }
 }
 

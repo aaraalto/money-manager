@@ -35,7 +35,7 @@
     }
     
     .insights-panel {
-        order: -1; /* Show insights on top on mobile? Or bottom? Let's keep bottom for flow, or stick to top. User asked for "right next to my inputs". */
+        order: -1; /* Show insights on top on mobile */
         position: static; /* Remove sticky on mobile */
         margin-bottom: 20px;
         margin-top: 0;
@@ -101,9 +101,9 @@
 }
 
 .col-type {
-    text-align: left; /* Fixed alignment: Changed from right to left */
+    text-align: left;
     display: flex;
-    justify-content: flex-start; /* Fixed alignment: Changed from flex-end to flex-start */
+    justify-content: flex-start;
     align-items: center;
 }
 
@@ -207,11 +207,31 @@ input[type=number]::-webkit-outer-spin-button {
     text-align: center;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    transition: all 0.2s ease;
 }
 
 .type-select:focus {
     border-color: var(--primary-color);
     outline: none;
+}
+
+/* Consistent coloring with insights */
+.type-select.type-need {
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--primary-color);
+    border-color: rgba(99, 102, 241, 0.2);
+}
+
+.type-select.type-want {
+    background: var(--bg-subtle);
+    color: var(--text-secondary);
+    border-color: var(--border-color);
+}
+
+.type-select.type-savings {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success, #10b981);
+    border-color: rgba(16, 185, 129, 0.2);
 }
 
 .type-tag {
@@ -242,16 +262,42 @@ input[type=number]::-webkit-outer-spin-button {
 .insights-panel {
     position: sticky;
     top: 40px; /* Stick to top of viewport with some gap */
-    background: var(--surface-card);
+    background: var(--surface-card); 
     border-radius: var(--radius-xl);
-    padding: 32px;
+    /* padding removed, moved to inner track */
     border: 1px solid var(--border-color);
     box-shadow: var(--shadow-lg);
-    text-align: left; /* Changed to left align */
-    /* Removed margin-top and border-top from previous layout */
+    text-align: left;
     margin-top: 0; 
-    border-top: 1px solid var(--border-color); /* Keep border box style */
-    height: fit-content; /* Don't stretch */
+    border-top: 1px solid var(--border-color);
+    height: fit-content;
+    z-index: 1; /* Ensure panel content is above expanding smoke */
+    /* Ensure background clip doesn't reveal smoke inside padding if transparent borders used */
+    background-clip: padding-box; 
+    overflow: visible; /* Allow smoke to billow out if needed */
+}
+
+.insights-track {
+    position: relative;
+    padding: 32px;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box; /* Ensure padding is included in width */
+}
+
+.burn-effect-canvas {
+    position: absolute;
+    /* Expand canvas primarily upwards and sideways */
+    top: -200px; 
+    left: -100px; 
+    width: calc(100% + 200px);
+    height: calc(100% + 300px); 
+    z-index: -1; /* Behind everything inside the panel stacking context */
+    pointer-events: none; 
+    opacity: 0.6;
+    /* Subtle fade at edges */
+    mask-image: radial-gradient(circle at center bottom, black 40%, transparent 80%);
+    -webkit-mask-image: radial-gradient(circle at center bottom, black 40%, transparent 80%);
 }
 
 .insight-metric .label {
@@ -271,6 +317,7 @@ input[type=number]::-webkit-outer-spin-button {
     letter-spacing: -2px;
     background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
     /* Provide fallback for browsers that don't support text-fill-color */
     color: var(--text-primary);
@@ -371,4 +418,217 @@ input[type=number]::-webkit-outer-spin-button {
 .add-row-btn .icon {
     font-size: 1.2rem;
     font-weight: bold;
+}
+
+/* Slasher Mode Enhancements */
+body.slasher-mode {
+    background: linear-gradient(180deg, var(--bg-deep) 0%, #1a1a2e 100%);
+}
+
+.impact-badge {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: var(--primary-color);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    font-weight: 600;
+    box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4);
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.impact-badge.visible {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.impact-badge .icon {
+    font-size: 1.5rem;
+}
+
+.crossover-pill {
+    background: rgba(255,255,255,0.1);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-family: 'Outfit', sans-serif;
+    color: #a5b4fc;
+}
+
+/* Slider Styling for Amounts */
+.amount-slider-container {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 1rem;
+}
+
+.amount-slider {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+    outline: none;
+}
+
+.amount-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    background: var(--text-primary);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.amount-slider::-webkit-slider-thumb:hover {
+    background: var(--primary-color);
+}
+
+/* Detail Drawer Styling */
+.drawer-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 2000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+    backdrop-filter: blur(2px);
+}
+.drawer-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.detail-drawer {
+    position: fixed;
+    top: 0;
+    right: -500px;
+    width: 450px;
+    height: 100%;
+    background: var(--bg-card);
+    z-index: 2001;
+    transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: -10px 0 30px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid var(--border-color);
+}
+
+.detail-drawer.open {
+    right: 0;
+}
+
+.drawer-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.drawer-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.close-drawer-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+}
+
+.drawer-content {
+    flex: 1;
+    padding: 1.5rem;
+    overflow-y: auto;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    padding: 0.8rem;
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-family: inherit;
+    transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    border-color: var(--primary-color);
+    outline: none;
+}
+
+.form-group textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.drawer-actions {
+    padding: 1.5rem;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+.btn-save {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.spending-row {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.spending-row:hover {
+    background-color: rgba(255,255,255,0.02);
+}
+.spending-row input, .spending-row select, .spending-row button {
+    /* Ensure inputs are clickable without triggering drawer */
+    position: relative;
+    z-index: 2;
 }

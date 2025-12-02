@@ -83,16 +83,16 @@
         /* Detail Drawer Styling */
         .drawer-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
+            inset: 0; /* Modern shorthand */
+            width: 100vw;
+            height: 100vh;
+            background: rgba(5, 5, 10, 0.4); /* Tinted slightly blue/dark for depth */
             z-index: 2000;
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.3s;
-            backdrop-filter: blur(2px);
+            transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1); /* Matches drawer physics */
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px); /* Safari support */
         }
         .drawer-overlay.open {
             opacity: 1;
@@ -231,7 +231,7 @@
     </div>
 
     <!-- Detail Drawer -->
-    <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+    <div class="drawer-overlay" id="drawer-overlay"></div>
     <div class="detail-drawer" id="detail-drawer">
         <div class="drawer-header">
             <h3 class="drawer-title">Expense Details</h3>
@@ -285,8 +285,10 @@
 
         <div class="editor-main">
             <div class="insights-panel">
-                <div id="spending-insights-content" class="insights-content">
-                    <p class="placeholder-text">Loading insights...</p>
+                <div class="insights-track">
+                    <div id="spending-insights-content" class="insights-content">
+                        <p class="placeholder-text">Loading insights...</p>
+                    </div>
                 </div>
             </div>
 
@@ -315,6 +317,20 @@
 {% endblock %}
 
 {% block extra_js %}
+    <script type="module">
+        import { initBurnEffect } from '/static/js/burn_effect.js';
+        import { setupInitialState, animateEntry } from '/static/js/modules/ui.js';
+        
+        // Set initial state immediately to prevent FOUC
+        setupInitialState();
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            initBurnEffect('.insights-track');
+        });
+        
+        // Export animateEntry so it can be used by the non-module script below
+        window.triggerAnimateEntry = animateEntry;
+    </script>
     <script>
         // State
         let initialTotal = 0;
@@ -322,12 +338,10 @@
         let spendingData = []; // Store full data objects
 
         document.addEventListener('DOMContentLoaded', () => {
-            // Initial animation setup
-            if (typeof gsap !== 'undefined') {
-                gsap.set(".editor-header", { y: 20, opacity: 0 });
-                gsap.set(".insights-panel", { y: 30, opacity: 0 });
-                gsap.set(".spending-table-form", { y: 30, opacity: 0 });
-            }
+            // Initial animation setup is handled by setupInitialState in the module above
+            
+            // Bind UI events
+            document.getElementById('drawer-overlay').addEventListener('click', closeDrawer);
 
             loadSpendingData();
             
@@ -371,38 +385,15 @@
                 }
 
                 // Trigger entry animation after data load
-                animateEntry();
+                if (window.triggerAnimateEntry) {
+                    // Allow a brief moment for DOM to settle
+                    requestAnimationFrame(() => {
+                        window.triggerAnimateEntry();
+                    });
+                }
             } catch (error) {
                 console.error('Error loading data:', error);
             }
-        }
-
-        function animateEntry() {
-            if (typeof gsap === 'undefined') return;
-            
-            const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
-            
-            // Animate Header
-            tl.to(".editor-header", {
-                y: 0,
-                opacity: 1,
-                duration: 0.8
-            });
-            
-            // Animate Panels
-            tl.to([".insights-panel", ".spending-table-form"], {
-                y: 0,
-                opacity: 1,
-                duration: 0.8,
-                stagger: 0.15
-            }, "-=0.4");
-
-            // Animate Rows
-            tl.fromTo(".spending-row", 
-                { y: 20, opacity: 0 },
-                { y: 0, opacity: 1, duration: 0.4, stagger: 0.03 },
-                "-=0.6"
-            );
         }
 
         function renderRows(data) {
@@ -448,7 +439,7 @@
             if (!isSlasherMode) {
                  typeControl = `
                     <div class="col-type">
-                        <select name="type" class="type-select" data-index="${index}">
+                        <select name="type" class="type-select ${getTypeClass(item.type)}" data-index="${index}" onchange="updateSelectColor(this)">
                             <option value="Want" ${item.type === 'Want' ? 'selected' : ''}>Want</option>
                             <option value="Need" ${item.type === 'Need' ? 'selected' : ''}>Need</option>
                             <option value="Savings" ${item.type === 'Savings' ? 'selected' : ''}>Savings</option>
@@ -475,6 +466,17 @@
                 </div>
             `;
             return row;
+        }
+
+        function getTypeClass(type) {
+            if (type === 'Need') return 'type-need';
+            if (type === 'Want') return 'type-want';
+            if (type === 'Savings') return 'type-savings';
+            return '';
+        }
+
+        function updateSelectColor(select) {
+            select.className = `type-select ${getTypeClass(select.value)}`;
         }
 
         function updateLocalModel(input) {
@@ -540,7 +542,7 @@
                         <span class="item-label">
                             <span class="dot-indicator dot-need"></span> 
                             Needs
-                            <span class="item-pct" style="display: inline; margin-left: 0;">${needPct}%</span>
+                            <span class="item-pct" style="display: inline; margin-left: 6px;">${needPct}%</span>
                         </span>
                         <div class="item-values">
                             <span class="item-amount">$${needs.toLocaleString()}</span>
@@ -548,8 +550,9 @@
                     </div>
                     <div class="insight-list-item">
                         <span class="item-label">
+                            <span class="dot-indicator dot-want"></span>
                             Wants
-                            <span class="item-pct" style="display: inline; margin-left: 0;">${wantPct}%</span>
+                            <span class="item-pct" style="display: inline; margin-left: 6px;">${wantPct}%</span>
                         </span>
                         <div class="item-values">
                             <span class="item-amount">$${wants.toLocaleString()}</span>
