@@ -349,7 +349,23 @@ body {
     grid-template-columns: 1fr;
     gap: var(--density-card-gap);
     margin-bottom: var(--density-spacing);
-    align-items: start; /* Ensure cards don't stretch weirdly */
+    /* align-items: start; Removed to allow cards to stretch to matching heights */
+}
+
+.dashboard-overview .card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* De-emphasize section titles in overview */
+.dashboard-overview .card h2 {
+    color: var(--text-tertiary);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    opacity: 0.8;
 }
 
 @media (min-width: 1024px) {

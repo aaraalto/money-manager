@@ -113,7 +113,7 @@ export function initBurnEffect(selector) {
             
             // 2. Expansion as it goes up
             // The smoke spreads out wider the higher it gets relative to origin
-            float spread = 0.2 + max(0.0, yRel * 0.8);
+            float spread = 0.25 + max(0.0, yRel * 1.0);
             
             // 3. Domain Warping for Entropy
             vec2 q = vec2(0.);
@@ -141,7 +141,7 @@ export function initBurnEffect(selector) {
             float alpha = f * mask * fadeBottom * fadeTop;
             
             // Boost alpha for visibility
-            alpha = smoothstep(0.1, 0.8, alpha) * 0.6;
+            alpha = smoothstep(0.05, 0.8, alpha) * 0.85;
 
             vec3 color = mix(uColorStart, uColorEnd, f * 1.5);
             

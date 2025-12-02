@@ -80,18 +80,33 @@
     display: grid;
     grid-template-columns: 2fr 1.5fr 1fr 40px; /* Match header */
     align-items: center;
-    padding: 20px 0;
-    border-bottom: 1px solid var(--border-subtle);
-    transition: background 0.2s ease;
-    min-width: 600px; /* Ensure minimum width to prevent squishing */
+    padding: 12px 16px;
+    margin-bottom: 4px;
+    border-radius: var(--radius-md);
+    border: 1px solid transparent;
+    background: transparent; /* Start transparent */
+    transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+    cursor: pointer;
+    position: relative;
 }
 
 .spending-row:hover {
-    background: var(--bg-subtle);
+    background: var(--bg-card-hover);
+    border-color: var(--border-subtle);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transform: translateY(-1px);
+    z-index: 2;
+}
+
+/* Ensure inputs within row don't break layout */
+.spending-row input, .spending-row select, .spending-row button {
+    position: relative;
+    z-index: 2;
 }
 
 .col-category {
     text-align: left;
+    padding-right: 16px;
 }
 
 .col-amount {
@@ -114,24 +129,31 @@
 }
 
 .delete-btn {
-    background: none;
+    background: transparent;
     border: none;
     color: var(--text-tertiary);
     cursor: pointer;
     font-size: 1.2rem;
     opacity: 0;
-    transition: all 0.2s;
-    padding: 5px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform: scale(0.8);
 }
 
 .delete-btn:hover {
-    color: var(--error, #ef4444);
-    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger);
+    background: rgba(235, 87, 87, 0.1);
+    transform: scale(1);
 }
 
 .spending-row:hover .delete-btn {
     opacity: 1;
+    transform: scale(1);
 }
 
 input {
@@ -141,41 +163,47 @@ input {
     font-family: inherit;
     width: 100%;
     outline: none;
-    transition: border-bottom 0.2s;
 }
 
 /* Editable category input */
 .category-input {
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 500;
-    color: var(--text-secondary);
+    color: var(--text-primary);
     border-bottom: 1px solid transparent;
-    padding-bottom: 2px;
+    padding: 4px 0;
+    transition: border-color 0.2s ease;
+}
+
+.category-input::placeholder {
+    color: var(--text-tertiary);
+    opacity: 0.5;
+    font-weight: 400;
 }
 
 .category-input:focus {
-    color: var(--text-primary);
     border-bottom: 1px solid var(--primary-color);
 }
 
-.static-input {
-    /* Deprecated in favor of editable, but keeping for compatibility if needed */
-    font-size: 1.1rem;
-    font-weight: 500;
-    color: var(--text-secondary);
-    pointer-events: none;
-}
-
 .col-amount .currency {
-    font-size: 1.5rem;
-    font-weight: 500;
+    font-size: 1rem;
+    font-weight: 400;
     color: var(--text-tertiary);
     margin-right: 4px;
+    user-select: none;
 }
 
 .bold-input {
-    font-size: 2rem;
-    font-weight: 700;
+    font-size: 1.1rem; /* Reduced from 2rem for better balance */
+    font-weight: 600;
+    color: var(--text-primary);
+    font-feature-settings: "tnum";
+    font-variant-numeric: tabular-nums;
+}
+
+.bold-input:focus {
+    color: var(--primary-color);
+}
     letter-spacing: -0.02em;
     color: var(--text-primary);
     padding: 0;
@@ -196,42 +224,52 @@ input[type=number]::-webkit-outer-spin-button {
 /* Type Select Styling */
 .type-select {
     appearance: none;
-    background: var(--bg-subtle);
-    border: 1px solid var(--border-color);
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-color: var(--bg-subtle);
+    background-image: none;
+    border: 1px solid transparent;
     color: var(--text-secondary);
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 0.8rem;
+    padding: 4px 12px;
+    border-radius: 100px;
+    font-size: 0.75rem;
     font-weight: 600;
     cursor: pointer;
     text-align: center;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    transition: all 0.2s ease;
+    transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+    min-width: 80px;
+    display: inline-block;
+}
+
+.type-select:hover {
+    filter: brightness(1.1);
+    transform: scale(1.02);
 }
 
 .type-select:focus {
-    border-color: var(--primary-color);
     outline: none;
+    box-shadow: 0 0 0 2px var(--bg-card), 0 0 0 4px var(--primary-dim);
 }
 
 /* Consistent coloring with insights */
 .type-select.type-need {
-    background: rgba(99, 102, 241, 0.1);
-    color: var(--primary-color);
-    border-color: rgba(99, 102, 241, 0.2);
+    background-color: rgba(99, 102, 241, 0.15);
+    color: #818cf8;
+    border-color: transparent;
 }
 
 .type-select.type-want {
-    background: var(--bg-subtle);
-    color: var(--text-secondary);
-    border-color: var(--border-color);
+    background-color: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+    border-color: transparent;
 }
 
 .type-select.type-savings {
-    background: rgba(16, 185, 129, 0.1);
-    color: var(--success, #10b981);
-    border-color: rgba(16, 185, 129, 0.2);
+    background-color: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+    border-color: transparent;
 }
 
 .type-tag {

@@ -7,7 +7,7 @@
     
     /* Typography - Tighter scaling for Simulator */
     --sim-kpi-value-size: clamp(1.8rem, 3vw, 2.5rem);
-    --sim-rotary-size: clamp(3rem, 5vw, 4.5rem);
+    --sim-rotary-size: clamp(4rem, 7vw, 6rem);
 }
 
 /* Back Link Styling */
@@ -601,8 +601,8 @@ h1 {
 /* Rotary Dial */
 .rotary-container {
     position: relative;
-    width: min(80vw, 350px); /* Slightly smaller max width */
-    height: min(80vw, 350px);
+    width: min(90vw, 420px); /* Increased size */
+    height: min(90vw, 420px);
     margin: 0 auto;
     user-select: none;
     display: flex;
@@ -613,8 +613,8 @@ h1 {
 
 @media (min-width: 1024px) {
     .rotary-container {
-        width: min(60vh, 400px);
-        height: min(60vh, 400px);
+        width: min(70vh, 500px); /* Significantly larger on desktop */
+        height: min(70vh, 500px);
     }
 }
 
