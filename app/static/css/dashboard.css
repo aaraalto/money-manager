@@ -217,13 +217,14 @@ body {
 /* --- Header (Page Titles) --- */
 .app-header {
     margin-bottom: var(--space-8);
-    animation: fadeInDown 0.6s var(--ease-smooth);
+    /* animation: fadeInDown 0.6s var(--ease-smooth); Handled by GSAP */
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
     position: relative; /* Create positioning context */
     z-index: 100; /* Ensure header is above other content */
     overflow: visible; /* Allow dropdown to overflow */
+    opacity: 0; /* Default hidden for GSAP to reveal */
 }
 
 @keyframes fadeInDown {

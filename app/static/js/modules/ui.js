@@ -162,65 +162,112 @@ export function renderFinancialHealth(data) {
 export function animateEntry() {
     if (typeof gsap === 'undefined') return;
     
-    const tl = gsap.timeline({ defaults: { ease: "expo.out" } });
+    const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
 
-    // Header Fade In
+    // 1. Header Fade In (Fast & crisp)
     tl.to(".app-header", {
         y: 0,
         opacity: 1,
-        duration: 0.8
+        duration: 0.8,
+        ease: "power2.out"
     });
 
-    // Primary Content Wave (Overview, Simulator, Spending Plan)
-    // We select all possible major containers and stagger them collectively
-    // to ensure a unified flow regardless of the page.
-    const contentSelectors = [
-        ".dashboard-overview .card",
-        ".grid .card",
-        ".simulator-container",
-        ".simulation-layout .controls-section",
-        ".simulation-layout .results-section",
-        ".visualization-panel",
-        ".spending-summary",
-        ".spending-category",
-        ".spending-row",
-        ".editor-header",
-        ".insights-panel",
-        ".spending-table-form"
-    ];
-    
-    const contentElements = document.querySelectorAll(contentSelectors.join(", "));
-    
-    if (contentElements.length > 0) {
-        tl.to(contentElements, {
+    // Check if we are on the Overview Dashboard
+    const overviewCards = document.querySelectorAll(".dashboard-overview .card");
+    if (overviewCards.length > 0) {
+        // Specific choreographed sequence for Overview
+        
+        // "Daily Capacity" and "Expense Composition" are children of .dashboard-overview
+        // We treat them as the primary heroes.
+        tl.to(".dashboard-overview .card", {
             y: 0,
             opacity: 1,
-            duration: 1.2,
-            stagger: 0.08
-        }, "-=0.4"); // Slight overlap with header
+            scale: 1,
+            duration: 0.8,
+            stagger: 0.15, // Distinct steps between the two main cards
+            ease: "expo.out"
+        }, "-=0.4");
+
+        // Grid cards (Secondary info)
+        // Enter slightly faster, with a tighter stagger
+        const gridCards = document.querySelectorAll(".grid .card");
+        if (gridCards.length > 0) {
+            tl.to(gridCards, {
+                y: 0,
+                opacity: 1,
+                scale: 1,
+                duration: 0.6,
+                stagger: {
+                    amount: 0.3, // Distribute start times over 0.3s
+                    grid: "auto",
+                    from: "start"
+                },
+                ease: "back.out(1.2)" // Subtle pop
+            }, "-=0.6"); // Start before overview finishes
+        }
+
+    } else {
+        // Fallback / Universal Animation for other pages (Simulator, Spending Editor)
+        const contentSelectors = [
+            ".simulator-container",
+            ".simulation-layout .controls-section",
+            ".simulation-layout .results-section",
+            ".visualization-panel",
+            ".spending-summary",
+            ".spending-category",
+            ".spending-row",
+            ".editor-header",
+            ".insights-panel",
+            ".spending-table-form",
+            ".hero-allowance-container", // Dashboard Level 1 Hero
+            ".section-header"
+        ];
+        
+        const contentElements = document.querySelectorAll(contentSelectors.join(", "));
+        
+        if (contentElements.length > 0) {
+            tl.to(contentElements, {
+                y: 0,
+                opacity: 1,
+                scale: 1,
+                duration: 0.8,
+                stagger: 0.06,
+                ease: "expo.out"
+            }, "-=0.4");
+        }
     }
 }
 
 export function setupInitialState() {
     if (typeof gsap !== 'undefined') {
          // Universal Targets
-         gsap.set(".app-header", { y: -15, opacity: 0 });
-         gsap.set(".card", { y: 15, opacity: 0 });
+         // We add a slight scale down (0.98) for a subtle "pop" in effect
+         gsap.set(".app-header", { y: -20, opacity: 0 });
          
-         // Specific Page Containers (if they exist outside .card)
-         gsap.set(".simulator-container", { y: 15, opacity: 0 });
-         gsap.set(".simulation-layout .controls-section", { y: 15, opacity: 0 });
-         gsap.set(".simulation-layout .results-section", { y: 15, opacity: 0 });
-         gsap.set(".visualization-panel", { y: 15, opacity: 0 });
-         gsap.set(".spending-summary", { y: 15, opacity: 0 });
-         gsap.set(".spending-category", { y: 15, opacity: 0 });
+         // Cards and Containers
+         const targets = [
+             ".card", 
+             ".simulator-container",
+             ".simulation-layout .controls-section", 
+             ".simulation-layout .results-section",
+             ".visualization-panel",
+             ".spending-summary",
+             ".spending-category",
+             ".editor-header",
+             ".insights-panel",
+             ".spending-table-form",
+             ".hero-allowance-container",
+             ".section-header"
+         ];
+
+         gsap.set(targets.join(", "), { 
+             y: 20, 
+             opacity: 0,
+             scale: 0.98
+         });
          
-         // Spending Editor Targets
-         gsap.set(".editor-header", { y: 15, opacity: 0 });
-         gsap.set(".insights-panel", { y: 15, opacity: 0 });
-         gsap.set(".spending-table-form", { y: 15, opacity: 0 });
-         // Rows are dynamic, but we can set them if they exist (e.g. static ones)
-         gsap.set(".spending-row", { y: 15, opacity: 0 });
+         // Specific rows (might be too many to scale, just fade/slide)
+         gsap.set(".spending-row", { y: 10, opacity: 0 });
     }
 }
 

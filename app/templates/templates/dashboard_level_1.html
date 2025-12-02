@@ -15,7 +15,7 @@
 
     <div id="dashboard" class="hidden">
         <!-- Hero Section: Daily Capacity -->
-        <div class="hero-allowance-container fade-in-up">
+        <div class="hero-allowance-container">
              <div class="hero-content">
                  <div class="hero-label">Daily Safe-to-Spend</div>
                  <div class="hero-value-row">
@@ -40,13 +40,13 @@
              </div>
         </div>
 
-        <div class="section-header fade-in-up delay-1">
+        <div class="section-header">
             <h3>The War Room</h3>
             <p>Strategic Debt Elimination</p>
         </div>
 
         <!-- Level 1 Focus: Debt Payoff -->
-        <div class="dashboard-overview fade-in-up delay-2">
+        <div class="dashboard-overview">
              {% call card("Debt Resolution Status", "shield") %}
                 <div class="stat">
                     <div class="stat-label">Total Liabilities</div>
@@ -69,7 +69,7 @@
             {% endcall %}
         </div>
 
-        <div class="grid fade-in-up delay-3">
+        <div class="grid">
             <!-- Debt Payoff Chart is the Hero here -->
             {% call card("Freedom Trajectory", "trending-down") %}
                 <div class="chart-container" id="chart-debt"></div>

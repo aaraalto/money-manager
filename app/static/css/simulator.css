@@ -10,6 +10,13 @@
     --sim-rotary-size: clamp(4rem, 7vw, 6rem);
 }
 
+/* Global Resets */
+body {
+    overflow-x: hidden;
+    width: 100%;
+    cursor: auto; /* Override any potential weirdness */
+}
+
 /* Back Link Styling */
 .back-link {
     display: inline-flex;
@@ -52,6 +59,11 @@ h1 {
     letter-spacing: -0.02em;
     color: var(--text-primary);
     animation: fadeInDown 0.6s var(--ease-smooth);
+}
+
+.app-header h1 {
+    margin-bottom: 0;
+    text-align: left;
 }
 
 @keyframes fadeInDown {
@@ -601,8 +613,8 @@ h1 {
 /* Rotary Dial */
 .rotary-container {
     position: relative;
-    width: min(90vw, 420px); /* Increased size */
-    height: min(90vw, 420px);
+    width: min(85vw, 420px); /* Adjusted for shadow overflow */
+    height: min(85vw, 420px);
     margin: 0 auto;
     user-select: none;
     display: flex;
@@ -792,9 +804,9 @@ h1 {
 
 .rotary-label {
     display: block;
-    font-size: clamp(0.75rem, 1.2vw, 0.9rem);
+    font-size: clamp(0.85rem, 1.5vw, 1rem);
     color: var(--text-tertiary);
-    margin-top: var(--space-1);
+    margin-top: var(--space-2);
     text-transform: uppercase;
     letter-spacing: 3px;
     font-weight: 500;
@@ -802,31 +814,31 @@ h1 {
 
 /* Divider & Limit Display */
 .rotary-divider {
-    width: 40px;
+    width: 60px;
     height: 1px;
     background: var(--border-color);
-    margin: var(--space-4) 0;
+    margin: var(--space-5) 0;
     transition: background-color 0.3s var(--ease-smooth);
 }
 
 .rotary-limit-display {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 4px;
     pointer-events: auto; /* Allow tooltip hover */
 }
 
 .limit-label {
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 1.5px;
     color: var(--text-tertiary);
     display: inline-block;
 }
 
 .limit-value {
     font-family: var(--font-mono);
-    font-size: 1.1rem;
+    font-size: 1.25rem;
     color: var(--text-secondary);
     font-weight: 500;
 }
