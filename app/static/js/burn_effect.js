@@ -36,14 +36,20 @@ export function initBurnEffect(selector) {
         uResolution: { value: new THREE.Vector2(width, height) },
         uColorStart: { value: new THREE.Color('#2a2a2a') }, // Dark grey
         uColorEnd: { value: new THREE.Color('#888888') },   // Lighter grey smoke
-        uOriginOffset: { value: 0.0 } // Vertical start position (0-1 UV)
+        uOriginOffset: { value: 0.0 }, // Vertical start position (0-1 UV)
+        uSpeed: { value: 0.2 },
+        uSpreadBase: { value: 0.25 },
+        uExpansion: { value: 1.0 },
+        uDensity: { value: 0.85 },
+        uNoiseScale: { value: 1.0 },
+        uFlowVector: { value: new THREE.Vector2(0.0, 1.0) } // Direction of flow
     };
 
     const vertexShader = `
         varying vec2 vUv;
         void main() {
             vUv = uv;
-            gl_Position = vec4(position, 1.0);
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
         }
     `;
 
@@ -53,6 +59,12 @@ export function initBurnEffect(selector) {
         uniform vec3 uColorStart;
         uniform vec3 uColorEnd;
         uniform float uOriginOffset;
+        uniform float uSpeed;
+        uniform float uSpreadBase;
+        uniform float uExpansion;
+        uniform float uDensity;
+        uniform float uNoiseScale;
+        uniform vec2 uFlowVector;
         
         varying vec2 vUv;
 
@@ -100,48 +112,53 @@ export function initBurnEffect(selector) {
         void main() {
             vec2 st = gl_FragCoord.xy / uResolution.xy;
             st.x *= uResolution.x / uResolution.y;
+            st *= uNoiseScale;
             
             // Adjust coordinate system to align with origin offset
             float yRel = vUv.y - uOriginOffset;
             
-            // Time flows upwards
-            float time = uTime * 0.2;
+            // Time flows based on uFlowVector
+            // We use uFlowVector to direct the 'time' scrolling
+            float time = uTime * uSpeed;
             
             // Smoke Physics / Shape
-            // 1. Center alignment
-            float center = 0.5 * (uResolution.x / uResolution.y);
+            // Center alignment for masking
+            float aspect = uResolution.x / uResolution.y;
+            vec2 uv = vUv;
+            uv.x *= aspect; 
+            float uvCenter = 0.5 * aspect;
             
-            // 2. Expansion as it goes up
-            // The smoke spreads out wider the higher it gets relative to origin
-            float spread = 0.25 + max(0.0, yRel * 1.0);
+            // Expansion logic
+            float spread = uSpreadBase + max(0.0, yRel * uExpansion);
             
-            // 3. Domain Warping for Entropy
+            // Domain Warping
+            // We offset the noise lookup by time * flowVector
+            // The -time ensures standard "flow" direction is consistent with vector
+            
+            vec2 flow = uFlowVector * time;
+            
             vec2 q = vec2(0.);
-            q.x = fbm( st + vec2(0.0, time * 0.5) );
-            q.y = fbm( st + vec2(1.0));
-
+            q.x = fbm( st + flow * 0.5 ); 
+            q.y = fbm( st + vec2(1.0)); // Keep y variation somewhat independent or sync? 
+            // Ideally, q should warp along flow too.
+            
             vec2 r = vec2(0.);
             r.x = fbm( st + 1.0*q + vec2(1.7,9.2) + 0.15*time );
             r.y = fbm( st + 1.0*q + vec2(8.3,2.8) + 0.126*time );
 
-            float f = fbm(st + r + vec2(0.0, -time));
+            // Main scroll
+            float f = fbm(st + r - flow);
 
-            // 4. Masking the shape
-            // Distance from center, modified by noise to make it wispy
-            float dist = abs(st.x - center);
-            // It gets wispier at edges
+            // Masking
+            float dist = abs(uv.x - uvCenter);
             float mask = smoothstep(spread, spread - 0.3, dist + f * 0.2);
             
-            // 5. Vertical Fade
-            // Fade in at origin
+            // Vertical Fade
             float fadeBottom = smoothstep(uOriginOffset - 0.05, uOriginOffset + 0.1, vUv.y);
-            // Fade out at top of canvas
             float fadeTop = smoothstep(1.0, 0.7, vUv.y);
             
             float alpha = f * mask * fadeBottom * fadeTop;
-            
-            // Boost alpha for visibility
-            alpha = smoothstep(0.05, 0.8, alpha) * 0.85;
+            alpha = smoothstep(0.05, 0.8, alpha) * uDensity;
 
             vec3 color = mix(uColorStart, uColorEnd, f * 1.5);
             
@@ -168,15 +185,12 @@ export function initBurnEffect(selector) {
         const canvasRect = canvas.getBoundingClientRect();
         
         // Determine origin Y based on metric element position
-        let metricTop = canvasRect.top; // Default to top of canvas
+        let metricTop = canvasRect.top; 
         if (metricElement) {
             const metricRect = metricElement.getBoundingClientRect();
             metricTop = metricRect.top + (metricRect.height * 0.5);
         }
         
-        // Convert to UV space (0 at bottom, 1 at top)
-        // pixelY is distance from top of viewport
-        // relativeY = (pixelY - canvasTop) / canvasHeight
         const relativeYFromTop = (metricTop - canvasRect.top) / canvasRect.height;
         const uvY = 1.0 - relativeYFromTop;
         
@@ -189,7 +203,6 @@ export function initBurnEffect(selector) {
         renderer.render(scene, camera);
     }
 
-    // Handle resize
     window.addEventListener('resize', () => {
         const rect = canvas.getBoundingClientRect();
         renderer.setSize(rect.width, rect.height, false);
@@ -199,5 +212,13 @@ export function initBurnEffect(selector) {
 
     // Start
     animate();
-    setTimeout(updateOrigin, 100); // Initial positioning
+    setTimeout(updateOrigin, 100);
+    
+    return {
+        uniforms: uniforms,
+        updateOrigin: updateOrigin,
+        renderer: renderer,
+        scene: scene,
+        mesh: mesh
+    };
 }
