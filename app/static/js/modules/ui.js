@@ -17,7 +17,10 @@ export function renderReasoning(elementId, lines) {
     el.appendChild(ul);
 }
 
-export function animateValue(elementId, endValue) {
+// Constant for syncing number animations with content entry
+const NUMBER_ANIMATION_DELAY = 1.2;
+
+export function animateValue(elementId, endValue, delay = 0) {
     const el = document.getElementById(elementId);
     if (!el) return; // Safety check
 
@@ -25,8 +28,9 @@ export function animateValue(elementId, endValue) {
         const obj = { val: 0 };
         gsap.to(obj, {
             val: endValue,
-            duration: 2,
-            ease: "power4.out",
+            duration: 2.0,
+            delay: delay,
+            ease: "expo.out",
             onUpdate: function () {
                 const updateEl = document.getElementById(elementId);
                 if(updateEl) updateEl.textContent = formatCurrency(obj.val);
@@ -38,9 +42,9 @@ export function animateValue(elementId, endValue) {
 }
 
 export function renderNetWorth(data) {
-    animateValue("nw-total", data.total);
-    animateValue("nw-liquid", data.liquid);
-    animateValue("nw-debt", data.liabilities_total);
+    animateValue("nw-total", data.total, NUMBER_ANIMATION_DELAY);
+    animateValue("nw-liquid", data.liquid, NUMBER_ANIMATION_DELAY);
+    animateValue("nw-debt", data.liabilities_total, NUMBER_ANIMATION_DELAY);
     renderReasoning("nw-reasoning", data.reasoning);
 }
 
@@ -50,8 +54,8 @@ export function renderDailyAllowance(data) {
     const monthly = typeof data === 'number' ? amount * 30 : (data.monthly || amount * 30);
     const percentage = typeof data === 'number' ? null : (data.percentage_of_income || null);
     
-    animateValue("daily-allowance-value", amount);
-    animateValue("hero-safe-spend", amount);
+    animateValue("daily-allowance-value", amount, NUMBER_ANIMATION_DELAY);
+    animateValue("hero-safe-spend", amount, NUMBER_ANIMATION_DELAY);
     
     // Update monthly total
     const monthlyEl = document.getElementById("monthly-allowance");
@@ -60,8 +64,9 @@ export function renderDailyAllowance(data) {
             const obj = { val: 0 };
             gsap.to(obj, {
                 val: monthly,
-                duration: 2,
-                ease: "power4.out",
+                duration: 2.0,
+                delay: NUMBER_ANIMATION_DELAY,
+                ease: "expo.out",
                 onUpdate: function () {
                     monthlyEl.textContent = formatCurrency(obj.val);
                 }
@@ -78,8 +83,9 @@ export function renderDailyAllowance(data) {
             const obj = { val: 0 };
             gsap.to(obj, {
                 val: percentage,
-                duration: 2,
-                ease: "power4.out",
+                duration: 2.0,
+                delay: NUMBER_ANIMATION_DELAY,
+                ease: "expo.out",
                 onUpdate: function () {
                     percentageEl.textContent = Math.round(obj.val) + "%";
                 }
@@ -156,7 +162,7 @@ export function renderFinancialHealth(data) {
 export function animateEntry() {
     if (typeof gsap === 'undefined') return;
     
-    const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+    const tl = gsap.timeline({ defaults: { ease: "expo.out" } });
 
     // Header Fade In
     tl.to(".app-header", {
@@ -165,28 +171,45 @@ export function animateEntry() {
         duration: 0.8
     });
 
-    // Cards Stagger
-    tl.to(".card", {
-        y: 0,
-        opacity: 1,
-        duration: 0.8,
-        stagger: 0.15
-    }, "-=0.4");
-
-    // KPIs pop in
-    tl.to(".kpi", {
-        scale: 1,
-        opacity: 1,
-        duration: 0.5,
-        stagger: 0.1
-    }, "-=0.6");
+    // Primary Content Wave (Overview, Simulator, Spending Plan)
+    // We select all possible major containers and stagger them collectively
+    // to ensure a unified flow regardless of the page.
+    const contentSelectors = [
+        ".dashboard-overview .card",
+        ".grid .card",
+        ".simulator-container",
+        ".simulation-layout .controls-section",
+        ".simulation-layout .results-section",
+        ".visualization-panel",
+        ".spending-summary",
+        ".spending-category"
+    ];
+    
+    const contentElements = document.querySelectorAll(contentSelectors.join(", "));
+    
+    if (contentElements.length > 0) {
+        tl.to(contentElements, {
+            y: 0,
+            opacity: 1,
+            duration: 1.2,
+            stagger: 0.08
+        }, "-=0.4"); // Slight overlap with header
+    }
 }
 
 export function setupInitialState() {
     if (typeof gsap !== 'undefined') {
-         gsap.set(".app-header", { y: -20, opacity: 0 });
-         gsap.set(".card", { y: 20, opacity: 0 });
-         gsap.set(".kpi", { scale: 0.9, opacity: 0 });
+         // Universal Targets
+         gsap.set(".app-header", { y: -15, opacity: 0 });
+         gsap.set(".card", { y: 15, opacity: 0 });
+         
+         // Specific Page Containers (if they exist outside .card)
+         gsap.set(".simulator-container", { y: 15, opacity: 0 });
+         gsap.set(".simulation-layout .controls-section", { y: 15, opacity: 0 });
+         gsap.set(".simulation-layout .results-section", { y: 15, opacity: 0 });
+         gsap.set(".visualization-panel", { y: 15, opacity: 0 });
+         gsap.set(".spending-summary", { y: 15, opacity: 0 });
+         gsap.set(".spending-category", { y: 15, opacity: 0 });
     }
 }
 

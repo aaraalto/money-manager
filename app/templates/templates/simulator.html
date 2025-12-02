@@ -104,7 +104,12 @@
 
 {% block extra_js %}
     <script src="/static/js/rotary.js"></script>
-    <script>
+    <script type="module">
+        import { setupInitialState, animateEntry } from '/static/js/modules/ui.js';
+        
+        // Set initial state immediately
+        setupInitialState();
+
         gsap.registerPlugin(Draggable);
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -117,6 +122,9 @@
                 displaySelector: '#rotary-display',
                 limitSelector: '#metric-fcf'
             });
+            
+            // Trigger entry animation
+            animateEntry();
         });
     </script>
 {% endblock %}
