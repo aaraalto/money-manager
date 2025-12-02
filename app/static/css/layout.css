@@ -1,0 +1,159 @@
+/* Top Navigation Styles */
+.top-nav {
+    width: 100%;
+    background: var(--bg-body); /* Match body bg for transparency feel or card? */
+    background: rgba(10, 10, 10, 0.8); /* Slightly transparent */
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.nav-container {
+    max-width: 80%;
+    margin: 0 auto;
+    padding: 1rem 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-family: 'Outfit', sans-serif;
+}
+
+.nav-brand-text {
+    color: var(--text-tertiary);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 1rem;
+    transition: color 0.2s ease;
+}
+
+.nav-brand-text:hover {
+     color: var(--text-primary);
+}
+
+.nav-separator {
+    color: var(--text-tertiary);
+    opacity: 0.3;
+    font-size: 1rem;
+}
+
+/* Page Selector Dropdown */
+.nav-page-selector {
+    position: relative;
+}
+
+.nav-page-trigger {
+    background: transparent;
+    border: 1px solid var(--border-color); /* Outline */
+    padding: 0.5rem 1rem; /* Equal top/bottom padding */
+    margin: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Center content */
+    gap: 8px;
+    color: var(--text-primary);
+    font-family: 'Outfit', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 1000px; /* Fully rounded pill shape */
+    transition: all 0.2s ease;
+}
+
+.nav-page-trigger:hover, .nav-page-trigger:focus {
+    background: var(--bg-subtle);
+    border-color: var(--primary); /* Highlight outline on interaction */
+    outline: none;
+}
+
+.chevron-icon {
+    width: 12px;
+    height: 12px;
+    color: var(--text-secondary);
+    transition: transform 0.2s ease;
+}
+
+.nav-page-selector.open .chevron-icon {
+    transform: rotate(180deg);
+}
+
+.nav-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    width: 200px;
+    background: #1c1c1e; /* Dark gray like iOS menus */
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 4px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 2000; /* Ensure it appears above other content */
+}
+
+.nav-page-selector.open .nav-dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.nav-dropdown-item {
+    display: block;
+    padding: 10px 12px;
+    color: var(--text-primary);
+    text-decoration: none;
+    font-size: 0.9rem;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.nav-dropdown-item:hover {
+    background: var(--bg-subtle); /* Or accent color low opacity */
+    background: rgba(255,255,255,0.1);
+}
+
+.nav-dropdown-item.active {
+    color: var(--primary);
+}
+
+.nav-dropdown-item .check {
+    opacity: 0;
+    float: right;
+}
+
+.nav-dropdown-item.active .check {
+    opacity: 1;
+}
+
+/* Right Side */
+.nav-right {
+    display: flex;
+    align-items: center;
+}
+
+/* Main Layout */
+.main-content {
+    /* We rely on the container inside pages, but global container override? */
+    /* The legacy container style was max-width 1200px. 
+       We should probably align main content max-width with nav if desired, 
+       but usually nav is wider or same. User only specified Header max-width. 
+    */
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0;
+}
+

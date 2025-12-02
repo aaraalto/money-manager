@@ -217,6 +217,7 @@ h1 {
 
 /* Generated Output Card */
 .generated-card {
+    position: relative;
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-xl);
@@ -909,5 +910,123 @@ h1 {
 }
     100% {
         box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+    }
+}
+
+/* --- EMPTY STATE (Quiet & Inevitable) --- */
+.empty-state-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-10) var(--space-6);
+    text-align: center;
+    min-height: 300px;
+    color: var(--text-secondary);
+}
+
+.empty-icon {
+    color: var(--text-tertiary);
+    margin-bottom: var(--space-4);
+    opacity: 0.6;
+    transition: transform 0.3s var(--ease-smooth);
+}
+
+.empty-state-wrapper:hover .empty-icon {
+    transform: scale(1.05);
+    opacity: 0.8;
+}
+
+.empty-state-wrapper h3 {
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: 1.1rem;
+    margin-bottom: var(--space-2);
+    color: var(--text-primary);
+}
+
+.empty-state-wrapper p {
+    font-size: 0.9rem;
+    color: var(--text-tertiary);
+    margin-bottom: var(--space-6);
+    max-width: 280px;
+    line-height: 1.5;
+}
+
+.btn-quiet {
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 0.6rem 1.2rem;
+    border-radius: 100px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s var(--ease-smooth);
+}
+
+.btn-quiet:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--primary);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+/* --- SKELETON LOADING (Fanatical Care) --- */
+/* 
+   We apply this when htmx-request is active.
+   We use a structured skeleton to preserve layout weight.
+*/
+
+.skeleton-wrapper {
+    width: 100%;
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    background: var(--bg-card);
+    transition: opacity 0.2s var(--ease-smooth);
+    height: 100%;
+}
+
+/* When container is loading, show skeleton overlay */
+.htmx-request .skeleton-wrapper {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.skeleton-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-4);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.skeleton-bar {
+    height: 1rem;
+    border-radius: 4px;
+    background: var(--bg-subtle);
+    overflow: hidden;
+    position: relative;
+}
+
+.skeleton-bar::after {
+    content: "";
+    position: absolute;
+    top: 0; 
+    left: 0;
+    width: 100%;
+    height: 100%;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+    animation: skeleton-shimmer 1.5s infinite;
+}
+
+@keyframes skeleton-shimmer {
+    100% {
+        transform: translateX(100%);
     }
 }

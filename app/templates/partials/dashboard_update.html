@@ -1,0 +1,77 @@
+{# app/templates/partials/dashboard_update.html #}
+
+{# 1. Metrics #}
+{% set fcf_class = "positive" if fcf >= 0 else "negative" %}
+<span class="value {{ fcf_class }}" id="metric-fcf" hx-swap-oob="true">${{ "{:,.0f}".format(fcf) }}</span>
+
+<div class="value date" id="metric-date" hx-swap-oob="true">{{ payoff_date_str }}</div>
+
+<div class="value positive" id="metric-savings" hx-swap-oob="true">${{ "{:,.0f}".format(interest_saved) }}</div>
+
+{# 2. Chart #}
+<div id="chart-container" hx-swap-oob="true">
+    {{ chart_svg | safe }}
+</div>
+
+{# 3. Table #}
+<div id="payment-table-container" hx-swap-oob="true">
+    <div class="sim-table-container">
+        <table class="sim-table">
+            <thead>
+                <tr>
+                    <th class="text-left">Debt Name</th>
+                    <th class="text-right">APR</th>
+                    <th class="text-left">Balance</th>
+                    <th class="text-right">Payoff Date</th>
+                    <th class="text-right">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for l in sorted_debts %}
+                {% set is_paid_off = l.balance <= 0 %}
+                <tr class="{{ 'row-paid-off' if is_paid_off else '' }}">
+                    <td class="cell-name">{{ l.name }}</td>
+                    <td class="text-right">
+                        <span class="badge badge-soft {{ 'text-danger' if l.interest_rate > 0.2 else '' }}">
+                            {{ "{:.1f}%".format(l.interest_rate * 100) }}
+                        </span>
+                    </td>
+                    <td class="cell-mono">${{ "{:,.0f}".format(l.balance) }}</td>
+                    <td class="cell-mono text-right">
+                        {% if is_paid_off %}
+                            -
+                        {% else %}
+                            {{ payoff_dates.get(l.name, date_free).strftime("%b %Y") }}
+                        {% endif %}
+                    </td>
+                    <td class="cell-action text-right">
+                        {% if not is_paid_off %}
+                            {% if l.payment_url %}
+                                <a href="{{ l.payment_url }}" target="_blank" class="pay-link" title="Pay off {{ l.name }}">Pay</a>
+                            {% else %}
+                                <a href="/pay/{{ l.id }}" class="pay-link" title="Pay off {{ l.name }}">Pay</a>
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{# 4. Filters #}
+<div id="filter-container" class="filter-row" hx-swap-oob="true">
+    <div class="select-wrapper">
+        <select class="filter-select" 
+                onchange="document.querySelector('[name=filter_tag]').value=this.value; htmx.trigger('#hidden-payment-input', 'change')">
+            {% for tag in tags %}
+            <option value="{{ tag }}" {{ 'selected' if tag == filter_tag else '' }}>{{ tag }}</option>
+            {% endfor %}
+        </select>
+        <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+    </div>
+</div>
+

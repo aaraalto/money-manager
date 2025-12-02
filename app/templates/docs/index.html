@@ -1,0 +1,23 @@
+{% extends "templates/docs/layout.html" %}
+
+{% block docs_content %}
+    <h1>Documentation</h1>
+    <p>Welcome to the Radiant documentation.</p>
+    
+    <div style="margin-top: 2rem;">
+        {% for item in menu %}
+            {% if item.is_header %}
+                <h2>{{ item.title }}</h2>
+            {% elif item.level == 0 %}
+                <div style="margin-bottom: 1rem;">
+                    <a href="{{ item.url }}" style="font-size: 1.2rem; font-weight: 500;">{{ item.title }}</a>
+                </div>
+            {% else %}
+                <div style="margin-bottom: 0.5rem; margin-left: 1rem;">
+                    <a href="{{ item.url }}">{{ item.title }}</a>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+{% endblock %}
+

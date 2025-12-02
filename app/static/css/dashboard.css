@@ -525,16 +525,6 @@ body {
     100% { opacity: 0.6; }
 }
 
-/* Utility Classes */
-.hidden { display: none !important; }
-.mt-2 { margin-top: var(--space-2); }
-.mt-4 { margin-top: var(--space-4); }
-.h-full { height: 100%; }
-.w-full { width: 100%; }
-.h-400 { height: 400px; }
-.flex-col-center { display: flex; flex-direction: column; align-items: center; }
-.text-sm { font-size: 0.85rem; }
-.flex-center-gap { display: flex; align-items: center; gap: var(--space-4); }
 
 .text-gradient {
     background: linear-gradient(135deg, var(--primary), #a5b4fc);
@@ -542,11 +532,6 @@ body {
     -webkit-text-fill-color: transparent;
     background-clip: text;
 }
-
-.text-success { color: var(--success); }
-.text-danger { color: var(--danger); }
-.text-warning { color: var(--warning); }
-.text-primary-color { color: var(--primary); }
 
 /* Scrollbar Styling */
 ::-webkit-scrollbar {

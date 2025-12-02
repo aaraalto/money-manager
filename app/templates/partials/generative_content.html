@@ -1,7 +1,7 @@
 {# frontend/partials/generative_content.html #}
 
 {# 1. Metrics #}
-<div id="metric-fcf" hx-swap-oob="true" class="kpi-value text-primary-color">{{ format_currency(data.cash_flow.free) }}</div>
+<div id="metric-fcf" hx-swap-oob="true" class="kpi-value text-primary">{{ format_currency(data.cash_flow.free) }}</div>
 <div id="metric-date" hx-swap-oob="true" class="kpi-value date">{{ data.debt_payoff.avalanche.date_free }}</div>
 <div id="metric-savings" hx-swap-oob="true" class="kpi-value">{{ format_currency(data.debt_payoff.snowball.interest_paid - data.debt_payoff.avalanche.interest_paid) }}</div>
 
@@ -12,6 +12,24 @@
 
 {# 3. Payment Table #}
 <div id="payment-table-container" hx-swap-oob="true" class="sim-table-container">
+    {% if plan|length == 0 %}
+    <div class="empty-state-wrapper">
+        <div class="empty-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                <line x1="9" y1="9" x2="9.01" y2="9"></line>
+                <line x1="15" y1="9" x2="15.01" y2="9"></line>
+                <path d="M8 13a5 5 0 0 0 4 0"></path>
+                <polyline points="16 5 19 2 22 5"></polyline>
+            </svg>
+        </div>
+        <h3>No Liabilities Found</h3>
+        <p>Your financial table is clean. Add a liability to generate your payoff plan.</p>
+        <button class="btn-quiet" onclick="document.querySelector('.rotary-container').scrollIntoView({behavior: 'smooth'})">
+            Add Liability
+        </button>
+    </div>
+    {% else %}
     <table class="sim-table">
         <thead>
             <tr>
@@ -57,6 +75,7 @@
     <div class="table-footer">
         Visible Total: <span class="total-val">{{ format_currency(visible_total) }}</span>
     </div>
+    {% endif %}
 </div>
 
 {# 4. Filters (Update active state) #}

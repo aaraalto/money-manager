@@ -22,3 +22,5 @@ docs/fin-advice/ramit_sethi_assessment.md
 # Frontend dependencies if installed via npm (though current setup is manual)
 node_modules/
 
+# Standalone binaries
+bin/

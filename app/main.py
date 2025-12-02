@@ -10,10 +10,11 @@ from typing import List
 from app.models import Scenario, SpendingCategory, LiabilityTag
 from app.data.repository import FileRepository
 from app.services.financial import FinancialService
+from app.services.docs_service import DocsService
 from app.domain.debt import simulate_debt_payoff
 from app.domain.svg_charts import generate_simple_line_chart_svg
 
-app = FastAPI()
+app = FastAPI(docs_url="/api/docs", redoc_url="/api/redoc")
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
@@ -30,6 +31,43 @@ def get_repository(request: Request) -> FileRepository:
 
 def get_service(repo: FileRepository = Depends(get_repository)) -> FinancialService:
     return FinancialService(repo)
+
+docs_service = DocsService()
+
+@app.get("/docs", response_class=HTMLResponse)
+async def docs_index(request: Request):
+    menu = docs_service.get_flat_menu()
+    # Default to first item if available, or index
+    return templates.TemplateResponse("docs/index.html", {
+        "request": request, 
+        "menu": menu,
+        "title": "Documentation"
+    })
+
+@app.get("/docs/{path:path}", response_class=HTMLResponse)
+async def docs_page(path: str, request: Request):
+    menu = docs_service.get_flat_menu()
+    page_data = docs_service.get_page_content(path)
+    
+    if not page_data:
+        return templates.TemplateResponse("docs/index.html", {
+            "request": request,
+            "menu": menu,
+            "title": "Not Found"
+        }, status_code=404)
+
+    # Mark active item
+    for item in menu:
+        if item.get("url") == f"/docs/{path}":
+            item["active"] = True
+            
+    return templates.TemplateResponse("docs/page.html", {
+        "request": request,
+        "menu": menu,
+        "title": page_data["title"],
+        "content": page_data["content"]
+    })
+
 
 @app.get("/demo", response_class=HTMLResponse)
 async def demo_page(request: Request):
@@ -165,23 +203,7 @@ async def calculate_partial(request: Request, repo: FileRepository = Depends(get
         snowball_series=context_snowball.series,
         avalanche_series=context_avalanche.series
     )
-    
-    # Construct OOB Response
-    # 1. FCF
-    fcf_class = "positive" if fcf >= 0 else "negative"
-    html = f'<span class="value {fcf_class}" id="metric-fcf" hx-swap-oob="true">${fcf:,.0f}</span>'
-    
-    # 2. Date
-    html += f'<div class="value date" id="metric-date" hx-swap-oob="true">{payoff_date_str}</div>'
-    
-    # 3. Savings/Interest
-    # Show positive savings
-    html += f'<div class="value positive" id="metric-savings" hx-swap-oob="true">${interest_saved:,.0f}</div>'
-    
-    # 4. Chart
-    html += f'<div id="chart-container" hx-swap-oob="true">{chart_svg}</div>'
-    
-    # 5. Table (With Filtering)
+
     # Extract payoff dates per debt
     payoff_dates = {}
     for log in context.log:
@@ -194,85 +216,24 @@ async def calculate_partial(request: Request, repo: FileRepository = Depends(get
     else:
         filtered_liabilities = liabilities
 
-    table_rows = ""
     # Sort liabilities by payoff date
     sorted_debts = sorted(filtered_liabilities, key=lambda x: payoff_dates.get(x.name, context.date_free))
     
-    for l in sorted_debts:
-        is_paid_off = l.balance <= 0
-        row_class = "row-paid-off" if is_paid_off else ""
-        
-        if is_paid_off:
-            p_date = "-"
-            pay_action = ""
-        else:
-            p_date = payoff_dates.get(l.name, context.date_free).strftime("%b %Y")
-            # Pay Link (Action) - visible on hover
-            if getattr(l, 'payment_url', None):
-                pay_action = f'<a href="{l.payment_url}" target="_blank" class="pay-link" title="Pay off {l.name}">Pay</a>'
-            else:
-                pay_action = f'<a href="/pay/{l.id}" class="pay-link" title="Pay off {l.name}">Pay</a>'
-            
-        apr = f"{l.interest_rate * 100:.1f}%"
-        apr_class = "text-danger" if l.interest_rate > 0.2 else ""
-        
-        table_rows += f"""
-        <tr class="{row_class}">
-            <td class="cell-name">{l.name}</td>
-            <td class="text-right"><span class="badge badge-soft {apr_class}">{apr}</span></td>
-            <td class="cell-mono">${l.balance:,.0f}</td>
-            <td class="cell-mono text-right">{p_date}</td>
-            <td class="cell-action text-right">{pay_action}</td>
-        </tr>
-        """
-        
-    html += f"""
-    <div id="payment-table-container" hx-swap-oob="true">
-        <div class="sim-table-container">
-            <table class="sim-table">
-                <thead>
-                    <tr>
-                        <th class="text-left">Debt Name</th>
-                        <th class="text-right">APR</th>
-                        <th class="text-left">Balance</th>
-                        <th class="text-right">Payoff Date</th>
-                        <th class="text-right">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {table_rows}
-                </tbody>
-            </table>
-        </div>
-    </div>
-    """
-    
-    # 6. Filters (Dropdown)
-    # Generate filter dropdown dynamically
     # Available tags: All, plus standard ones
     tags = ["All"] + [t.value for t in LiabilityTag]
-    
-    options = ""
-    for tag in tags:
-        selected = "selected" if tag == filter_tag else ""
-        options += f'<option value="{tag}" {selected}>{tag}</option>'
-        
-    # Clean styled select component
-    filter_dropdown = f"""
-    <div class="select-wrapper">
-        <select class="filter-select" 
-                onchange="document.querySelector('[name=filter_tag]').value=this.value; htmx.trigger('#hidden-payment-input', 'change')">
-            {options}
-        </select>
-        <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="6 9 12 15 18 9"></polyline>
-        </svg>
-    </div>
-    """
 
-    html += f'<div id="filter-container" class="filter-row" hx-swap-oob="true">{filter_dropdown}</div>'
-    
-    return html
+    return templates.TemplateResponse("partials/dashboard_update.html", {
+        "request": request,
+        "fcf": fcf,
+        "payoff_date_str": payoff_date_str,
+        "interest_saved": interest_saved,
+        "chart_svg": chart_svg,
+        "sorted_debts": sorted_debts,
+        "payoff_dates": payoff_dates,
+        "date_free": context.date_free,
+        "filter_tag": filter_tag,
+        "tags": tags
+    })
 
 if __name__ == "__main__":
     import uvicorn

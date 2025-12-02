@@ -1,0 +1,36 @@
+{% extends "templates/layouts/base.html" %}
+
+{% block title %}Radiant Docs - {{ title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/docs.css">
+{% endblock %}
+
+{% block content %}
+<div class="docs-layout">
+    <aside class="docs-sidebar">
+        <div class="docs-nav-group">
+            <div class="docs-nav-header">Documentation</div>
+            {% for item in menu %}
+                {% if item.is_header %}
+                    <!-- Spacing between groups -->
+                    <div style="margin-top: 1.5rem;"></div>
+                    <div class="docs-nav-header">{{ item.title }}</div>
+                {% else %}
+                    <a href="{{ item.url }}" class="docs-nav-item {% if request.path == item.url %}active{% endif %}" 
+                       style="padding-left: {{ '0' if item.level == 0 else '0' }}px;">
+                        {{ item.title }}
+                    </a>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </aside>
+
+    <div class="docs-main">
+        <div class="docs-content">
+            {% block docs_content %}{% endblock %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
