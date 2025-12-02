@@ -90,16 +90,19 @@ h1 {
 @media (min-width: 1024px) {
     .simulation-layout {
         grid-template-columns: 40% 1fr; /* 40/60 Split */
-        gap: var(--space-10);
-        align-items: start; /* Align top */
+        gap: var(--space-8); /* Slightly tighter gap */
+        align-items: stretch; /* Align top */
         padding-bottom: 0;
     }
 
     .controls-section {
         position: sticky;
-        top: var(--space-8);
-        max-height: calc(100vh - var(--space-16));
-        overflow-y: auto; /* Allow scrolling within controls if needed */
+        top: var(--space-6);
+        height: calc(100vh - var(--space-12));
+        padding: 0;
+        overflow-y: auto; /* Safety scroll */
+        justify-content: center; /* Equal space top/bottom */
+        align-items: center;
     }
 }
 
@@ -107,7 +110,7 @@ h1 {
 .controls-section {
     display: flex;
     flex-direction: column;
-    gap: var(--space-8);
+    gap: var(--space-6);
     /* Add padding to prevent edge touches from triggering drag accidentally */
     padding: var(--space-4) 0; 
 }
@@ -625,8 +628,8 @@ h1 {
 
 @media (min-width: 1024px) {
     .rotary-container {
-        width: min(70vh, 500px); /* Significantly larger on desktop */
-        height: min(70vh, 500px);
+        width: min(60vh, 440px); /* More balanced size */
+        height: min(60vh, 440px);
     }
 }
 

@@ -302,27 +302,26 @@ function drawPieChart(selector, data) {
         displayData.push({ label: "Others", value: othersValue, type: "Mixed" });
     }
 
-    // Adjusted margins to give more space to the pie
-    const margin = { top: 10, right: 10, bottom: 50, left: 10 };
+    // Use flex column for layout (Pie + Grid Legend)
+    container.style("display", "flex")
+             .style("flex-direction", "column")
+             .style("align-items", "center")
+             .style("gap", "1rem")
+             .style("height", "auto") // Allow height to grow
+             .style("padding-bottom", "1rem");
+
     const containerNode = container.node();
-    if (!containerNode) return;
+    const width = containerNode.getBoundingClientRect().width || 300;
+    const chartHeight = 240; // Fixed height for the pie part
     
-    const width = containerNode.getBoundingClientRect().width;
-    const height = (containerNode.getBoundingClientRect().height || 220);
-    
-    // FIX: Correctly calculate available dimensions
-    const chartWidth = width - margin.left - margin.right;
-    const chartHeight = height - margin.top - margin.bottom;
-    
-    // FIX: Radius is half of the smallest dimension, without extra subtraction
-    const radius = Math.min(chartWidth, chartHeight) / 2;
+    // FIX: Radius is half of the smallest dimension
+    const radius = Math.min(width, chartHeight) / 2 - 10;
 
     const svg = container.append("svg")
         .attr("width", width)
-        .attr("height", height)
+        .attr("height", chartHeight)
         .append("g")
-        // FIX: Center the group based on calculated margins and dimensions
-        .attr("transform", `translate(${margin.left + chartWidth / 2},${margin.top + chartHeight / 2})`);
+        .attr("transform", `translate(${width / 2},${chartHeight / 2})`);
 
     // Use design system colors with semantic mapping
     const colorPalette = [
@@ -347,10 +346,6 @@ function drawPieChart(selector, data) {
         .outerRadius(radius)
         .padAngle(0.02);
 
-    const outerArc = d3.arc()
-        .innerRadius(radius * 1.1)
-        .outerRadius(radius * 1.1);
-
     // Create arcs with proper animation
     const arcs = svg.selectAll("path.arc")
         .data(pie(displayData))
@@ -364,37 +359,9 @@ function drawPieChart(selector, data) {
         .attr("stroke", bgCard)
         .style("stroke-width", "2px")
         .style("cursor", "pointer")
-        .style("opacity", 0.9)
-        .on("mouseover", function(event, d) {
-            d3.select(this)
-                .transition()
-                .duration(200)
-                .attr("transform", "scale(1.05)")
-                .style("opacity", 1);
-            
-            // Highlight in legend
-            const label = d.data.label;
-            svg.selectAll(".legend-item")
-                .filter(d => d === label)
-                .select("rect")
-                .style("opacity", 1)
-                .style("stroke-width", "2px");
-        })
-        .on("mouseout", function(event, d) {
-            d3.select(this)
-                .transition()
-                .duration(200)
-                .attr("transform", "scale(1)")
-                .style("opacity", 0.9);
-            
-            // Reset legend
-            svg.selectAll(".legend-item")
-                .select("rect")
-                .style("opacity", 0.8)
-                .style("stroke-width", "1px");
-        });
+        .style("opacity", 0.9);
 
-    // Animate arcs with D3 transition (more reliable than GSAP for paths)
+    // Animate arcs with D3 transition
     path.transition()
         .duration(800)
         .delay((d, i) => i * 100)
@@ -438,68 +405,69 @@ function drawPieChart(selector, data) {
         .duration(500)
         .style("opacity", 1);
 
-    // Add interactive legend below chart
-    const legend = svg.append("g")
-        .attr("class", "legend")
-        .attr("transform", `translate(${-width/2 + margin.left}, ${chartHeight/2 + margin.top + 20})`);
+    // Add HTML Grid Legend
+    const legendContainer = container.append("div")
+        .style("width", "100%")
+        .style("display", "grid")
+        .style("grid-template-columns", "repeat(auto-fit, minmax(110px, 1fr))")
+        .style("gap", "0.75rem")
+        .style("padding", "0 0.5rem");
 
-    const legendItem = legend.selectAll(".legend-item")
+    const legendItems = legendContainer.selectAll(".legend-item")
         .data(displayData)
         .enter()
-        .append("g")
+        .append("div")
         .attr("class", "legend-item")
-        .attr("transform", (d, i) => {
-            const itemWidth = 140;
-            const itemsPerRow = Math.floor((width - margin.left - margin.right) / itemWidth);
-            const row = Math.floor(i / itemsPerRow);
-            const col = i % itemsPerRow;
-            return `translate(${col * itemWidth}, ${row * 24})`;
-        })
+        .style("display", "flex")
+        .style("align-items", "center")
+        .style("gap", "0.5rem")
         .style("cursor", "pointer")
-        .on("mouseover", function(event, d) {
-            // Highlight corresponding arc
-            path.filter(p => p.data.label === d.label)
-                .transition()
-                .duration(200)
-                .attr("transform", "scale(1.05)")
-                .style("opacity", 1);
-        })
-        .on("mouseout", function(event, d) {
-            path.filter(p => p.data.label === d.label)
-                .transition()
-                .duration(200)
-                .attr("transform", "scale(1)")
-                .style("opacity", 0.9);
-        });
+        .style("padding", "0.25rem")
+        .style("border-radius", "4px")
+        .style("transition", "background 0.2s ease");
 
-    legendItem.append("rect")
-        .attr("width", 12)
-        .attr("height", 12)
-        .attr("rx", 2)
-        .attr("fill", d => color(d.label))
-        .style("opacity", 0.8)
-        .style("stroke", bgCard)
-        .style("stroke-width", "1px");
+    legendItems.append("div")
+        .style("width", "10px")
+        .style("height", "10px")
+        .style("border-radius", "2px")
+        .style("background-color", d => color(d.label))
+        .style("flex-shrink", "0");
 
-    legendItem.append("text")
-        .attr("x", 16)
-        .attr("y", 9)
+    legendItems.append("div")
         .style("font-size", "0.75rem")
-        .style("fill", textSecondary)
+        .style("color", textSecondary)
         .style("font-family", fontBody)
-        .text(d => {
+        .style("line-height", "1.2")
+        .html(d => {
             const pct = ((d.value / total) * 100).toFixed(0);
-            return `${d.label} (${pct}%)`;
+            return `<span style="color:${textPrimary}; font-weight:500;">${pct}%</span> ${d.label}`;
         });
 
-    // Animate legend
-    if (typeof gsap !== 'undefined') {
-        legend.style("opacity", 0);
-        gsap.to(legend.node(), {
-            opacity: 1,
-            duration: 0.5,
-            delay: 1.2
-        });
-    }
+    // Interactions
+    const highlight = (label) => {
+        path.filter(p => p.data.label === label)
+            .transition().duration(200)
+            .attr("transform", "scale(1.05)")
+            .style("opacity", 1);
+            
+        legendItems.filter(d => d.label === label)
+            .style("background", "rgba(255,255,255,0.05)");
+    };
+    
+    const unhighlight = (label) => {
+        path.filter(p => p.data.label === label)
+            .transition().duration(200)
+            .attr("transform", "scale(1)")
+            .style("opacity", 0.9);
+            
+        legendItems.filter(d => d.label === label)
+            .style("background", "transparent");
+    };
+
+    path.on("mouseover", (e, d) => highlight(d.data.label))
+        .on("mouseout", (e, d) => unhighlight(d.data.label));
+
+    legendItems.on("mouseover", (e, d) => highlight(d.label))
+               .on("mouseout", (e, d) => unhighlight(d.label));
 }
 

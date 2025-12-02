@@ -375,10 +375,18 @@
             try {
                 const response = await fetch('/api/spending-plan');
                 const data = await response.json();
-                spendingData = data;
-                initialTotal = data.reduce((sum, i) => sum + i.amount, 0);
-                renderRows(data);
-                updateInsights(data);
+                
+                // Migration: Map old types to new Fixed/Flexible
+                spendingData = data.map(item => {
+                    if (item.type === 'Need' || item.type === 'Savings') item.type = 'Fixed';
+                    if (item.type === 'Want') item.type = 'Flexible';
+                    if (!['Fixed', 'Flexible'].includes(item.type)) item.type = 'Fixed'; // Default
+                    return item;
+                });
+                
+                initialTotal = spendingData.reduce((sum, i) => sum + i.amount, 0);
+                renderRows(spendingData);
+                updateInsights(spendingData);
                 
                 if(isSlasherMode) {
                     document.getElementById('current-crossover').innerText = "Oct 2032"; // Mock initial
@@ -439,16 +447,15 @@
             if (!isSlasherMode) {
                  typeControl = `
                     <div class="col-type">
-                        <select name="type" class="type-select ${getTypeClass(item.type)}" data-index="${index}" onchange="updateSelectColor(this)">
-                            <option value="Want" ${item.type === 'Want' ? 'selected' : ''}>Want</option>
-                            <option value="Need" ${item.type === 'Need' ? 'selected' : ''}>Need</option>
-                            <option value="Savings" ${item.type === 'Savings' ? 'selected' : ''}>Savings</option>
+                        <select name="type" class="type-select" data-index="${index}">
+                            <option value="Fixed" ${item.type === 'Fixed' ? 'selected' : ''}>Fixed</option>
+                            <option value="Flexible" ${item.type === 'Flexible' ? 'selected' : ''}>Flexible</option>
                         </select>
                     </div>
                 `;
             } else {
                  // Hidden input for slasher mode defaults
-                 typeControl = `<input type="hidden" name="type" value="${item.type || 'Want'}" data-index="${index}">`;
+                 typeControl = `<input type="hidden" name="type" value="${item.type || 'Fixed'}" data-index="${index}">`;
             }
 
             row.innerHTML = `
@@ -468,17 +475,6 @@
             return row;
         }
 
-        function getTypeClass(type) {
-            if (type === 'Need') return 'type-need';
-            if (type === 'Want') return 'type-want';
-            if (type === 'Savings') return 'type-savings';
-            return '';
-        }
-
-        function updateSelectColor(select) {
-            select.className = `type-select ${getTypeClass(select.value)}`;
-        }
-
         function updateLocalModel(input) {
             const index = input.dataset.index;
             if (index !== undefined && spendingData[index]) {
@@ -496,7 +492,7 @@
                 id: crypto.randomUUID(),
                 category: '', 
                 amount: 0, 
-                type: 'Want',
+                type: 'Fixed',
                 owner: 'Me'
             };
             spendingData.push(newItem);
@@ -523,14 +519,14 @@
 
         function updateInsights(data) {
             const total = data.reduce((sum, item) => sum + item.amount, 0);
-            const needs = data.filter(i => i.type === 'Need').reduce((sum, i) => sum + i.amount, 0);
-            const wants = data.filter(i => i.type === 'Want').reduce((sum, i) => sum + i.amount, 0);
+            const fixed = data.filter(i => i.type === 'Fixed' || i.type === 'Need' || i.type === 'Savings').reduce((sum, i) => sum + i.amount, 0);
+            const flexible = data.filter(i => i.type === 'Flexible' || i.type === 'Want').reduce((sum, i) => sum + i.amount, 0);
             
             const insightsEl = document.getElementById('spending-insights-content');
             
             // Calculate percentages safely
-            const needPct = total > 0 ? Math.round(needs/total*100) : 0;
-            const wantPct = total > 0 ? Math.round(wants/total*100) : 0;
+            const fixedPct = total > 0 ? Math.round(fixed/total*100) : 0;
+            const flexiblePct = total > 0 ? Math.round(flexible/total*100) : 0;
             
             insightsEl.innerHTML = `
                 <div class="insight-metric">
@@ -541,21 +537,21 @@
                     <div class="insight-list-item">
                         <span class="item-label">
                             <span class="dot-indicator dot-need"></span> 
-                            Needs
-                            <span class="item-pct" style="display: inline; margin-left: 6px;">${needPct}%</span>
+                            Fixed
+                            <span class="item-pct" style="display: inline; margin-left: 6px;">${fixedPct}%</span>
                         </span>
                         <div class="item-values">
-                            <span class="item-amount">$${needs.toLocaleString()}</span>
+                            <span class="item-amount">$${fixed.toLocaleString()}</span>
                         </div>
                     </div>
                     <div class="insight-list-item">
                         <span class="item-label">
                             <span class="dot-indicator dot-want"></span>
-                            Wants
-                            <span class="item-pct" style="display: inline; margin-left: 6px;">${wantPct}%</span>
+                            Flexible
+                            <span class="item-pct" style="display: inline; margin-left: 6px;">${flexiblePct}%</span>
                         </span>
                         <div class="item-values">
-                            <span class="item-amount">$${wants.toLocaleString()}</span>
+                            <span class="item-amount">$${flexible.toLocaleString()}</span>
                         </div>
                     </div>
                 </div>

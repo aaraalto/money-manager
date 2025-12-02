@@ -17,33 +17,35 @@
     <div class="simulation-layout">
         <!-- LEFT COLUMN: Controls -->
         <div class="controls-section">
-            <div class="rotary-container" id="payment-rotary">
-                <svg viewBox="0 0 400 400" class="rotary-svg">
-                    <!-- Track -->
-                    <circle cx="200" cy="200" r="160" class="rotary-track" />
-                    <!-- Progress -->
-                    <circle cx="200" cy="200" r="160" class="rotary-progress" />
+            <div class="rotary-container-wrapper">
+                <div class="rotary-container" id="payment-rotary">
+                    <svg viewBox="0 0 400 400" class="rotary-svg">
+                        <!-- Track -->
+                        <circle cx="200" cy="200" r="160" class="rotary-track" />
+                        <!-- Progress -->
+                        <circle cx="200" cy="200" r="160" class="rotary-progress" />
 
-                    <!-- Knob Group -->
-                    <g class="rotary-knob-group">
-                        <!-- Latch/Handle Design - REMOVED per user request -->
-                    </g>
-                </svg>
+                        <!-- Knob Group -->
+                        <g class="rotary-knob-group">
+                            <!-- Latch/Handle Design - REMOVED per user request -->
+                        </g>
+                    </svg>
 
-                <div class="rotary-center-content">
-                    <div class="rotary-value-display">
-                        <div class="value-group">
-                            <span class="rotary-currency">$</span>
-                            <input type="number" id="rotary-display" class="rotary-amount-input" value="500">
+                    <div class="rotary-center-content">
+                        <div class="rotary-value-display">
+                            <div class="value-group">
+                                <span class="rotary-currency">$</span>
+                                <input type="number" id="rotary-display" class="rotary-amount-input" value="500">
+                            </div>
+                            <span class="rotary-label">Monthly Allocation</span>
                         </div>
-                        <span class="rotary-label">Monthly Allocation</span>
-                    </div>
 
-                    <div class="rotary-divider"></div>
+                        <div class="rotary-divider"></div>
 
-                    <div class="rotary-limit-display">
-                        <span class="limit-label term" data-tooltip="Free Cash Flow is your Income minus Fixed Expenses. It's the money you have available to allocate towards debt repayment or savings.">Free Cash Flow</span>
-                        <span class="limit-value" id="metric-fcf">--</span>
+                        <div class="rotary-limit-display">
+                            <span class="limit-label term" data-tooltip="Free Cash Flow is your Income minus Fixed Expenses. It's the money you have available to allocate towards debt repayment or savings.">Free Cash Flow</span>
+                            <span class="limit-value" id="metric-fcf">--</span>
+                        </div>
                     </div>
                 </div>
             </div>

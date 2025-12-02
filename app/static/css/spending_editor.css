@@ -226,9 +226,9 @@ input[type=number]::-webkit-outer-spin-button {
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
-    background-color: var(--bg-subtle);
+    background-color: transparent;
     background-image: none;
-    border: 1px solid transparent;
+    border: 1px solid var(--border-color);
     color: var(--text-secondary);
     padding: 4px 12px;
     border-radius: 100px;
@@ -244,32 +244,16 @@ input[type=number]::-webkit-outer-spin-button {
 }
 
 .type-select:hover {
-    filter: brightness(1.1);
-    transform: scale(1.02);
+    border-color: var(--text-secondary);
+    color: var(--text-primary);
+    transform: translateY(-1px);
 }
 
 .type-select:focus {
     outline: none;
-    box-shadow: 0 0 0 2px var(--bg-card), 0 0 0 4px var(--primary-dim);
-}
-
-/* Consistent coloring with insights */
-.type-select.type-need {
-    background-color: rgba(99, 102, 241, 0.15);
-    color: #818cf8;
-    border-color: transparent;
-}
-
-.type-select.type-want {
-    background-color: rgba(245, 158, 11, 0.15);
-    color: #fbbf24;
-    border-color: transparent;
-}
-
-.type-select.type-savings {
-    background-color: rgba(16, 185, 129, 0.15);
-    color: #34d399;
-    border-color: transparent;
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    box-shadow: 0 0 0 2px var(--bg-card), 0 0 0 4px rgba(99, 102, 241, 0.2);
 }
 
 .type-tag {
