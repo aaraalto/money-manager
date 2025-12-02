@@ -86,11 +86,14 @@
 {% macro page_header(title, subtitle, actions=None) %}
 <header class="app-header">
     <div class="header-brand">
-        <h1>{{ title }}</h1>
-        {% if subtitle %}<p class="tagline">{{ subtitle }}</p>{% endif %}
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <h1>{{ title }}</h1>
+            {{ nav_dropdown() }}
+        </div>
+        {% if subtitle and subtitle.strip() %}<p class="tagline">{{ subtitle }}</p>{% endif %}
     </div>
     <div class="header-controls">
-        {{ nav_dropdown() }}
+        <!-- Actions if any -->
     </div>
 </header>
 {% endmacro %}
@@ -99,16 +102,111 @@
 {% macro dashboard_header(level_text=None, level_badge_class="badge-primary", tagline="", extra_classes="", tagline_style="", adjust_label="Adjust Spending", adjust_icon="edit") %}
 <header class="app-header {{ extra_classes }}">
     <div class="header-brand">
-        <h1 style="display: flex; align-items: center; gap: 1rem;">
-            Radiant 
-            {% if level_text %}
-            <span class="{{ level_badge_class }}" style="font-size: 0.4em; vertical-align: middle;">{{ level_text }}</span>
-            {% endif %}
-        </h1>
-        <p class="tagline" style="{{ tagline_style }}">{{ tagline }}</p>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <h1 style="display: flex; align-items: center; gap: 1rem; margin: 0;">
+                Radiant 
+            </h1>
+            {{ nav_dropdown() }}
+        </div>
+        {% if tagline and tagline.strip() %}<p class="tagline" style="{{ tagline_style }}">{{ tagline }}</p>{% endif %}
     </div>
     <div class="header-controls">
-        {{ nav_dropdown() }}
+        {% if level_text %}
+        <button class="level-pill {{ level_badge_class }}" onclick="document.getElementById('level-modal').showModal()">
+            {{ level_text }}
+        </button>
+        {% endif %}
     </div>
 </header>
+
+{# Levels Modal #}
+<dialog id="level-modal" class="modal wealth-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="header-title">
+                <h2>Wealth Levels</h2>
+                <p class="subtitle">Your journey to financial freedom</p>
+            </div>
+            <button onclick="document.getElementById('level-modal').close()" class="close-btn">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+        </div>
+        
+        <div class="wealth-ladder">
+            <!-- Level 5 -->
+            <div class="ladder-step {% if 'Level 5' in level_text|default('') %}active{% endif %}" data-level="5">
+                <div class="step-marker">
+                    <div class="marker-node">5</div>
+                    <div class="marker-line"></div>
+                </div>
+                <div class="step-content">
+                    <div class="step-header">
+                        <h3>Abundance</h3>
+                        <span class="step-tag">Legacy</span>
+                    </div>
+                    <p>Wealth works for you. Focus on impact, philanthropy, and generational growth.</p>
+                </div>
+            </div>
+
+            <!-- Level 4 -->
+            <div class="ladder-step {% if 'Level 4' in level_text|default('') %}active{% endif %}" data-level="4">
+                <div class="step-marker">
+                    <div class="marker-node">4</div>
+                    <div class="marker-line"></div>
+                </div>
+                <div class="step-content">
+                    <div class="step-header">
+                        <h3>Growth</h3>
+                        <span class="step-tag">Expansion</span>
+                    </div>
+                    <p>Diversifying income streams and optimizing for tax efficiency and scale.</p>
+                </div>
+            </div>
+
+            <!-- Level 3 -->
+            <div class="ladder-step {% if 'Level 3' in level_text|default('') %}active{% endif %}" data-level="3">
+                <div class="step-marker">
+                    <div class="marker-node">3</div>
+                    <div class="marker-line"></div>
+                </div>
+                <div class="step-content">
+                    <div class="step-header">
+                        <h3>Accumulation</h3>
+                        <span class="step-tag">Compounding</span>
+                    </div>
+                    <p>Investing in assets that grow over time. Your money starts making money.</p>
+                </div>
+            </div>
+
+            <!-- Level 2 -->
+            <div class="ladder-step {% if 'Level 2' in level_text|default('') %}active{% endif %}" data-level="2">
+                <div class="step-marker">
+                    <div class="marker-node">2</div>
+                    <div class="marker-line"></div>
+                </div>
+                <div class="step-content">
+                    <div class="step-header">
+                        <h3>Stability</h3>
+                        <span class="step-tag">Security</span>
+                    </div>
+                    <p>Building the fortress. High-interest debt is gone; emergency fund is funded.</p>
+                </div>
+            </div>
+
+            <!-- Level 1 -->
+            <div class="ladder-step {% if 'Level 1' in level_text|default('') %}active{% endif %}" data-level="1">
+                <div class="step-marker">
+                    <div class="marker-node">1</div>
+                </div>
+                <div class="step-content">
+                    <div class="step-header">
+                        <h3>Clarity</h3>
+                        <span class="step-tag">Foundation</span>
+                    </div>
+                    <p>Understanding the flow. Tracking income and expenses to stop the bleed.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</dialog>
 {% endmacro %}

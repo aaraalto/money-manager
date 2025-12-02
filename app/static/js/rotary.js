@@ -94,6 +94,7 @@ class RotaryKnob {
     setupManualInput() {
         // Update rotary when user types
         this.display.addEventListener('input', (e) => {
+            this.resizeInput();
             const val = parseInt(e.target.value, 10);
             if (!isNaN(val)) {
                 // Don't update visuals fully to avoid cursor jumping, just knob and internal value
@@ -163,6 +164,7 @@ class RotaryKnob {
                 if (!fromInput && document.activeElement !== this.display) {
                     this.display.value = this.value;
                 }
+                this.resizeInput();
             } else {
                 this.animateNumber(this.display, this.value);
             }
@@ -225,6 +227,14 @@ class RotaryKnob {
         setTimeout(() => {
             element.classList.remove('flipping');
         }, 600);
+    }
+
+    resizeInput() {
+        if (!this.display || this.display.tagName !== 'INPUT') return;
+        
+        // Just update the state, let CSS handle the math.
+        // This is more performant and keeps styling logic in CSS.
+        this.display.style.setProperty('--char-count', this.display.value.toString().length);
     }
 
     commitValue() {

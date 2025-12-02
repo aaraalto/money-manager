@@ -9,23 +9,48 @@
 {% endblock %}
 
 {% block content %}
-    {{ dashboard_header("Level 1: Clarity", "badge badge-info", "Understanding the flow.") }}
+    {{ dashboard_header("Level 1: Clarity", "badge badge-info", "") }}
 
     <div id="loading">Analyzing cash flow...</div>
 
     <div id="dashboard" class="hidden">
         <!-- Level 0 Focus: Cash Flow & Burn -->
         <div class="dashboard-overview">
-            {% call card("Expense Breakdown", "pie-chart") %}
-                 <div class="chart-container" id="chart-spending" style="height: 220px;"></div>
+            <!-- 1. Daily Safe-to-Spend (Primary Focus) -->
+            {% call card("Daily Capacity", "activity") %}
+                <div class="daily-spend-container">
+                    <div class="spend-header">
+                        <span class="label-mono">Daily Allowance</span>
+                    <div class="spend-value-wrapper">
+                        <span id="daily-allowance-value" class="spend-value">--</span>
+                    </div>
+                    </div>
+                    
+                    <div class="spend-context">
+                        <div class="context-line"></div>
+                        <p class="context-text">Guilt-free capital. <br>Remaining after all obligations.</p>
+                        <div class="context-line"></div>
+                    </div>
+
+                    <div class="spend-metrics">
+                        <div class="metric-item">
+                            <span class="metric-label">Monthly Cap</span>
+                            <span class="metric-value" id="monthly-allowance">--</span>
+                        </div>
+                        <div class="metric-divider"></div>
+                        <div class="metric-item">
+                            <span class="metric-label">Income Share</span>
+                            <span class="metric-value" id="allowance-percentage">--</span>
+                        </div>
+                    </div>
+                </div>
             {% endcall %}
 
-            {% call card("Burn Rate Analysis", "activity") %}
-                <div class="stat" style="text-align: center; padding: 1rem 0;">
-                    <div class="stat-label">Daily Allowance</div>
-                    <div class="stat-value" id="daily-allowance-value">--</div>
-                    <div class="stat-change">Safe to spend</div>
-                </div>
+            <!-- 2. Expense Breakdown -->
+            {% call card("Expense Composition", "flame") %}
+                 <div class="expense-composition-wrapper" style="display: flex; flex-direction: column; align-items: center; height: 100%;">
+                    <div class="chart-container" id="chart-spending" style="width: 100%; height: 400px;"></div>
+                 </div>
             {% endcall %}
         </div>
 

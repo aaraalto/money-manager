@@ -9,37 +9,33 @@
 {% endblock %}
 
     {% block content %}
-    {{ dashboard_header("Level 1: Focus Mode", "badge badge-warning", "Systematic elimination of liabilities.", "", "", "Adjust Strategy", "sliders") }}
+    {{ dashboard_header("Level 1: Focus Mode", "badge badge-warning", "", "", "", "Adjust Strategy", "sliders") }}
 
     <div id="loading">Calculating payoff trajectory...</div>
 
     <div id="dashboard" class="hidden">
-        <!-- Hero Section: Guilt-Free Daily Allowance -->
+        <!-- Hero Section: Daily Capacity -->
         <div class="hero-allowance-container fade-in-up">
-             <div class="hero-allowance-label">Daily Safe-to-Spend</div>
-             <div class="hero-allowance-value" id="hero-safe-spend">--</div>
-             <div class="hero-allowance-sub">Guilt-free. After all bills, debt & savings.</div>
+             <div class="hero-content">
+                 <div class="hero-label">Daily Safe-to-Spend</div>
+                 <div class="hero-value-row">
+                    <div class="hero-allowance-value" id="hero-safe-spend">--</div>
+                 </div>
+                 <div class="hero-allowance-sub">Guilt-free capital. After all obligations.</div>
+             </div>
              
-             <div class="system-status-row">
-                 <div class="status-item" id="status-fixed">
-                     <div class="status-icon-check">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle></svg>
-                     </div>
-                     <div class="status-label">Fixed Costs</div>
+             <div class="system-integrity-panel">
+                 <div class="integrity-item" id="status-fixed">
+                     <div class="led-indicator"></div>
+                     <span class="integrity-label">Fixed Costs</span>
                  </div>
-                 <div class="status-line"></div>
-                 <div class="status-item" id="status-debt">
-                     <div class="status-icon-check">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle></svg>
-                     </div>
-                     <div class="status-label">Debt Strategy</div>
+                 <div class="integrity-item" id="status-debt">
+                     <div class="led-indicator"></div>
+                     <span class="integrity-label">Debt Strategy</span>
                  </div>
-                 <div class="status-line"></div>
-                 <div class="status-item" id="status-savings">
-                     <div class="status-icon-check">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle></svg>
-                     </div>
-                     <div class="status-label">Savings Auto</div>
+                 <div class="integrity-item" id="status-savings">
+                     <div class="led-indicator"></div>
+                     <span class="integrity-label">Auto-Savings</span>
                  </div>
              </div>
         </div>
@@ -58,9 +54,9 @@
                 </div>
                 <div class="separator"></div>
                 <div class="stat">
-                     <div class="stat-label">Payoff Velocity</div>
-                     <div class="stat-value text-success" id="payoff-velocity">--</div>
-                     <div class="stat-change positive">per month</div>
+                    <div class="stat-label">Payoff Velocity</div>
+                    <div class="stat-value text-success" id="payoff-velocity">--</div>
+                    <div class="stat-change positive">per month</div>
                 </div>
             {% endcall %}
 

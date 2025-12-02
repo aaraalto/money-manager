@@ -44,9 +44,52 @@ export function renderNetWorth(data) {
     renderReasoning("nw-reasoning", data.reasoning);
 }
 
-export function renderDailyAllowance(amount) {
+export function renderDailyAllowance(data) {
+    // Handle both old format (just number) and new format (object)
+    const amount = typeof data === 'number' ? data : data.daily;
+    const monthly = typeof data === 'number' ? amount * 30 : (data.monthly || amount * 30);
+    const percentage = typeof data === 'number' ? null : (data.percentage_of_income || null);
+    
     animateValue("daily-allowance-value", amount);
     animateValue("hero-safe-spend", amount);
+    
+    // Update monthly total
+    const monthlyEl = document.getElementById("monthly-allowance");
+    if (monthlyEl) {
+        if (typeof gsap !== 'undefined') {
+            const obj = { val: 0 };
+            gsap.to(obj, {
+                val: monthly,
+                duration: 2,
+                ease: "power4.out",
+                onUpdate: function () {
+                    monthlyEl.textContent = formatCurrency(obj.val);
+                }
+            });
+        } else {
+            monthlyEl.textContent = formatCurrency(monthly);
+        }
+    }
+    
+    // Update percentage if available
+    const percentageEl = document.getElementById("allowance-percentage");
+    if (percentageEl && percentage !== null) {
+        if (typeof gsap !== 'undefined') {
+            const obj = { val: 0 };
+            gsap.to(obj, {
+                val: percentage,
+                duration: 2,
+                ease: "power4.out",
+                onUpdate: function () {
+                    percentageEl.textContent = Math.round(obj.val) + "%";
+                }
+            });
+        } else {
+            percentageEl.textContent = Math.round(percentage) + "%";
+        }
+    } else if (percentageEl) {
+        percentageEl.textContent = "--";
+    }
 }
 
 export function renderSystemStatus(status) {

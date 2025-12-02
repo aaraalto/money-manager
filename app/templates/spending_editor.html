@@ -222,7 +222,7 @@
 
 {% block content %}
     {% if request.query_params.get('mode') != 'slasher' %}
-        {{ page_header("Spending Plan", "Design your money flow") }}
+        {{ page_header("Radiant") }}
     {% endif %}
 
     <div id="impact-toast" class="impact-badge">
@@ -284,6 +284,12 @@
         {% endif %}
 
         <div class="editor-main">
+            <div class="insights-panel">
+                <div id="spending-insights-content" class="insights-content">
+                    <p class="placeholder-text">Loading insights...</p>
+                </div>
+            </div>
+
             <div class="inputs-column">
                 <form id="spending-form" class="spending-table-form">
                     <div class="table-header">
@@ -304,13 +310,6 @@
                     </div>
                 </form>
             </div>
-
-            <div class="insights-panel">
-                <h2>Monthly Burn</h2>
-                <div id="spending-insights-content" class="insights-content">
-                    <p class="placeholder-text">Loading insights...</p>
-                </div>
-            </div>
         </div>
     </div>
 {% endblock %}
@@ -323,6 +322,13 @@
         let spendingData = []; // Store full data objects
 
         document.addEventListener('DOMContentLoaded', () => {
+            // Initial animation setup
+            if (typeof gsap !== 'undefined') {
+                gsap.set(".editor-header", { y: 20, opacity: 0 });
+                gsap.set(".insights-panel", { y: 30, opacity: 0 });
+                gsap.set(".spending-table-form", { y: 30, opacity: 0 });
+            }
+
             loadSpendingData();
             
             // Auto-save on input change with debounce
@@ -363,9 +369,40 @@
                 if(isSlasherMode) {
                     document.getElementById('current-crossover').innerText = "Oct 2032"; // Mock initial
                 }
+
+                // Trigger entry animation after data load
+                animateEntry();
             } catch (error) {
                 console.error('Error loading data:', error);
             }
+        }
+
+        function animateEntry() {
+            if (typeof gsap === 'undefined') return;
+            
+            const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+            
+            // Animate Header
+            tl.to(".editor-header", {
+                y: 0,
+                opacity: 1,
+                duration: 0.8
+            });
+            
+            // Animate Panels
+            tl.to([".insights-panel", ".spending-table-form"], {
+                y: 0,
+                opacity: 1,
+                duration: 0.8,
+                stagger: 0.15
+            }, "-=0.4");
+
+            // Animate Rows
+            tl.fromTo(".spending-row", 
+                { y: 20, opacity: 0 },
+                { y: 0, opacity: 1, duration: 0.4, stagger: 0.03 },
+                "-=0.6"
+            );
         }
 
         function renderRows(data) {
@@ -500,17 +537,22 @@
                 </div>
                 <div class="insight-list">
                     <div class="insight-list-item">
-                        <span class="item-label"><span class="dot-indicator dot-need"></span> Needs</span>
+                        <span class="item-label">
+                            <span class="dot-indicator dot-need"></span> 
+                            Needs
+                            <span class="item-pct" style="display: inline; margin-left: 0;">${needPct}%</span>
+                        </span>
                         <div class="item-values">
                             <span class="item-amount">$${needs.toLocaleString()}</span>
-                            <span class="item-pct">${needPct}%</span>
                         </div>
                     </div>
                     <div class="insight-list-item">
-                        <span class="item-label"><span class="dot-indicator dot-want"></span> Wants</span>
+                        <span class="item-label">
+                            Wants
+                            <span class="item-pct" style="display: inline; margin-left: 0;">${wantPct}%</span>
+                        </span>
                         <div class="item-values">
                             <span class="item-amount">$${wants.toLocaleString()}</span>
-                            <span class="item-pct">${wantPct}%</span>
                         </div>
                     </div>
                 </div>

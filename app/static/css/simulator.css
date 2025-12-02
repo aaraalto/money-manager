@@ -121,12 +121,14 @@ h1 {
     align-items: center;
     margin-bottom: var(--space-4);
     padding: 0 var(--space-4);
+    gap: var(--space-4); /* Add gap between metrics */
 }
 
 .hero-metric {
     display: flex;
     flex-direction: column;
     gap: var(--space-1);
+    flex: 1; /* Distribute space evenly */
 }
 
 .hero-metric .label {
@@ -146,9 +148,11 @@ h1 {
     letter-spacing: -2px;
 }
 
+/* Remove specific secondary sizing to match primary */
 .hero-metric.secondary .value {
-    font-size: clamp(1.5rem, 3vw, 2rem);
-    letter-spacing: -1px;
+    /* Inherit standard size */
+    font-size: clamp(2.5rem, 5vw, 3.5rem);
+    letter-spacing: -2px;
 }
 
 /* Mini KPI in Controls */
@@ -509,6 +513,7 @@ h1 {
     margin-left: var(--space-2);
 }
 
+/* Loading State */
 .loader {
     text-align: center;
     color: var(--text-tertiary);
@@ -516,11 +521,81 @@ h1 {
     margin-bottom: var(--space-4);
     opacity: 0;
     transition: opacity 0.3s;
-    height: 20px;
+    height: 0;
+    overflow: hidden;
 }
 
 .loader.htmx-indicator.htmx-request {
     opacity: 1;
+    height: auto;
+    margin-bottom: var(--space-4);
+}
+
+/* Loading Skeleton Animation */
+@keyframes shimmer {
+    0% { background-position: -1000px 0; }
+    100% { background-position: 1000px 0; }
+}
+
+.htmx-request .value,
+.htmx-request .sim-table td,
+.htmx-request .generated-card,
+.htmx-request .hero-metric .value {
+    position: relative;
+    overflow: hidden;
+    color: transparent !important;
+    background: #2a2a2a;
+    background-image: linear-gradient(to right, #2a2a2a 0%, #3a3a3a 20%, #2a2a2a 40%, #2a2a2a 100%);
+    background-repeat: no-repeat;
+    background-size: 2000px 100%; 
+    animation: shimmer 2s infinite linear;
+    border-radius: 4px;
+    min-height: 1em; /* Ensure height for text elements */
+}
+
+/* Special case for containers to avoid double background */
+.htmx-request.results-section .generated-card {
+    /* Only shimmer the contents, or the card itself if empty */
+    background: var(--bg-card); /* Reset */
+    background-image: none;
+    animation: none;
+    opacity: 0.7; /* Dim the cards while loading */
+    pointer-events: none;
+}
+
+/* Apply shimmer to specific loading areas within results */
+.results-section.htmx-request .value,
+.results-section.htmx-request td,
+.results-section.htmx-request .card-title,
+.results-section.htmx-request rect,
+.results-section.htmx-request path {
+    /* Targets specific text elements inside */
+    opacity: 0.5; 
+}
+
+/* Better approach: Overlay or specific skeleton classes */
+.skeleton-loading {
+    background: #2a2a2a;
+    background-image: linear-gradient(to right, #2a2a2a 0%, #333 20%, #2a2a2a 40%, #2a2a2a 100%);
+    background-repeat: no-repeat;
+    background-size: 800px 100%; 
+    animation: shimmer 1.5s infinite linear;
+    color: transparent !important;
+    border-radius: 4px;
+    display: inline-block;
+    min-height: 1em;
+    width: 100%;
+}
+
+/* Target children during HTMX request on parent form/container */
+.htmx-request .hero-metric .value {
+    background: #2a2a2a;
+    background-image: linear-gradient(to right, #2a2a2a 0%, #333 20%, #2a2a2a 40%, #2a2a2a 100%);
+    background-repeat: no-repeat;
+    background-size: 800px 100%; 
+    animation: shimmer 1.5s infinite linear;
+    color: transparent !important;
+    border-radius: 4px;
 }
 
 /* Rotary Dial */
@@ -675,7 +750,13 @@ h1 {
 }
 
 .rotary-amount-input {
-    font-size: var(--sim-rotary-size);
+    /* Dynamic Sizing Logic */
+    --char-count: 3; /* Default */
+    --scale-factor: clamp(0.5, 1.2 - (var(--char-count) * 0.1), 0.9);
+    
+    font-size: calc(var(--sim-rotary-size) * var(--scale-factor));
+    width: calc((var(--char-count) + 0.6) * 1ch);
+    
     font-weight: 600;
     color: var(--text-primary);
     letter-spacing: -1px;
@@ -684,13 +765,14 @@ h1 {
     background: transparent;
     border: none;
     border-bottom: 2px solid transparent;
-    width: 3.5ch;
+    min-width: 1ch;
+    max-width: 100%;
     text-align: center;
     padding: 0;
     margin: 0;
     -moz-appearance: textfield;
     appearance: none;
-    transition: border-color 0.2s ease, background-color 0.2s ease;
+    transition: border-color 0.2s ease, background-color 0.2s ease, font-size 0.2s ease, width 0.2s ease;
     pointer-events: auto;
     cursor: text;
 }

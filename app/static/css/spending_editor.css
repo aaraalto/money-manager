@@ -23,7 +23,7 @@
 /* New Split Layout */
 .editor-main {
     display: grid;
-    grid-template-columns: 2fr 1fr; /* Inputs take 2/3, Insights take 1/3 */
+    grid-template-columns: 1fr 2fr; /* Insights (1fr), Inputs (2fr) */
     gap: 40px;
     align-items: start; /* Align to top */
     position: relative;
@@ -244,7 +244,7 @@ input[type=number]::-webkit-outer-spin-button {
     top: 40px; /* Stick to top of viewport with some gap */
     background: var(--surface-card);
     border-radius: var(--radius-xl);
-    padding: 40px;
+    padding: 32px;
     border: 1px solid var(--border-color);
     box-shadow: var(--shadow-lg);
     text-align: left; /* Changed to left align */
@@ -254,24 +254,18 @@ input[type=number]::-webkit-outer-spin-button {
     height: fit-content; /* Don't stretch */
 }
 
-.insights-panel h2 {
-    font-size: 1rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--text-tertiary);
-    margin-bottom: 30px;
-    margin-top: 0;
-}
-
 .insight-metric .label {
     display: block;
-    font-size: 1rem;
-    color: var(--text-secondary);
-    margin-bottom: 10px;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-tertiary);
+    margin-bottom: 8px;
+    font-weight: 600;
 }
 
 .insight-metric .value {
-    font-size: 3.5rem;
+    font-size: 3rem;
     font-weight: 700;
     line-height: 1;
     letter-spacing: -2px;
@@ -286,15 +280,15 @@ input[type=number]::-webkit-outer-spin-button {
 .insight-list {
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    margin-top: 30px;
+    gap: 16px;
+    margin-top: 24px;
 }
 
 .insight-list-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px 0;
+    padding: 12px 0;
     border-bottom: 1px solid var(--border-subtle);
 }
 
