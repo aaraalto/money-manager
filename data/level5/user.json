@@ -1,0 +1,11 @@
+{
+  "id": "55555555-5555-5555-5555-555555555555",
+  "name": "Turing",
+  "current_level": 5,
+  "avatar_url": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=160&h=160",
+  "onboarding_completed": true,
+  "monthly_income": 50000.0,
+  "monthly_burn": 12000.0,
+  "total_debt": 0.0,
+  "liquid_assets": 2500000.0
+}

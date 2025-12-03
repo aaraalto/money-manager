@@ -127,16 +127,17 @@
                 <p class="subtitle">Your journey to financial freedom</p>
             </div>
             <button onclick="document.getElementById('level-modal').close()" class="close-btn">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
         </div>
         
         <div class="wealth-ladder">
+            <div class="ladder-spine"></div>
+
             <!-- Level 5 -->
             <div class="ladder-step {% if 'Level 5' in level_text|default('') %}active{% endif %}" data-level="5">
                 <div class="step-marker">
                     <div class="marker-node">5</div>
-                    <div class="marker-line"></div>
                 </div>
                 <div class="step-content">
                     <div class="step-header">
@@ -151,7 +152,6 @@
             <div class="ladder-step {% if 'Level 4' in level_text|default('') %}active{% endif %}" data-level="4">
                 <div class="step-marker">
                     <div class="marker-node">4</div>
-                    <div class="marker-line"></div>
                 </div>
                 <div class="step-content">
                     <div class="step-header">
@@ -166,7 +166,6 @@
             <div class="ladder-step {% if 'Level 3' in level_text|default('') %}active{% endif %}" data-level="3">
                 <div class="step-marker">
                     <div class="marker-node">3</div>
-                    <div class="marker-line"></div>
                 </div>
                 <div class="step-content">
                     <div class="step-header">
@@ -181,7 +180,6 @@
             <div class="ladder-step {% if 'Level 2' in level_text|default('') %}active{% endif %}" data-level="2">
                 <div class="step-marker">
                     <div class="marker-node">2</div>
-                    <div class="marker-line"></div>
                 </div>
                 <div class="step-content">
                     <div class="step-header">

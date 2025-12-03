@@ -1,0 +1,18 @@
+[
+  {
+    "id": "a1",
+    "name": "Brokerage Account",
+    "type": "equity",
+    "value": 150000.0,
+    "apy": 0.09,
+    "liquidity": "liquid"
+  },
+  {
+    "id": "a2",
+    "name": "Real Estate Fund",
+    "type": "real_estate",
+    "value": 75000.0,
+    "apy": 0.12,
+    "liquidity": "illiquid"
+  }
+]

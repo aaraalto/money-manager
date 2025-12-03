@@ -918,24 +918,44 @@ body {
 
 .wealth-modal .close-btn:hover {
     color: var(--text-primary);
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--bg-subtle);
     opacity: 1;
 }
 
 /* Ladder Layout */
 .wealth-ladder {
-    padding: var(--space-10) var(--space-10); /* Increased Padding */
+    padding: var(--space-10) var(--space-10);
     display: flex;
     flex-direction: column;
     gap: 0;
     position: relative;
 }
 
+/* The Shared Spine (Background Line) */
+.ladder-spine {
+    position: absolute;
+    top: var(--space-10); /* Matches padding */
+    bottom: var(--space-10);
+    left: calc(var(--space-10) + 18px); /* Padding + half marker width */
+    width: 2px;
+    background: repeating-linear-gradient(
+        to bottom,
+        #2a2a30 0,
+        #2a2a30 4px,
+        transparent 4px,
+        transparent 8px
+    );
+    z-index: 1;
+    opacity: 0.5;
+    transform: translateX(-50%); /* Center aligns with the left position */
+}
+
 .ladder-step {
     display: flex;
-    gap: var(--space-6); /* More gap between marker and text */
+    gap: var(--space-6);
     position: relative;
-    padding-bottom: var(--space-10); /* More vertical breathing room */
+    padding-bottom: var(--space-10);
+    z-index: 2; /* Above spine */
 }
 
 .ladder-step:last-child {
@@ -947,57 +967,36 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 36px; /* Slightly larger markers */
+    width: 36px;
     flex-shrink: 0;
+    position: relative; /* Added to contain the beam alignment */
 }
 
 .marker-node {
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: #131316; /* Darker background for "Future" */
-    border: 2px solid #2a2a30; /* Darker border for "Future" */
-    color: #444; /* Dimmed text for "Future" */
+    background: #131316;
+    border: 2px solid #2a2a30;
+    color: #444;
     display: flex;
     align-items: center;
     justify-content: center;
     font-family: var(--font-mono);
     font-size: 0.9rem;
     font-weight: 600;
-    z-index: 2;
+    z-index: 10;
     transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-    position: relative; /* For pseudo-elements */
+    position: relative;
 }
 
-/* Dashed Line for Future Steps (Default) */
-.marker-line {
-    flex: 1;
-    width: 2px;
-    background: repeating-linear-gradient(
-        to bottom,
-        #2a2a30 0,
-        #2a2a30 4px,
-        transparent 4px,
-        transparent 8px
-    ); /* Dashed line */
-    min-height: 24px;
-    margin-top: -2px;
-    margin-bottom: -2px;
-    z-index: 1;
-    transition: all 0.3s ease;
-    opacity: 0.5;
-}
-
-/* Remove line for last item */
-.ladder-step:last-child .marker-line {
-    display: none;
-}
+/* REMOVED: Individual .marker-line styles */
 
 /* Content Styling (Future Default) */
 .step-content {
     flex: 1;
     padding-top: 2px;
-    opacity: 0.4; /* Dimmed for Future */
+    opacity: 0.4;
     transition: opacity 0.3s ease;
 }
 
@@ -1048,9 +1047,9 @@ body {
 }
 
 /* Animation for the Electric Beam */
-@keyframes electric-ascend {
-    0% { background-position: 0% 100%; }
-    100% { background-position: 0% 0%; }
+@keyframes electric-descend {
+    0% { background-position: 0% 0%; }
+    100% { background-position: 0% 100%; }
 }
 
 /* 1. ACTIVE STATE (Current Level) */
@@ -1062,35 +1061,42 @@ body {
         0 0 0 4px rgba(99, 102, 241, 0.15),
         0 0 30px rgba(99, 102, 241, 0.5);
     transform: scale(1.15);
+    z-index: 10; /* Ensure it stays on top */
 }
 
-/* 
-   UPDATE: The Active Line (Connecting Active -> Past) 
-   This creates the "Shock" effect
+/* The Beam Effect - Re-implemented for the Shared Spine
+   We use a pseudo-element on the spine container to mask or highlight the active section
+   OR simpler: We style the spine itself based on general state, but that's hard.
+   
+   BETTER APPROACH: We use a pseudo-element on the ACTIVE step marker to draw a "beam" downwards to the next step.
 */
-.ladder-step.active .marker-line {
-    /* The Beam Gradient: Dark -> Primary -> White Hot -> Primary -> Dark */
+.ladder-step.active .step-marker::after {
+    content: '';
+    position: absolute;
+    top: 36px; /* Start below the node */
+    bottom: -40px; /* Extend to the next node (approx spacing) */
+    left: 50%;
+    width: 2px;
+    transform: translateX(-1px);
+    
+    /* The Beam Gradient */
     background: linear-gradient(
-        to top, 
+        to bottom, 
         var(--primary) 0%, 
         #6366f1 40%, 
         #ffffff 50%, 
         #6366f1 60%, 
         var(--primary) 100%
     );
-    
-    /* Scale the background so the "beam" is only a small part of the total height */
     background-size: 100% 300%; 
-    
-    /* The Animation: 2s cycle, infinite loop */
-    animation: electric-ascend 2s linear infinite;
-    
-    /* Add a glow to the line itself */
+    animation: electric-descend 2s linear infinite;
     box-shadow: 0 0 15px rgba(99, 102, 241, 0.6);
-    opacity: 1;
-    
-    /* Ensure it stays distinct */
     z-index: 5;
+}
+
+/* Hide beam for last child if it is active (unlikely but good safety) */
+.ladder-step:last-child.active .step-marker::after {
+    display: none;
 }
 
 .ladder-step.active .step-content {
@@ -1109,30 +1115,55 @@ body {
     box-shadow: 0 0 10px rgba(99, 102, 241, 0.1);
 }
 
-/* 2. COMPLETED STATES (Levels Below Active) 
-   Since HTML order is 5 -> 1, the siblings AFTER active are lower levels (1, 2...).
-   We want these to look solid and foundational.
-*/
+/* 2. COMPLETED STATES (Levels Below Active) */
 
 .ladder-step.active ~ .ladder-step .marker-node {
     background: #1e293b; /* Solid, settled slate */
     border-color: #475569;
     color: #94a3b8;
     box-shadow: none;
+    z-index: 10;
 }
 
-/* Completed Levels (Solid Foundation) */
-.ladder-step.active ~ .ladder-step .marker-line {
-    /* A steady flow, less intense */
-    background: linear-gradient(
-        to top, 
-        #334155 0%, 
-        #475569 50%, 
-        #334155 100%
-    );
-    background-size: 100% 200%;
-    animation: electric-ascend 4s linear infinite; /* Slower flow */
-    opacity: 1;
+/* Solid line for completed path - Attached to the step above it */
+/* We need to attach this to the previous step's marker ::after */
+/* But we can't select backwards in CSS. */
+/* Instead, we can style the spine segments. OR, we can add the ::after to the completed steps themselves? No, the line is ABOVE them. */
+
+/* Better logic:
+   The line segment connects Node N to Node N-1.
+   If Node N is Active, the line N -> N-1 is the BEAM.
+   If Node N is Future (above active), line is DASHED (default spine).
+   If Node N is Completed (below active), line N -> N-1 is SOLID. 
+   
+   Wait, HTML order is 5 -> 1. 
+   So "Active ~ .ladder-step" selects 1, 2, 3 (if 4 is active).
+   So these are the steps BELOW the active one.
+   They are "Completed" or "Past".
+   
+   The line connecting Active (4) to 3 is the Beam.
+   The line connecting 3 to 2 should be SOLID.
+   The line connecting 2 to 1 should be SOLID.
+   
+   So, for every step AFTER active (.ladder-step.active ~ .ladder-step),
+   its own marker's ::after (which draws down to the next) should be SOLID.
+*/
+
+.ladder-step.active ~ .ladder-step .step-marker::after {
+    content: '';
+    position: absolute;
+    top: 36px;
+    bottom: -40px; 
+    left: 50%;
+    width: 1px;
+    transform: translateX(-0.5px);
+    background: #334155; /* Solid line */
+    z-index: 4;
+}
+
+/* Remove the line from the very last item (Level 1) as there is no Level 0 */
+.ladder-step:last-child .step-marker::after {
+    display: none;
 }
 
 .ladder-step.active ~ .ladder-step .step-content {

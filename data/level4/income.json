@@ -1,0 +1,14 @@
+[
+  {
+    "source": "Consulting",
+    "amount": 15000.0,
+    "frequency": "monthly",
+    "tags": ["Business"]
+  },
+  {
+    "source": "Investments",
+    "amount": 10000.0,
+    "frequency": "monthly",
+    "tags": ["Passive"]
+  }
+]

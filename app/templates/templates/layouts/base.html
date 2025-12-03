@@ -46,6 +46,15 @@
         </div>
     </main>
 
+    <!-- User Switcher Avatar -->
+    <a href="/demo" class="viewport-avatar-btn" title="Switch User">
+        {% if user and user.avatar_url %}
+            <img src="{{ user.avatar_url }}" alt="{{ user.name }}">
+        {% else %}
+            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=64&h=64" alt="User Avatar">
+        {% endif %}
+    </a>
+
     <!-- Scripts -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="/static/gsap-public/minified/gsap.min.js"></script>

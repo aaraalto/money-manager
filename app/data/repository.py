@@ -81,11 +81,24 @@ class FileRepository:
 
             data = await asyncio.to_thread(read_json)
             
+            # Helper function to clean up invalid UUID IDs
+            def clean_item(item: dict) -> dict:
+                """Remove invalid UUID IDs to let Pydantic generate new ones."""
+                if 'id' in item:
+                    try:
+                        # Try to parse as UUID - if it fails, remove it
+                        UUID(str(item['id']))
+                    except (ValueError, TypeError):
+                        # Not a valid UUID, remove it so model generates one
+                        item = item.copy()
+                        del item['id']
+                return item
+            
             if is_list:
-                items = [model(**item) for item in data]
+                items = [model(**clean_item(item)) for item in data]
                 result = items
             else:
-                result = model(**data)
+                result = model(**clean_item(data))
             
             # Update cache
             _GLOBAL_CACHE[file_str] = result

@@ -1,0 +1,16 @@
+[
+  {
+    "id": "sp1",
+    "category": "Living Expenses",
+    "amount": 8000.0,
+    "type": "Need",
+    "owner": "Me"
+  },
+  {
+    "id": "sp2",
+    "category": "Philanthropy",
+    "amount": 4000.0,
+    "type": "Want",
+    "owner": "Me"
+  }
+]

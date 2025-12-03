@@ -1,0 +1,59 @@
+{% extends "templates/layouts/base.html" %}
+{% from "templates/components/atoms.html" import button, icon %}
+{% from "templates/components/molecules.html" import card, stat, kpi_box, alert, dashboard_header with context %}
+
+{% block title %}Radiant - Independence{% endblock %}
+
+{% block extra_js %}
+<script type="module" src="/static/js/modules/main.js"></script>
+{% endblock %}
+
+{% block content %}
+    {{ dashboard_header("Level 4: Financial Independence", "badge-success", "", "", "", "Manage Portfolio", "pie-chart") }}
+
+    <div id="loading">Calculating independence metrics...</div>
+
+    <div id="dashboard" class="hidden">
+        <!-- Level 4 Focus: Work Optional Status -->
+        <div class="dashboard-overview">
+             {% call card("Work Optional Status", "sun") %}
+                <div class="stat">
+                    <div class="stat-label">Safe Withdrawal Rate (4%)</div>
+                    <div class="stat-value text-success" id="safe-withdrawal">{{ format_currency(safe_withdrawal) }}</div>
+                    <div class="stat-change">per month</div>
+                </div>
+                <div class="separator"></div>
+                <div class="stat">
+                    <div class="stat-label">Lifestyle Cost</div>
+                    <div class="stat-value" id="lifestyle-cost">{{ format_currency(lifestyle_cost) }}</div>
+                    <div class="stat-change">per month</div>
+                </div>
+                <div class="separator"></div>
+                {{ alert("FI Achieved", "Your portfolio can sustain your lifestyle indefinitely.", "success") }}
+            {% endcall %}
+
+            {% call card("Portfolio Status", "globe") %}
+                 <div class="stat">
+                     <div class="stat-label">Total Net Worth</div>
+                     <div class="stat-value text-primary" id="nw-total">{{ format_currency(net_worth) }}</div>
+                 </div>
+                 <div class="separator"></div>
+                 <div class="kpi-row">
+                     {{ kpi_box("Coverage Ratio", value="%.1fx"|format(coverage_ratio)) }}
+                     {{ kpi_box("Years of Expenses", value="%.1f"|format(years_expenses)) }}
+                 </div>
+            {% endcall %}
+        </div>
+
+        <div class="grid">
+            <!-- Hero Chart: FI Status -->
+            {% call card("Independence Trajectory", "activity") %}
+                <div class="chart-container" id="chart-projection"></div>
+                <div class="reasoning">
+                    You've reached Financial Independence. Your portfolio generates enough passive income to cover your lifestyle expenses.
+                </div>
+            {% endcall %}
+        </div>
+    </div>
+{% endblock %}
+

@@ -274,7 +274,7 @@ input[type=number]::-webkit-outer-spin-button {
 .insights-panel {
     position: sticky;
     top: 40px; /* Stick to top of viewport with some gap */
-    background: var(--surface-card); 
+    background: color-mix(in srgb, var(--surface-card, var(--bg-card)) 85%, white); 
     border-radius: var(--radius-xl);
     /* padding removed, moved to inner track */
     border: 1px solid var(--border-color);

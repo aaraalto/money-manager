@@ -78,6 +78,7 @@ class UserProfile(BaseModel):
     id: UUID = Field(default_factory=uuid4)
     name: str = "Euclid"
     current_level: int = Field(0, ge=0, le=6)
+    avatar_url: Optional[str] = None
     onboarding_completed: bool = False
     monthly_income: float = 0.0
     monthly_burn: float = 0.0

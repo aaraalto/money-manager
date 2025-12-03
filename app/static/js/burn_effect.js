@@ -199,7 +199,8 @@ export function initBurnEffect(selector) {
 
     function animate() {
         requestAnimationFrame(animate);
-        uniforms.uTime.value = clock.getElapsedTime();
+        // Add 0.2s delay to smoke start
+        uniforms.uTime.value = Math.max(0, clock.getElapsedTime() - 0.2);
         renderer.render(scene, camera);
     }
 

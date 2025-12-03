@@ -1,0 +1,23 @@
+[
+  {
+    "id": "sp1",
+    "category": "Living Expenses",
+    "amount": 3500.0,
+    "type": "Need",
+    "owner": "Me"
+  },
+  {
+    "id": "sp2",
+    "category": "Discretionary",
+    "amount": 1500.0,
+    "type": "Want",
+    "owner": "Me"
+  },
+  {
+    "id": "sp3",
+    "category": "Travel",
+    "amount": 1000.0,
+    "type": "Want",
+    "owner": "Me"
+  }
+]

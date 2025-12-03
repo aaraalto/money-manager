@@ -1,0 +1,18 @@
+[
+  {
+    "id": "a1",
+    "name": "High Yield Savings",
+    "type": "cash",
+    "value": 25000.0,
+    "apy": 0.045,
+    "liquidity": "liquid"
+  },
+  {
+    "id": "a2",
+    "name": "Index Funds",
+    "type": "equity",
+    "value": 45000.0,
+    "apy": 0.08,
+    "liquidity": "liquid"
+  }
+]

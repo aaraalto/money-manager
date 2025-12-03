@@ -1,0 +1,18 @@
+[
+  {
+    "id": "a1",
+    "name": "Diversified Portfolio",
+    "type": "equity",
+    "value": 2500000.0,
+    "apy": 0.07,
+    "liquidity": "liquid"
+  },
+  {
+    "id": "a2",
+    "name": "Angel Investments",
+    "type": "equity",
+    "value": 500000.0,
+    "apy": 0.15,
+    "liquidity": "illiquid"
+  }
+]
