@@ -1,28 +1,28 @@
-
 from typing import List
 from app.models import IncomeSource, Liability, SpendingCategory
+from app.domain.financial_formulas import (
+    calculate_total_monthly_income,
+    calculate_total_monthly_spending,
+)
+
 
 def calculate_monthly_income(income: List[IncomeSource]) -> float:
-    total = 0.0
-    for i in income:
-        if i.frequency == "monthly":
-            total += i.amount
-        elif i.frequency == "bi-weekly":
-            total += i.amount * 26 / 12
-        elif i.frequency == "weekly":
-            total += i.amount * 52 / 12
-        elif i.frequency == "annually":
-            total += i.amount / 12
-    return total
+    """
+    Calculates total monthly income from all sources.
+    
+    Deprecated: Use calculate_total_monthly_income() from financial_formulas.py directly.
+    This function is kept for backwards compatibility.
+    """
+    return calculate_total_monthly_income(income)
 
 def calculate_metrics(
     income: List[IncomeSource],
     spending: List[SpendingCategory],
     liabilities: List[Liability]
 ) -> dict:
-    monthly_gross_income = calculate_monthly_income(income)
+    monthly_gross_income = calculate_total_monthly_income(income)
     
-    monthly_spending = sum(s.amount for s in spending)
+    monthly_spending = calculate_total_monthly_spending(spending)
     monthly_debt_payments = sum(l.min_payment for l in liabilities)
     
     # DTI: Debt Payments / Gross Income

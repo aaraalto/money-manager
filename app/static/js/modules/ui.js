@@ -164,12 +164,8 @@ export function animateEntry() {
     
     const tl = gsap.timeline({ defaults: { ease: "expo.out" } });
 
-    // Header Fade In
-    tl.to(".app-header", {
-        y: 0,
-        opacity: 1,
-        duration: 0.8
-    });
+    // Header is now always visible - no animation for seamless page transitions
+    // Removed: Header Fade In animation
 
     // Primary Content Wave (Overview, Simulator, Spending Plan)
     // We select all possible major containers and stagger them collectively
@@ -193,14 +189,16 @@ export function animateEntry() {
             opacity: 1,
             duration: 1.2,
             stagger: 0.08
-        }, "-=0.4"); // Slight overlap with header
+        });
     }
 }
 
 export function setupInitialState() {
     if (typeof gsap !== 'undefined') {
+         // Header is always visible - no initial state setup for seamless transitions
+         // Removed: gsap.set(".app-header", ...)
+         
          // Universal Targets
-         gsap.set(".app-header", { y: -15, opacity: 0 });
          gsap.set(".card", { y: 15, opacity: 0 });
          
          // Specific Page Containers (if they exist outside .card)
@@ -237,7 +235,7 @@ export function showError(error) {
     
     // Use textContent for safe insertion instead of innerHTML
     const alertDiv = document.createElement("div");
-    alertDiv.className = "alert alert-warning";
+    alertDiv.className = "alert alert-danger";
     alertDiv.style.cssText = "max-width: 400px; margin: 0 auto;";
     
     const contentDiv = document.createElement("div");
@@ -245,11 +243,11 @@ export function showError(error) {
     
     const titleDiv = document.createElement("div");
     titleDiv.className = "alert-title";
-    titleDiv.textContent = "Having trouble connecting";
+    titleDiv.textContent = "Connection Error";
     
     const descDiv = document.createElement("div");
     descDiv.className = "alert-description";
-    descDiv.textContent = "We couldn't load your data. Please check your connection and try again.";
+    descDiv.textContent = errorMessage;
     
     const retryBtn = document.createElement("button");
     retryBtn.className = "btn-nav";

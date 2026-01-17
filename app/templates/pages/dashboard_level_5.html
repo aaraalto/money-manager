@@ -1,6 +1,6 @@
-{% extends "templates/layouts/base.html" %}
-{% from "templates/components/atoms.html" import button, icon %}
-{% from "templates/components/molecules.html" import card, stat, kpi_box, alert, dashboard_header with context %}
+{% extends "layouts/base.html" %}
+{% from "components/atoms.html" import button, icon %}
+{% from "components/molecules.html" import card, stat, kpi_box, alert, dashboard_header with context %}
 
 {% block title %}Radiant - Abundance{% endblock %}
 
@@ -9,9 +9,9 @@
 {% endblock %}
 
 {% block content %}
-    {{ dashboard_header("Level 5: Abundance", "badge badge-primary", "", "", "", "Allocations", "pie-chart") }}
+    {{ dashboard_header("Level 5: Abundance", "badge badge-success", "", "", "", "Allocations", "pie-chart", user.current_level|default(5)) }}
 
-    <div id="loading">Loading your overview...</div>
+    <div id="loading">Retrieving portfolio...</div>
 
     <div id="dashboard" class="hidden">
         <div class="dashboard-overview">

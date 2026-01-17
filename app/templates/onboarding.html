@@ -29,7 +29,7 @@
         
         .onboarding-container {
             width: 100%;
-            max-width: 480px;
+            max-width: 520px;
             padding: var(--space-6);
             text-align: center;
         }
@@ -179,6 +179,19 @@
             color: var(--primary);
             font-weight: 600;
         }
+        
+        /* Import Section */
+        .import-section {
+            margin-top: var(--space-8);
+            padding-top: var(--space-6);
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .import-section p {
+            font-size: 0.9rem;
+            margin-bottom: var(--space-4);
+            color: var(--text-tertiary);
+        }
     </style>
 </head>
 <body>
@@ -196,8 +209,8 @@
                 <button type="submit" class="btn-primary">Next</button>
             </form>
             
-            <div style="margin-top: 2rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
-                <p style="font-size: 0.9rem; margin-bottom: 1rem; color: var(--text-tertiary);">Already have data?</p>
+            <div class="import-section">
+                <p>Already have data?</p>
                 <button class="btn-secondary" hx-post="/api/onboarding/import" hx-target="#onboarding-content" hx-swap="innerHTML">
                     Import from Data Folder
                 </button>

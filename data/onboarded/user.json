@@ -1,10 +1,10 @@
 {
-  "id": "6dd6bd8c-2f2b-4077-b7b2-a62e7608d1b4",
-  "name": "Euclid",
-  "current_level": 0,
-  "onboarding_completed": false,
-  "monthly_income": 0.0,
-  "monthly_burn": 0.0,
+  "id": "fb544042-f29d-4e78-837f-d8f653531d57",
+  "name": "User",
+  "current_level": 2,
+  "onboarding_completed": true,
+  "monthly_income": 2000.0,
+  "monthly_burn": 2000.0,
   "total_debt": 0.0,
-  "liquid_assets": 0.0
+  "liquid_assets": 1222.0
 }

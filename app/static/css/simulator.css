@@ -119,16 +119,16 @@ h1 {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: var(--space-4);
+    margin-bottom: var(--space-6);
     padding: 0 var(--space-4);
-    gap: var(--space-4); /* Add gap between metrics */
+    gap: var(--space-6);
 }
 
 .hero-metric {
     display: flex;
     flex-direction: column;
-    gap: var(--space-1);
-    flex: 1; /* Distribute space evenly */
+    gap: var(--space-2);
+    flex: 1;
 }
 
 .hero-metric .label {
@@ -852,6 +852,45 @@ h1 {
 
 .is-over-limit .limit-value {
     color: var(--danger);
+}
+
+/* Dragging State */
+.is-dragging .rotary-knob-visual {
+    cursor: grabbing;
+}
+
+.is-dragging .rotary-progress {
+    stroke: var(--primary);
+    filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.3));
+}
+
+.is-dragging .rotary-amount {
+    color: var(--primary);
+}
+
+/* Preview State - Subtle indicator during live preview */
+.is-previewing::after {
+    content: '';
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 8px;
+    height: 8px;
+    background: var(--primary);
+    border-radius: 50%;
+    opacity: 0.8;
+    animation: previewPulse 1s ease-in-out infinite;
+}
+
+@keyframes previewPulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 0.5;
+    }
 }
 
 /* Shake Animation */

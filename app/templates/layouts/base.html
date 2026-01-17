@@ -170,7 +170,7 @@
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 0 var(--space-6);
+            padding: 0;
         }
     </style>
     {% block extra_css %}{% endblock %}
@@ -182,12 +182,25 @@
             {% block content %}{% endblock %}
         </div>
     </main>
+    
+    <!-- Level Up Celebration Modal -->
+    {% if level_up_detected %}
+        {% include "partials/level_up_modal.html" %}
+    {% endif %}
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container toast-bottom-right" role="region" aria-label="Notifications" aria-live="polite"></div>
 
     <!-- Scripts -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="/static/gsap-public/minified/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script type="module">
+        // Initialize toast system
+        import { initHtmxToastHandlers } from '/static/js/modules/toast.js';
+        // HTMX handlers are auto-initialized on import
+    </script>
     <script>
         function toggleNavDropdown() {
             const selector = document.getElementById('navPageSelector');

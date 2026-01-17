@@ -1,17 +1,17 @@
-{% extends "templates/layouts/base.html" %}
-{% from "templates/components/atoms.html" import button, icon %}
-{% from "templates/components/molecules.html" import card, stat, kpi_box, alert, dashboard_header with context %}
+{% extends "layouts/base.html" %}
+{% from "components/atoms.html" import button, icon %}
+{% from "components/molecules.html" import card, stat, kpi_box, alert, dashboard_header with context %}
 
-{% block title %}Radiant - Building Security{% endblock %}
+{% block title %}Radiant - Stability{% endblock %}
 
 {% block extra_js %}
 <script type="module" src="/static/js/modules/main.js"></script>
 {% endblock %}
 
 {% block content %}
-    {{ dashboard_header("Level 2: Building Security", "badge badge-success", "", "", "", "Review Budget", "list") }}
+    {{ dashboard_header("Level 2: Building Security", "badge badge-success", "", "", "", "Review Budget", "list", user.current_level|default(2)) }}
 
-    <div id="loading">Loading your progress...</div>
+    <div id="loading">Checking defenses...</div>
 
     <div id="dashboard" class="hidden">
         <!-- Level 2 Focus: Emergency Fund & Security -->

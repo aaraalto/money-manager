@@ -1,15 +1,15 @@
-/* Scoped variables if needed, otherwise use base vars */
+/* Spending Editor Styles */
 .editor-container {
     width: 100%;
-    max-width: 1200px; /* Increased max-width for side-by-side */
+    max-width: 1200px;
     margin: 0 auto;
-    padding: 20px 20px; /* Added horizontal padding */
+    padding: var(--space-5) var(--space-6);
     box-sizing: border-box;
 }
 
 .editor-header {
     text-align: center;
-    margin-bottom: 40px;
+    margin-bottom: var(--space-10);
 }
 
 .editor-header h1 {
@@ -20,30 +20,30 @@
     color: var(--text-primary);
 }
 
-/* New Split Layout */
+/* Split Layout */
 .editor-main {
     display: grid;
-    grid-template-columns: 1fr 2fr; /* Insights (1fr), Inputs (2fr) */
-    gap: 40px;
-    align-items: start; /* Align to top */
+    grid-template-columns: 1fr 2fr;
+    gap: var(--space-10);
+    align-items: start;
     position: relative;
 }
 
 @media (max-width: 900px) {
     .editor-main {
-        grid-template-columns: 1fr; /* Stack on smaller screens */
+        grid-template-columns: 1fr;
     }
     
     .insights-panel {
-        order: -1; /* Show insights on top on mobile? Or bottom? Let's keep bottom for flow, or stick to top. User asked for "right next to my inputs". */
-        position: static; /* Remove sticky on mobile */
-        margin-bottom: 20px;
+        order: -1;
+        position: static;
+        margin-bottom: var(--space-5);
         margin-top: 0;
     }
 }
 
 .status-indicator {
-    margin-top: 10px;
+    margin-top: var(--space-3);
     font-size: 0.9rem;
     color: var(--text-tertiary);
     transition: color 0.3s ease;
@@ -54,36 +54,36 @@
 }
 
 .spending-table-form {
-    background: var(--surface-card);
+    background: var(--bg-card);
     border-radius: var(--radius-xl);
-    padding: 40px;
+    padding: var(--space-10);
     border: 1px solid var(--border-color);
     box-shadow: var(--shadow-lg);
-    overflow-x: auto; /* Handle horizontal scrolling */
+    overflow-x: auto;
 }
 
 .table-header {
     display: grid;
-    grid-template-columns: 2fr 1.5fr 1fr 40px; /* Added column for delete action */
-    padding-bottom: 15px;
+    grid-template-columns: 2fr 1.5fr 1fr 40px;
+    padding-bottom: var(--space-4);
     border-bottom: 1px solid var(--border-color);
-    margin-bottom: 20px;
+    margin-bottom: var(--space-5);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--text-tertiary);
     font-size: 0.8rem;
-    min-width: 600px; /* Ensure minimum width to prevent squishing */
+    min-width: 600px;
 }
 
 .spending-row {
     display: grid;
-    grid-template-columns: 2fr 1.5fr 1fr 40px; /* Match header */
+    grid-template-columns: 2fr 1.5fr 1fr 40px;
     align-items: center;
-    padding: 20px 0;
+    padding: var(--space-5) 0;
     border-bottom: 1px solid var(--border-subtle);
     transition: background 0.2s ease;
-    min-width: 600px; /* Ensure minimum width to prevent squishing */
+    min-width: 600px;
 }
 
 .spending-row:hover {
@@ -241,17 +241,15 @@ input[type=number]::-webkit-outer-spin-button {
 /* Sticky Insights Panel */
 .insights-panel {
     position: sticky;
-    top: 40px; /* Stick to top of viewport with some gap */
-    background: var(--surface-card);
+    top: var(--space-10);
+    background: var(--bg-card);
     border-radius: var(--radius-xl);
-    padding: 32px;
+    padding: var(--space-8);
     border: 1px solid var(--border-color);
     box-shadow: var(--shadow-lg);
-    text-align: left; /* Changed to left align */
-    /* Removed margin-top and border-top from previous layout */
-    margin-top: 0; 
-    border-top: 1px solid var(--border-color); /* Keep border box style */
-    height: fit-content; /* Don't stretch */
+    text-align: left;
+    margin-top: 0;
+    height: fit-content;
 }
 
 .insight-metric .label {
@@ -260,7 +258,7 @@ input[type=number]::-webkit-outer-spin-button {
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--text-tertiary);
-    margin-bottom: 8px;
+    margin-bottom: var(--space-2);
     font-weight: 600;
 }
 
@@ -272,23 +270,22 @@ input[type=number]::-webkit-outer-spin-button {
     background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    /* Provide fallback for browsers that don't support text-fill-color */
     color: var(--text-primary);
 }
 
-/* Refactored List Layout for Insights */
+/* Insight List */
 .insight-list {
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    margin-top: 24px;
+    gap: var(--space-4);
+    margin-top: var(--space-6);
 }
 
 .insight-list-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 0;
+    padding: var(--space-3) 0;
     border-bottom: 1px solid var(--border-subtle);
 }
 
@@ -304,7 +301,7 @@ input[type=number]::-webkit-outer-spin-button {
     letter-spacing: 0.05em;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-2);
 }
 
 .insight-list-item .item-values {
@@ -342,7 +339,7 @@ input[type=number]::-webkit-outer-spin-button {
 
 /* Add Row Button */
 .add-row-container {
-    margin-top: 20px;
+    margin-top: var(--space-5);
     text-align: center;
 }
 
@@ -350,14 +347,14 @@ input[type=number]::-webkit-outer-spin-button {
     background: transparent;
     border: 2px dashed var(--border-color);
     color: var(--text-tertiary);
-    padding: 12px 24px;
+    padding: var(--space-3) var(--space-6);
     border-radius: var(--radius-lg);
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-2);
     width: 100%;
     justify-content: center;
 }

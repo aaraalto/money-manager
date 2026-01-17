@@ -1,6 +1,6 @@
-{% extends "templates/layouts/base.html" %}
-{% from "templates/components/atoms.html" import icon %}
-{% from "templates/components/molecules.html" import page_header with context %}
+{% extends "layouts/base.html" %}
+{% from "components/atoms.html" import icon %}
+{% from "components/molecules.html" import page_header with context %}
 
 {% block title %}Radiant - Radiant{% endblock %}
 
@@ -12,7 +12,7 @@
 {% endblock %}
 
 {% block content %}
-    {{ page_header("Radiant") }}
+    {{ page_header("Debt Simulator", user_level=user.current_level|default(0)) }}
     
     <div class="simulation-layout">
         <!-- LEFT COLUMN: Controls -->

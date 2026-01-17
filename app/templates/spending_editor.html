@@ -1,5 +1,5 @@
-{% extends "templates/layouts/base.html" %}
-{% from "templates/components/molecules.html" import page_header with context %}
+{% extends "layouts/base.html" %}
+{% from "components/molecules.html" import page_header with context %}
 
 {% block title %}Radiant / CSP Editor{% endblock %}
 
@@ -222,7 +222,7 @@
 
 {% block content %}
     {% if request.query_params.get('mode') != 'slasher' %}
-        {{ page_header("Radiant") }}
+        {{ page_header("Budget", user_level=user.current_level|default(0)) }}
     {% endif %}
 
     <div id="impact-toast" class="impact-badge">

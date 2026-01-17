@@ -1,76 +1,76 @@
-{% extends "templates/layouts/base.html" %}
-{% from "templates/components/atoms.html" import button, icon %}
-{% from "templates/components/molecules.html" import card, stat, kpi_box, alert, dashboard_header with context %}
+{% extends "layouts/base.html" %}
+{% from "components/atoms.html" import button, icon %}
+{% from "components/molecules.html" import card, stat, kpi_box, alert, dashboard_header with context %}
 
-{% block title %}Radiant - Building Balance{% endblock %}
+{% block title %}Radiant - Crisis Mode{% endblock %}
 
 {% block extra_js %}
 <script type="module" src="/static/js/modules/main.js"></script>
 {% endblock %}
 
 {% block content %}
-    {{ dashboard_header("Level 0: Building Balance", "badge badge-warning", "") }}
+    {{ dashboard_header("Level 0: Building Balance", "badge badge-warning", "", "", "", "Review Budget", "list", user.current_level|default(0)) }}
 
-    <div id="loading">Looking at your cash flow...</div>
+    <div id="loading">Analyzing cash flow...</div>
 
     <div id="dashboard" class="hidden">
-        <!-- Focus Banner -->
-        <div class="focus-banner fade-in-up">
-            <div class="focus-icon">
+        <!-- Crisis Alert Banner -->
+        <div class="crisis-banner fade-in-up">
+            <div class="crisis-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <path d="M12 16v-4"></path>
-                    <path d="M12 8h.01"></path>
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
                 </svg>
             </div>
-            <div class="focus-content">
-                <h2>Let's Balance Your Cash Flow</h2>
-                <p>Your spending is outpacing income right now. The good news? Small changes can make a big difference.</p>
+            <div class="crisis-content">
+                <h2>Cash Flow Emergency</h2>
+                <p>Your expenses exceed your income. Immediate action required to stop the bleeding.</p>
             </div>
         </div>
 
-        <!-- Level 0 Focus: Create Balance -->
+        <!-- Level 0 Focus: Stop the Bleeding -->
         <div class="dashboard-overview fade-in-up delay-1">
-            <!-- 1. Monthly Gap -->
-            {% call card("Monthly Gap", "target") %}
-                <div class="gap-container">
-                    <div class="gap-header">
-                        <span class="label-mono">Gap to Close</span>
-                        <div class="gap-value-wrapper">
-                            <span id="monthly-deficit" class="gap-value text-warning">--</span>
+            <!-- 1. Monthly Deficit -->
+            {% call card("Monthly Deficit", "alert-triangle") %}
+                <div class="deficit-container">
+                    <div class="deficit-header">
+                        <span class="label-mono">Monthly Shortfall</span>
+                        <div class="deficit-value-wrapper">
+                            <span id="monthly-deficit" class="deficit-value text-danger">--</span>
                         </div>
                     </div>
                     
-                    <div class="gap-breakdown">
+                    <div class="deficit-breakdown">
                         <div class="breakdown-item">
                             <span class="breakdown-label">Income</span>
-                            <span class="breakdown-value text-success" id="balance-income">--</span>
+                            <span class="breakdown-value text-success" id="crisis-income">--</span>
                         </div>
                         <div class="breakdown-divider">-</div>
                         <div class="breakdown-item">
                             <span class="breakdown-label">Expenses</span>
-                            <span class="breakdown-value text-danger" id="balance-expenses">--</span>
+                            <span class="breakdown-value text-danger" id="crisis-expenses">--</span>
                         </div>
                     </div>
                     
-                    <div class="runway-info">
+                    <div class="runway-warning">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
                             <circle cx="12" cy="12" r="10"></circle>
                             <polyline points="12 6 12 12 16 14"></polyline>
                         </svg>
-                        <span>Runway: <strong id="balance-runway">--</strong> days</span>
+                        <span>Runway: <strong id="crisis-runway">--</strong> days</span>
                     </div>
                 </div>
             {% endcall %}
 
             <!-- 2. Quick Wins -->
-            {% call card("Quick Wins to Try", "zap") %}
+            {% call card("Immediate Actions", "zap") %}
                 <div class="actions-list">
                     <div class="action-item priority-high">
                         <div class="action-icon">1</div>
                         <div class="action-content">
-                            <strong>Review Subscriptions</strong>
-                            <p>Small recurring costs add up fast</p>
+                            <strong>Cut Non-Essentials</strong>
+                            <p>Review subscriptions and discretionary spending</p>
                         </div>
                         <a href="/spending-editor" class="action-btn">Review</a>
                     </div>
@@ -78,14 +78,14 @@
                         <div class="action-icon">2</div>
                         <div class="action-content">
                             <strong>Negotiate Bills</strong>
-                            <p>A quick call could lower your fixed costs</p>
+                            <p>Call providers to reduce fixed costs</p>
                         </div>
                     </div>
                     <div class="action-item priority-low">
                         <div class="action-icon">3</div>
                         <div class="action-content">
-                            <strong>Explore Extra Income</strong>
-                            <p>Side gigs, overtime, or selling unused items</p>
+                            <strong>Increase Income</strong>
+                            <p>Side gigs, overtime, or selling items</p>
                         </div>
                     </div>
                 </div>
@@ -104,9 +104,9 @@
     </div>
 
     <style>
-        .focus-banner {
-            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(245, 158, 11, 0.05) 100%);
-            border: 1px solid rgba(245, 158, 11, 0.3);
+        .crisis-banner {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.05) 100%);
+            border: 1px solid rgba(239, 68, 68, 0.3);
             border-radius: var(--radius-xl);
             padding: var(--space-6);
             display: flex;
@@ -115,51 +115,51 @@
             margin-bottom: var(--space-6);
         }
         
-        .focus-icon {
+        .crisis-icon {
             flex-shrink: 0;
             width: 48px;
             height: 48px;
-            background: rgba(245, 158, 11, 0.2);
+            background: rgba(239, 68, 68, 0.2);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: var(--warning);
+            color: var(--danger);
         }
         
-        .focus-icon svg {
+        .crisis-icon svg {
             width: 24px;
             height: 24px;
         }
         
-        .focus-content h2 {
+        .crisis-content h2 {
             margin: 0 0 var(--space-1);
-            color: var(--warning);
+            color: var(--danger);
             font-size: 1.25rem;
         }
         
-        .focus-content p {
+        .crisis-content p {
             margin: 0;
             color: var(--text-secondary);
             font-size: 0.9rem;
         }
         
-        .gap-container {
+        .deficit-container {
             text-align: center;
         }
         
-        .gap-header {
+        .deficit-header {
             margin-bottom: var(--space-4);
         }
         
-        .gap-value {
+        .deficit-value {
             font-family: var(--font-mono);
             font-size: 3rem;
             font-weight: 700;
             letter-spacing: -2px;
         }
         
-        .gap-breakdown {
+        .deficit-breakdown {
             display: flex;
             justify-content: center;
             align-items: center;
@@ -193,19 +193,19 @@
             color: var(--text-tertiary);
         }
         
-        .runway-info {
+        .runway-warning {
             display: inline-flex;
             align-items: center;
             gap: var(--space-2);
             padding: var(--space-2) var(--space-4);
-            background: rgba(245, 158, 11, 0.1);
+            background: rgba(239, 68, 68, 0.1);
             border-radius: 100px;
             font-size: 0.85rem;
             color: var(--text-secondary);
         }
         
-        .runway-info strong {
-            color: var(--warning);
+        .runway-warning strong {
+            color: var(--danger);
         }
         
         .actions-list {

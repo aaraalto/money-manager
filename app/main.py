@@ -15,10 +15,13 @@ import html as html_module
 from app.models import Scenario, SpendingCategory, LiabilityTag, UserProfile, IncomeSource, Liability, Asset, AssetType
 from app.data.repository import FileRepository
 from app.services.financial import FinancialService
+from app.services.simulation import SimulationService, SimulationParams
+from app.views.simulation_partials import render_simulation_partial
 from app.domain.debt import simulate_debt_payoff
 from app.domain.svg_charts import generate_simple_line_chart_svg
 from app.core.logging import get_logger
 from app.core.config import FINANCIAL, RATE_LIMIT, APP
+from app.core.state_machine import get_onboarding_fsm, OnboardingSession
 
 # Module logger
 logger = get_logger("main")
@@ -152,6 +155,9 @@ def get_repository(request: Request) -> FileRepository:
 def get_service(repo: FileRepository = Depends(get_repository)) -> FinancialService:
     return FinancialService(repo)
 
+def get_simulation_service(repo: FileRepository = Depends(get_repository)) -> SimulationService:
+    return SimulationService(repo)
+
 @app.get("/demo", response_class=HTMLResponse)
 async def demo_page(request: Request):
     return templates.TemplateResponse("select_user.html", {"request": request})
@@ -181,25 +187,57 @@ async def root(request: Request, repo: FileRepository = Depends(get_repository))
     
     user = await repo.get_user_profile()
     
+    # Level-up detection
+    level_up_detected = False
+    previous_level = user.previous_level
+    new_level = user.current_level
+    unlocked_feature = None
+    
+    if previous_level is not None and user.current_level > previous_level:
+        level_up_detected = True
+        # Determine unlocked feature based on new level
+        feature_unlocks = {
+            1: "Debt Strategy Simulator",
+            2: "Emergency Fund Tracker",
+            3: "Investment Portfolio",
+            4: "Withdrawal Calculator",
+            5: "Legacy Planning Tools",
+        }
+        unlocked_feature = feature_unlocks.get(user.current_level)
+        
+        # Update previous_level to current (so we don't show again)
+        user.previous_level = user.current_level
+        await repo.save_user_profile(user)
+    
     # Select dashboard based on level
-    template_name = "templates/dashboard.html"
+    template_name = "pages/dashboard.html"
     if user.current_level == 0:
-        template_name = "templates/dashboard.html"  # Building Balance
+        template_name = "pages/dashboard.html"  # Crisis mode
     elif user.current_level == 1:
-        template_name = "templates/dashboard_level_1.html"  # Clearing the Path
+        template_name = "pages/dashboard_level_1.html"  # Debt war room
     elif user.current_level == 2:
-        template_name = "templates/dashboard_level_2.html"  # Building Security
+        template_name = "pages/dashboard_level_2.html"  # Stability
     elif user.current_level == 3:
-        template_name = "templates/dashboard_level_3.html"  # Building Wealth
+        template_name = "pages/dashboard_level_3.html"  # Growth
     elif user.current_level >= 4:
-        template_name = "templates/dashboard_level_5.html"  # Abundance
+        template_name = "pages/dashboard_level_5.html"  # FI/RE
 
-    return templates.TemplateResponse(template_name, {"request": request, "user": user})
+    return templates.TemplateResponse(
+        template_name, 
+        {
+            "request": request, 
+            "user": user,
+            "level_up_detected": level_up_detected,
+            "previous_level": previous_level,
+            "new_level": new_level,
+            "unlocked_feature": unlocked_feature,
+        }
+    )
 
 @app.get("/simulator", response_class=HTMLResponse)
 async def simulator(request: Request, repo: FileRepository = Depends(get_repository)):
     user = await repo.get_user_profile()
-    return templates.TemplateResponse("templates/simulator.html", {"request": request, "user": user})
+    return templates.TemplateResponse("pages/simulator.html", {"request": request, "user": user})
 
 @app.get("/spending-editor", response_class=HTMLResponse)
 async def spending_editor(request: Request, repo: FileRepository = Depends(get_repository)):
@@ -279,34 +317,66 @@ async def save_scenario(scenario: Scenario, repo: FileRepository = Depends(get_r
     return {"status": "success", "scenario": scenario.model_dump()}
 
 # =============================================================================
-# ONBOARDING ENDPOINTS
+# ONBOARDING ENDPOINTS (FSM-Based)
 # =============================================================================
+
+def _get_session_from_request(request: Request) -> OnboardingSession:
+    """
+    Get or create an onboarding session from the request.
+    
+    Uses session_id cookie if present, otherwise creates a new session.
+    """
+    fsm = get_onboarding_fsm()
+    session_id = request.cookies.get("onboard_session")
+    return fsm.get_or_create_session(session_id)
+
 
 @app.get("/onboarding", response_class=HTMLResponse)
 async def onboarding_page(request: Request):
-    """Render the onboarding page."""
-    return templates.TemplateResponse("onboarding.html", {"request": request})
+    """Render the onboarding page with a new session."""
+    session = _get_session_from_request(request)
+    response = templates.TemplateResponse(
+        "onboarding.html", 
+        {"request": request, **session.get_context()}
+    )
+    # Set session cookie for subsequent requests
+    response.set_cookie(key="onboard_session", value=session.id, max_age=3600)
+    return response
+
 
 @app.post("/api/onboarding/step-1-income", response_class=HTMLResponse)
 async def onboarding_step_1(request: Request, income: float = Form(...)):
     """Step 1: Capture monthly income and proceed to burn rate."""
-    # Store in session via cookies (stateless approach)
+    session = _get_session_from_request(request)
+    session.set_income(income)
+    
+    fsm = get_onboarding_fsm()
+    fsm.update_session(session)
+    
     response = templates.TemplateResponse(
         "partials/onboarding_step_2.html", 
-        {"request": request}
+        {"request": request, **session.get_context()}
     )
-    response.set_cookie(key="onboard_income", value=str(income), max_age=3600)
+    response.set_cookie(key="onboard_session", value=session.id, max_age=3600)
     return response
+
 
 @app.post("/api/onboarding/step-2-burn", response_class=HTMLResponse)
 async def onboarding_step_2(request: Request, burn: float = Form(...)):
     """Step 2: Capture monthly spending and proceed to debt check."""
+    session = _get_session_from_request(request)
+    session.set_burn(burn)
+    
+    fsm = get_onboarding_fsm()
+    fsm.update_session(session)
+    
     response = templates.TemplateResponse(
         "partials/onboarding_step_3.html", 
-        {"request": request}
+        {"request": request, **session.get_context()}
     )
-    response.set_cookie(key="onboard_burn", value=str(burn), max_age=3600)
+    response.set_cookie(key="onboard_session", value=session.id, max_age=3600)
     return response
+
 
 @app.post("/api/onboarding/step-3-debt", response_class=HTMLResponse)
 async def onboarding_step_3(
@@ -315,72 +385,66 @@ async def onboarding_step_3(
     debt_amount: float = Form(0)
 ):
     """Step 3: Capture debt status and route accordingly."""
-    # If user has debt, go to result. If no debt, ask about liquid assets.
-    income = float(request.cookies.get("onboard_income", 0))
-    burn = float(request.cookies.get("onboard_burn", 0))
+    session = _get_session_from_request(request)
     
-    if has_debt == "yes" and debt_amount > 0:
-        # Calculate level immediately
-        from app.domain.metrics import calculate_financial_level
-        level = calculate_financial_level(
-            monthly_income=income,
-            monthly_burn=burn,
-            total_debt=debt_amount,
-            liquid_assets=0
-        )
-        response = templates.TemplateResponse(
-            "partials/onboarding_result.html",
-            {"request": request, "level": level}
-        )
-        response.set_cookie(key="onboard_debt", value=str(debt_amount), max_age=3600)
-        response.set_cookie(key="onboard_level", value=str(level), max_age=3600)
-        return response
+    # Process debt response using FSM
+    session.set_debt_response(
+        has_debt=has_debt == "yes",
+        debt_amount=debt_amount if has_debt == "yes" else 0.0
+    )
+    
+    fsm = get_onboarding_fsm()
+    fsm.update_session(session)
+    
+    context = {"request": request, **session.get_context()}
+    
+    # FSM determines next template based on state
+    if session.data.has_debt and session.data.debt_amount > 0:
+        template_name = "partials/onboarding_result.html"
+        context["level"] = session.data.calculated_level
     else:
-        # No debt - ask about liquid assets
-        response = templates.TemplateResponse(
-            "partials/onboarding_step_4_assets.html",
-            {"request": request}
-        )
-        response.set_cookie(key="onboard_debt", value="0", max_age=3600)
-        return response
+        template_name = "partials/onboarding_step_4_assets.html"
+    
+    response = templates.TemplateResponse(template_name, context)
+    response.set_cookie(key="onboard_session", value=session.id, max_age=3600)
+    return response
+
 
 @app.post("/api/onboarding/step-4-assets", response_class=HTMLResponse)
 async def onboarding_step_4(request: Request, liquid_assets: float = Form(...)):
     """Step 4: Capture liquid assets and calculate final level."""
-    income = float(request.cookies.get("onboard_income", 0))
-    burn = float(request.cookies.get("onboard_burn", 0))
-    debt = float(request.cookies.get("onboard_debt", 0))
+    session = _get_session_from_request(request)
+    session.set_assets(liquid_assets)
     
-    from app.domain.metrics import calculate_financial_level
-    level = calculate_financial_level(
-        monthly_income=income,
-        monthly_burn=burn,
-        total_debt=debt,
-        liquid_assets=liquid_assets
-    )
+    fsm = get_onboarding_fsm()
+    fsm.update_session(session)
     
     response = templates.TemplateResponse(
         "partials/onboarding_result.html",
-        {"request": request, "level": level}
+        {"request": request, "level": session.data.calculated_level, **session.get_context()}
     )
-    response.set_cookie(key="onboard_assets", value=str(liquid_assets), max_age=3600)
-    response.set_cookie(key="onboard_level", value=str(level), max_age=3600)
+    response.set_cookie(key="onboard_session", value=session.id, max_age=3600)
     return response
+
 
 @app.post("/api/onboarding/complete")
 async def onboarding_complete(request: Request, repo: FileRepository = Depends(get_repository)):
     """Complete onboarding: create user profile and redirect to dashboard."""
-    # Retrieve onboarding data from cookies
-    income = float(request.cookies.get("onboard_income", 0))
-    burn = float(request.cookies.get("onboard_burn", 0))
-    debt = float(request.cookies.get("onboard_debt", 0))
-    assets = float(request.cookies.get("onboard_assets", 0))
-    level = int(request.cookies.get("onboard_level", 0))
+    session = _get_session_from_request(request)
+    
+    # Extract data from FSM session
+    data = session.data
+    income = data.income or 0.0
+    burn = data.burn or 0.0
+    debt = data.debt_amount
+    assets = data.liquid_assets
+    level = data.calculated_level or 0
     
     # Create/update user profile
     profile = UserProfile(
         name="User",
         current_level=level,
+        previous_level=None,  # First time, no previous level
         onboarding_completed=True,
         monthly_income=income,
         monthly_burn=burn,
@@ -406,7 +470,6 @@ async def onboarding_complete(request: Request, repo: FileRepository = Depends(g
     
     # Create initial asset if liquid assets exist
     if assets > 0:
-        from app.models import Asset, AssetType
         asset_list = [Asset(
             name="Cash & Savings",
             type=AssetType.CASH,
@@ -415,15 +478,17 @@ async def onboarding_complete(request: Request, repo: FileRepository = Depends(g
         )]
         await repo.save_assets(asset_list)
     
-    # Clear onboarding cookies and redirect
+    # Mark session as completed and clean up
+    session.complete()
+    fsm = get_onboarding_fsm()
+    fsm.delete_session(session.id)
+    
+    # Redirect with proper cookies
     response = RedirectResponse(url="/", status_code=302)
     response.set_cookie(key="demo_user", value="onboarded")
-    response.delete_cookie(key="onboard_income")
-    response.delete_cookie(key="onboard_burn")
-    response.delete_cookie(key="onboard_debt")
-    response.delete_cookie(key="onboard_assets")
-    response.delete_cookie(key="onboard_level")
+    response.delete_cookie(key="onboard_session")
     return response
+
 
 @app.post("/api/onboarding/import", response_class=HTMLResponse)
 async def onboarding_import(request: Request, repo: FileRepository = Depends(get_repository)):
@@ -436,8 +501,15 @@ async def onboarding_import(request: Request, repo: FileRepository = Depends(get
     except Exception:
         pass
     
+    # Clean up any existing session
+    session_id = request.cookies.get("onboard_session")
+    if session_id:
+        fsm = get_onboarding_fsm()
+        fsm.delete_session(session_id)
+    
     response = RedirectResponse(url="/", status_code=302)
     response.set_cookie(key="demo_user", value="default")
+    response.delete_cookie(key="onboard_session")
     return response
 
 # =============================================================================
@@ -445,203 +517,29 @@ async def onboarding_import(request: Request, repo: FileRepository = Depends(get
 # =============================================================================
 
 @app.get("/partials/calculate", response_class=HTMLResponse)
-async def calculate_partial(request: Request, repo: FileRepository = Depends(get_repository)):
-    # Get params with validation
-    params = request.query_params
+async def calculate_partial(
+    request: Request, 
+    simulation_service: SimulationService = Depends(get_simulation_service)
+):
+    """
+    Calculate and render debt payoff simulation results.
+    
+    This endpoint handles HTMX requests from the simulator page,
+    returning HTML fragments for out-of-band swaps.
+    """
     try:
-        monthly_payment = float(params.get("monthly_payment", FINANCIAL.DEFAULT_MONTHLY_PAYMENT))
-        if monthly_payment < 0:
-            monthly_payment = 0.0
-    except (ValueError, TypeError):
-        monthly_payment = FINANCIAL.DEFAULT_MONTHLY_PAYMENT
+        # Parse and validate parameters
+        params = SimulationParams.from_query_params(dict(request.query_params))
         
-    strategy = params.get("strategy", "avalanche")
-    if strategy not in ["avalanche", "snowball"]:
-        strategy = "avalanche"
-    
-    filter_tag = params.get("filter_tag", "All")
-    valid_tags = ["All"] + [t.value for t in LiabilityTag]
-    if filter_tag not in valid_tags:
-        filter_tag = "All"
-    
-    try:
-        # Load Data
-        liabilities = await repo.get_liabilities()
-        income_list = await repo.get_income()
-        spending_list = await repo.get_spending_plan()
+        # Run simulation
+        result = await simulation_service.run_simulation(params)
+        
+        # Render HTML response
+        return render_simulation_partial(result)
+        
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to load financial data: {str(e)}")
-    
-    # Calculate FCF
-    monthly_income = 0
-    for i in income_list:
-        if i.frequency == "monthly": monthly_income += i.amount
-        elif i.frequency == "bi-weekly": monthly_income += i.amount * 26 / 12
-        elif i.frequency == "weekly": monthly_income += i.amount * 52 / 12
-        elif i.frequency == "annually": monthly_income += i.amount / 12
-
-    # Exclude existing 'Debt Repayment' from spending to avoid double counting
-    monthly_spending = sum(s.amount for s in spending_list if s.category != "Debt Repayment")
-    
-    fcf = monthly_income - monthly_spending - monthly_payment
-    
-    # Run Simulation
-    # 1. Baseline (Minimum Payments Only)
-    context_baseline = simulate_debt_payoff(
-        liabilities=liabilities,
-        strategy=strategy,
-        extra_monthly_payment=0
-    )
-    
-    # 2. Current Scenario
-    context = simulate_debt_payoff(
-        liabilities=liabilities,
-        strategy=strategy,
-        extra_monthly_payment=monthly_payment
-    )
-    
-    # Format Results
-    payoff_date_str = context.date_free.strftime("%b %Y")
-    
-    # Calculate Savings (Baseline Interest - Scenario Interest)
-    interest_saved = context_baseline.interest_paid - context.interest_paid
-    
-    # Generate Chart
-    # We need two series for comparison. For now, generate both strategies
-    context_snowball = simulate_debt_payoff(liabilities, "snowball", monthly_payment)
-    context_avalanche = simulate_debt_payoff(liabilities, "avalanche", monthly_payment)
-    
-    chart_svg = generate_simple_line_chart_svg(
-        snowball_series=context_snowball.series,
-        avalanche_series=context_avalanche.series
-    )
-    
-    # Construct OOB Response
-    # 1. FCF
-    fcf_class = "positive" if fcf >= 0 else "negative"
-    html = f'<span class="value {fcf_class}" id="metric-fcf" hx-swap-oob="true">${fcf:,.0f}</span>'
-    
-    # 2. Date
-    html += f'<div class="value date" id="metric-date" hx-swap-oob="true">{payoff_date_str}</div>'
-    
-    # 3. Savings/Interest
-    # Show positive savings
-    html += f'<div class="value positive" id="metric-savings" hx-swap-oob="true">${interest_saved:,.0f}</div>'
-    
-    # 4. Chart
-    html += f'<div id="chart-container" hx-swap-oob="true">{chart_svg}</div>'
-    
-    # 5. Table (With Filtering)
-    # Extract payoff dates per debt
-    payoff_dates = {}
-    for log in context.log:
-        if log.event == "PAID OFF":
-            payoff_dates[log.debt_name] = log.date
-            
-    # Apply Filter
-    if filter_tag and filter_tag != "All":
-        # Compare against tag values (tags are LiabilityTag enums, filter_tag is a string)
-        filtered_liabilities = [l for l in liabilities if any(t.value == filter_tag if hasattr(t, 'value') else t == filter_tag for t in l.tags)]
-    else:
-        filtered_liabilities = liabilities
-
-    table_rows = ""
-    # Sort liabilities by payoff date
-    sorted_debts = sorted(filtered_liabilities, key=lambda x: payoff_dates.get(x.name, context.date_free))
-    
-    if not sorted_debts:
-        # Empty state - no liabilities to display
-        table_rows = """
-        <tr>
-            <td colspan="5" class="empty-state">
-                <div style="text-align: center; padding: 2rem; color: var(--text-tertiary);">
-                    <p>No liabilities found.</p>
-                    <p style="font-size: 0.85rem;">Add debts to start tracking your payoff journey.</p>
-                </div>
-            </td>
-        </tr>
-        """
-    else:
-        for l in sorted_debts:
-            is_paid_off = l.balance <= 0
-            row_class = "row-paid-off" if is_paid_off else ""
-            
-            # Escape user data to prevent XSS
-            debt_name_escaped = html_module.escape(l.name)
-            
-            if is_paid_off:
-                p_date = "-"
-                pay_action = ""
-            else:
-                p_date = payoff_dates.get(l.name, context.date_free).strftime("%b %Y")
-                # Pay Link (Action) - visible on hover
-                # Escape payment_url if present to prevent XSS
-                if getattr(l, 'payment_url', None):
-                    payment_url_escaped = html_module.escape(l.payment_url)
-                    pay_action = f'<a href="{payment_url_escaped}" target="_blank" class="pay-link" title="Pay off {debt_name_escaped}">Pay</a>'
-                else:
-                    pay_action = f'<a href="/pay/{l.id}" class="pay-link" title="Pay off {debt_name_escaped}">Pay</a>'
-                
-            apr = f"{l.interest_rate * 100:.1f}%"
-            apr_class = "text-danger" if l.interest_rate > FINANCIAL.DANGER_INTEREST_THRESHOLD else ""
-            
-            table_rows += f"""
-            <tr class="{row_class}">
-                <td class="cell-name">{debt_name_escaped}</td>
-                <td class="text-right"><span class="badge badge-soft {apr_class}">{apr}</span></td>
-                <td class="cell-mono">${l.balance:,.0f}</td>
-                <td class="cell-mono text-right">{p_date}</td>
-                <td class="cell-action text-right">{pay_action}</td>
-            </tr>
-            """
-        
-    html += f"""
-    <div id="payment-table-container" hx-swap-oob="true">
-        <div class="sim-table-container">
-            <table class="sim-table">
-                <thead>
-                    <tr>
-                        <th class="text-left">Debt Name</th>
-                        <th class="text-right">APR</th>
-                        <th class="text-left">Balance</th>
-                        <th class="text-right">Payoff Date</th>
-                        <th class="text-right">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {table_rows}
-                </tbody>
-            </table>
-        </div>
-    </div>
-    """
-    
-    # 6. Filters (Dropdown)
-    # Generate filter dropdown dynamically
-    # Available tags: All, plus standard ones
-    tags = ["All"] + [t.value for t in LiabilityTag]
-    
-    options = ""
-    for tag in tags:
-        selected = "selected" if tag == filter_tag else ""
-        options += f'<option value="{tag}" {selected}>{tag}</option>'
-        
-    # Clean styled select component
-    filter_dropdown = f"""
-    <div class="select-wrapper">
-        <select class="filter-select" 
-                onchange="document.querySelector('[name=filter_tag]').value=this.value; htmx.trigger('#hidden-payment-input', 'change')">
-            {options}
-        </select>
-        <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="6 9 12 15 18 9"></polyline>
-        </svg>
-    </div>
-    """
-
-    html += f'<div id="filter-container" class="filter-row" hx-swap-oob="true">{filter_dropdown}</div>'
-    
-    return html
+        logger.error(f"Simulation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to run simulation: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn

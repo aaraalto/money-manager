@@ -78,11 +78,13 @@ class UserProfile(BaseModel):
     id: UUID = Field(default_factory=uuid4)
     name: str = "Euclid"
     current_level: int = Field(0, ge=0, le=6)
+    previous_level: Optional[int] = Field(None, ge=0, le=6, description="Previous level for level-up detection")
     onboarding_completed: bool = False
     monthly_income: float = 0.0
     monthly_burn: float = 0.0
     total_debt: float = 0.0
     liquid_assets: float = 0.0
+
 
 class FinancialSnapshot(BaseModel):
     """Represents the user's financial state at a point in time."""
@@ -91,9 +93,89 @@ class FinancialSnapshot(BaseModel):
     transactions: list[Transaction] = []
     user: Optional[UserProfile] = None
 
+
 class Scenario(BaseModel):
     id: UUID = Field(default_factory=uuid4)
     name: str = "New Scenario"
     monthly_payment: float = Field(..., ge=0)
     strategy: str = "avalanche"
     created_at: date = Field(default_factory=date.today)
+
+
+# =============================================================================
+# TYPED RESPONSE MODELS
+# =============================================================================
+
+class FinancialHealthMetrics(BaseModel):
+    """Metrics about the user's financial health."""
+    savings_rate: float = Field(..., description="Percentage of income saved (0.0-1.0)")
+    debt_to_income_ratio: float = Field(..., description="DTI ratio (0.0-1.0+)")
+    savings_rate_change: float = Field(0.0, description="Change vs previous period")
+    monthly_surplus: float = Field(..., description="Income minus expenses")
+
+
+class SpendingBreakdownItem(BaseModel):
+    """A single item in the spending breakdown."""
+    label: str
+    value: float
+    type: str  # Need, Want, Savings
+
+
+class SystemStatus(BaseModel):
+    """Status indicators for the user's financial system."""
+    fixed_costs_covered: bool = Field(..., description="Whether income covers fixed costs")
+    debt_strategy_active: bool = Field(..., description="Whether a debt payoff strategy is active")
+    savings_automated: bool = Field(..., description="Whether savings are automated")
+    obligations_monthly: float = Field(..., description="Total monthly obligations")
+    income_monthly: float = Field(..., description="Total monthly income")
+
+
+class DebtPayoffStrategy(BaseModel):
+    """Results for a single debt payoff strategy."""
+    date_free: date
+    interest_paid: float
+    strategy: str
+    series: list = Field(default_factory=list)
+    reasoning: list[str] = Field(default_factory=list)
+    
+    class Config:
+        # Allow arbitrary types for the series (TimeSeriesPoint objects)
+        arbitrary_types_allowed = True
+
+
+class DebtPayoffSummary(BaseModel):
+    """Summary of debt payoff projections."""
+    snowball: DebtPayoffStrategy
+    avalanche: DebtPayoffStrategy
+    comparison: list[str] = Field(default_factory=list)
+
+
+class ProjectionSummary(BaseModel):
+    """Summary of wealth projection."""
+    final_value: float
+    total_contributions: float
+    total_interest: float
+    inflation_adjusted_final_value: Optional[float] = None
+    context: str
+    crossover_date: Optional[date] = None
+
+
+class NetWorthSummary(BaseModel):
+    """Summary of net worth calculation."""
+    total: float
+    liquid: float
+    illiquid: float
+    assets_total: float
+    liabilities_total: float
+    reasoning: list[str] = Field(default_factory=list)
+
+
+class DashboardData(BaseModel):
+    """Complete dashboard data response - fully typed for IDE support."""
+    net_worth: NetWorthSummary
+    financial_health: FinancialHealthMetrics
+    projection: ProjectionSummary
+    debt_payoff: DebtPayoffSummary
+    spending_breakdown: list[SpendingBreakdownItem]
+    daily_allowance: float
+    system_status: SystemStatus

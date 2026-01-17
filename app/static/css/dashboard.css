@@ -175,7 +175,7 @@ body {
     padding: 0;
 }
 
-/* Mobile Nav */
+/* Mobile Responsive */
 @media (max-width: 768px) {
     .app-layout {
         flex-direction: column;
@@ -210,14 +210,89 @@ body {
     }
 
     .main-content {
-        padding: var(--space-6);
+        padding: var(--space-4);
+    }
+    
+    .container {
+        padding: 0;
+    }
+    
+    /* Cards */
+    .card {
+        padding: var(--space-5);
+        margin-bottom: var(--space-4);
+    }
+    
+    .card h2 {
+        font-size: 1rem;
+        margin-bottom: var(--space-4);
+    }
+    
+    /* Headers */
+    .app-header {
+        margin-bottom: var(--space-6);
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-3);
+    }
+    
+    .header-brand h1 {
+        font-size: 1.5rem;
+    }
+    
+    .header-title-row {
+        flex-wrap: wrap;
+        gap: var(--space-2);
+    }
+    
+    /* Grids */
+    .grid,
+    .dashboard-overview {
+        gap: var(--space-4);
+    }
+    
+    /* Section Headers */
+    .section-header {
+        margin-top: var(--space-6);
+        margin-bottom: var(--space-4);
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-1);
+    }
+    
+    /* Hero Sections */
+    .hero-allowance-container {
+        padding: var(--space-8) var(--space-4);
+        margin-bottom: var(--space-6);
+    }
+    
+    .hero-allowance-value {
+        font-size: clamp(2.5rem, 8vw, 4rem);
+    }
+    
+    .system-integrity-panel {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: var(--space-4);
+        padding: var(--space-3) var(--space-4);
+    }
+    
+    /* Stats */
+    .stat-value {
+        font-size: 1.5rem;
+    }
+    
+    /* KPI Row */
+    .kpi-row {
+        flex-direction: column;
+        gap: var(--space-4);
     }
 }
 
 /* --- Header (Page Titles) --- */
 .app-header {
     margin-bottom: var(--space-8);
-    animation: fadeInDown 0.6s var(--ease-smooth);
+    /* Removed animation for seamless page transitions */
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
@@ -226,23 +301,20 @@ body {
     overflow: visible; /* Allow dropdown to overflow */
 }
 
-@keyframes fadeInDown {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
+/* Removed fadeInDown keyframes - header is always visible for seamless transitions */
 
 .header-brand {
     display: flex;
     flex-direction: column;
     gap: var(--space-1);
-    position: relative; /* Ensure context for absolute children if needed */
+    position: relative;
     z-index: 101;
+}
+
+.header-title-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
 }
 
 .header-brand h1 {
@@ -334,7 +406,7 @@ body {
 .grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: var(--density-card-gap);
+    gap: var(--space-6);
 }
 
 @media (min-width: 768px) {
@@ -347,22 +419,20 @@ body {
 .dashboard-overview {
     display: grid;
     grid-template-columns: 1fr;
-    gap: var(--density-card-gap);
-    margin-bottom: var(--density-spacing);
-    align-items: start; /* Ensure cards don't stretch weirdly */
+    gap: var(--space-6);
+    margin-bottom: var(--space-8);
+    align-items: start;
 }
 
 @media (min-width: 1024px) {
     .dashboard-overview {
-        grid-template-columns: 1fr 2fr; /* Swapped ratio for Daily Safe-to-Spend focus if needed, or keep 1:1 or 2:1 */
-        /* Let's try balanced or 1:2 if chart is complex. Previous was 2:1 for chart. 
-           Since "Daily Capacity" is now primary, let's make them more balanced or keep chart big. 
-           User asked for "Daily Spend first", so it's column 1. 
-           If Daily Spend is compact, maybe 1:2 is better. 
-           Let's stick to 1:2 (Daily : Chart) or 1:1. 
-           Given content, 1:2 is good. */
-        grid-template-columns: 1fr 2fr; 
+        grid-template-columns: 1fr 1fr;
         min-height: 300px;
+    }
+    
+    /* When chart is primary focus, use wider ratio */
+    .dashboard-overview.chart-focus {
+        grid-template-columns: 1fr 2fr;
     }
 }
 
@@ -406,7 +476,7 @@ body {
 .stat {
     display: flex;
     flex-direction: column;
-    gap: var(--space-1);
+    gap: var(--space-2);
 }
 
 .stat-label {
@@ -414,12 +484,43 @@ body {
     color: var(--text-tertiary);
     font-weight: 600;
     text-transform: uppercase;
+    letter-spacing: 0.03em;
 }
 
 .stat-value {
-    font-size: var(--density-stat-value-size); /* 1.75rem from design system */
+    font-size: var(--density-stat-value-size);
     font-weight: 600;
     font-family: var(--font-mono);
+    color: var(--text-primary);
+    line-height: 1.1;
+}
+
+/* KPI Row - Horizontal layout for multiple KPIs */
+.kpi-row {
+    display: flex;
+    gap: var(--space-6);
+    padding: var(--space-4) 0;
+}
+
+.kpi {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    flex: 1;
+}
+
+.kpi-label {
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.kpi-value {
+    font-family: var(--font-mono);
+    font-size: 1.25rem;
+    font-weight: 600;
     color: var(--text-primary);
 }
 
@@ -614,21 +715,28 @@ body {
 /* Hide old style status items if any remain */
 .status-line { display: none; }
 
-/* War Room Header */
+/* Section Header - Creates visual rhythm between page sections */
 .section-header {
+    margin-top: var(--space-10);
     margin-bottom: var(--space-6);
+    padding-bottom: var(--space-3);
     border-bottom: 1px solid var(--border-subtle);
-    padding-bottom: var(--space-2);
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
 }
 
+.section-header:first-child {
+    margin-top: 0;
+}
+
 .section-header h3 {
     margin: 0;
     font-family: var(--font-heading);
-    font-size: 1.25rem;
+    font-size: 1.125rem;
+    font-weight: 600;
     color: var(--text-secondary);
+    letter-spacing: -0.01em;
 }
 
 .section-header p {

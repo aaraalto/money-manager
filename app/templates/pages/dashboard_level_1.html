@@ -1,17 +1,17 @@
-{% extends "templates/layouts/base.html" %}
-{% from "templates/components/atoms.html" import button, icon %}
-{% from "templates/components/molecules.html" import card, stat, kpi_box, alert, dashboard_header with context %}
+{% extends "layouts/base.html" %}
+{% from "components/atoms.html" import button, icon %}
+{% from "components/molecules.html" import card, stat, kpi_box, alert, dashboard_header with context %}
 
-{% block title %}Radiant - Your Freedom Plan{% endblock %}
+{% block title %}Radiant - Debt Resolution{% endblock %}
 
 {% block extra_js %}
 <script type="module" src="/static/js/modules/main.js"></script>
 {% endblock %}
 
-    {% block content %}
-    {{ dashboard_header("Level 1: Clearing the Path", "badge badge-warning", "", "", "", "Adjust Strategy", "sliders") }}
+{% block content %}
+    {{ dashboard_header("Level 1: Clearing the Path", "badge badge-warning", "", "", "", "Adjust Strategy", "sliders", user.current_level|default(1)) }}
 
-    <div id="loading">Building your personalized plan...</div>
+    <div id="loading">Calculating payoff trajectory...</div>
 
     <div id="dashboard" class="hidden">
         <!-- Hero Section: Daily Capacity -->
@@ -41,32 +41,32 @@
         </div>
 
         <div class="section-header fade-in-up delay-1">
-            <h3>Your Debt Freedom Plan</h3>
-            <p>Smart Strategy, Clear Progress</p>
+            <h3>The War Room</h3>
+            <p>Strategic Debt Elimination</p>
         </div>
 
         <!-- Level 1 Focus: Debt Payoff -->
         <div class="dashboard-overview fade-in-up delay-2">
-             {% call card("Your Progress", "shield") %}
+             {% call card("Debt Resolution Status", "shield") %}
                 <div class="stat">
-                    <div class="stat-label">Remaining Balance</div>
+                    <div class="stat-label">Total Liabilities</div>
                     <div class="stat-value" id="nw-debt">--</div>
                 </div>
                 <div class="separator"></div>
                 <div class="stat">
-                    <div class="stat-label">Monthly Progress</div>
+                    <div class="stat-label">Payoff Velocity</div>
                     <div class="stat-value text-success" id="payoff-velocity">--</div>
                     <div class="stat-change positive">per month</div>
                 </div>
             {% endcall %}
 
             {% call card("Current Strategy", "crosshair") %}
-                 {{ alert("Avalanche Method", "Focusing on highest interest first—this saves you the most money over time.", "info") }}
-                 <div class="kpi-row" style="margin-top: 1rem;">
+                 {{ alert("Avalanche Method", "Targeting highest interest rate (24.99%) first to minimize loss.", "info") }}
+                 <div class="kpi-row">
                      {{ kpi_box("Freedom Date", id="freedom-date") }}
                      {{ kpi_box("Interest Saved", id="interest-saved") }}
                  </div>
-                 <div class="strategy-action" style="margin-top: var(--space-4); text-align: center;">
+                 <div class="strategy-action">
                      <a href="/simulator" class="btn-strategy">
                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
                              <circle cx="12" cy="12" r="3"></circle>
@@ -113,6 +113,8 @@
         .strategy-action {
             border-top: 1px solid var(--border-color);
             padding-top: var(--space-4);
+            margin-top: var(--space-4);
+            text-align: center;
         }
     </style>
     {% endblock %}

@@ -20,17 +20,13 @@
     
     <h1 style="font-size: 2rem;">
         {% if level == 0 %}
-            Building Balance
+            Crisis Mode
         {% elif level == 1 %}
-            Clearing the Path
+            Solvency Seeker
         {% elif level == 2 %}
-            Building Security
-        {% elif level == 3 %}
-            Building Wealth
-        {% elif level == 4 %}
-            Financial Independence
+            Stability Builder
         {% else %}
-            Abundance
+            Growth Architect
         {% endif %}
     </h1>
     
@@ -40,32 +36,18 @@
     
     <p>
         {% if level == 0 %}
-            Your spending is outpacing income right now. Let's create a plan to turn that around.
+            Your expenses exceed your income. Immediate action is required to stop the bleeding.
         {% elif level == 1 %}
-            You're earning more than you spend—great foundation! Let's channel that into clearing your debt.
+            You are solvent, but debt is weighing you down. Your mission is to destroy it.
         {% elif level == 2 %}
-            Debt-free! Now let's build a safety net that gives you peace of mind.
-        {% elif level == 3 %}
-            Strong foundation in place. Time to focus on growth and building wealth.
-        {% elif level == 4 %}
-            You're approaching the point where work becomes optional. Let's keep the momentum going.
+            You are debt-free! Now it's time to build a full 6-month safety net.
         {% else %}
-            You've built something amazing. Time to live your rich life and create lasting impact.
+            You have a strong foundation. It's time to optimize for wealth and freedom.
         {% endif %}
     </p>
     
     <form hx-post="/api/onboarding/complete" hx-target="body">
-        <button type="submit" class="btn-primary">
-            {% if level == 0 %}
-                Let's Get Started
-            {% elif level == 1 %}
-                See Your Roadmap
-            {% elif level == 2 %}
-                Start Building
-            {% else %}
-                Explore Opportunities
-            {% endif %}
-        </button>
+        <button type="submit" class="btn-primary">Enter the War Room</button>
     </form>
 </div>
 

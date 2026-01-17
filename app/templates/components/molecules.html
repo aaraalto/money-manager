@@ -1,0 +1,360 @@
+{% from "components/atoms.html" import icon, button %}
+
+{# Card Component #}
+{% macro card(title, icon_name=None, id=None, extra_classes="") %}
+<div class="card {{ extra_classes }}" {% if id %}id="{{ id }}"{% endif %}>
+    {% if title %}
+    <h2>
+        {% if icon_name %}
+            {{ icon(icon_name) }}
+        {% endif %}
+        {{ title }}
+    </h2>
+    {% endif %}
+    {{ caller() }}
+</div>
+{% endmacro %}
+
+{# Alert Component #}
+{% macro alert(title, description, variant="info", icon_name="info") %}
+<div class="alert alert-{{ variant }}">
+    <svg class="alert-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="16" x2="12" y2="12"></line>
+        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+    </svg>
+    <div class="alert-content">
+        {% if title %}<div class="alert-title">{{ title }}</div>{% endif %}
+        <div class="alert-description">{{ description }}</div>
+    </div>
+</div>
+{% endmacro %}
+
+{# Stat / KPI Component #}
+{% macro stat(label, value="--", id=None, change=None, change_positive=True) %}
+<div class="stat">
+    <div class="stat-label">{{ label }}</div>
+    <div class="stat-value" {% if id %}id="{{ id }}"{% endif %}>{{ value }}</div>
+    {% if change %}
+    <div class="stat-change {% if change_positive %}positive{% else %}negative{% endif %}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="18 15 12 9 6 15"></polyline>
+        </svg>
+        <span>{{ change }}</span>
+    </div>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{# KPI Box (Compact) #}
+{% macro kpi_box(label, value="--", id=None) %}
+<div class="kpi">
+    <div class="kpi-label">{{ label }}</div>
+    <div class="kpi-value" {% if id %}id="{{ id }}"{% endif %}>{{ value }}</div>
+</div>
+{% endmacro %}
+
+{# =============================================================================
+   SKELETON LOADERS
+   ============================================================================= #}
+
+{# Skeleton Card - Mimics card shape during loading #}
+{% macro skeleton_card(has_title=True, rows=3) %}
+<div class="card skeleton-card" aria-hidden="true" aria-busy="true">
+    {% if has_title %}
+    <div class="skeleton skeleton-title" style="width: 40%;"></div>
+    {% endif %}
+    <div class="skeleton-content">
+        {% for i in range(rows) %}
+        <div class="skeleton skeleton-text" style="width: {{ [100, 85, 70, 90, 60][i % 5] }}%;"></div>
+        {% endfor %}
+    </div>
+</div>
+{% endmacro %}
+
+{# Skeleton Stat - Mimics stat/KPI shape during loading #}
+{% macro skeleton_stat() %}
+<div class="stat skeleton-stat" aria-hidden="true">
+    <div class="skeleton skeleton-text" style="width: 60%; height: 0.75rem;"></div>
+    <div class="skeleton skeleton-number" style="width: 80%; height: 2rem; margin-top: var(--space-2);"></div>
+</div>
+{% endmacro %}
+
+{# Skeleton Table Row - For table loading states #}
+{% macro skeleton_table_row(cols=5) %}
+<tr class="skeleton-row" aria-hidden="true">
+    {% for i in range(cols) %}
+    <td><div class="skeleton skeleton-text" style="width: {{ [80, 50, 60, 40, 30][i % 5] }}%;"></div></td>
+    {% endfor %}
+</tr>
+{% endmacro %}
+
+{# Skeleton Table - Complete table with skeleton rows #}
+{% macro skeleton_table(rows=5, cols=5) %}
+<div class="skeleton-table-container" aria-hidden="true" aria-busy="true">
+    <table class="sim-table">
+        <thead>
+            <tr>
+                {% for i in range(cols) %}
+                <th><div class="skeleton skeleton-text" style="width: 60%;"></div></th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in range(rows) %}
+            {{ skeleton_table_row(cols) }}
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endmacro %}
+
+{# Skeleton Chart - For chart placeholders #}
+{% macro skeleton_chart(height="300px") %}
+<div class="skeleton-chart" style="height: {{ height }};" aria-hidden="true" aria-busy="true">
+    <div class="skeleton-chart-bars">
+        <div class="skeleton-bar" style="height: 60%;"></div>
+        <div class="skeleton-bar" style="height: 80%;"></div>
+        <div class="skeleton-bar" style="height: 45%;"></div>
+        <div class="skeleton-bar" style="height: 90%;"></div>
+        <div class="skeleton-bar" style="height: 70%;"></div>
+        <div class="skeleton-bar" style="height: 55%;"></div>
+    </div>
+</div>
+{% endmacro %}
+
+{# Dashboard Skeleton - Full dashboard loading state #}
+{% macro skeleton_dashboard() %}
+<div class="skeleton-dashboard" aria-busy="true" aria-label="Loading dashboard">
+    <div class="dashboard-overview">
+        <div class="skeleton-grid">
+            {{ skeleton_card(True, 3) }}
+            {{ skeleton_card(True, 2) }}
+        </div>
+    </div>
+    <div class="grid" style="margin-top: var(--space-6);">
+        {{ skeleton_card(True, 1) }}
+    </div>
+</div>
+{% endmacro %}
+
+{# Navigation Dropdown (Legacy - kept for backwards compatibility) #}
+{% macro nav_dropdown() %}
+<div class="nav-page-selector" id="navPageSelector">
+    <button class="nav-page-trigger" onclick="toggleNavDropdown()">
+        <span class="current-page-name">
+            {% if 'simulator' in request.url.path %}Simulator
+            {% elif 'spending-editor' in request.url.path %}Spending Plan
+            {% elif 'assets' in request.url.path %}Assets
+            {% else %}Overview{% endif %}
+        </span>
+        <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+    </button>
+    
+    <div class="nav-dropdown-menu">
+        <a href="/" class="nav-dropdown-item {% if request.url.path == '/' %}active{% endif %}">
+            Overview <span class="check">✓</span>
+        </a>
+        <a href="/simulator" class="nav-dropdown-item {% if 'simulator' in request.url.path %}active{% endif %}">
+            Simulator <span class="check">✓</span>
+        </a>
+        <a href="/spending-editor" class="nav-dropdown-item {% if 'spending-editor' in request.url.path %}active{% endif %}">
+            Spending Plan <span class="check">✓</span>
+        </a>
+        <a href="/assets" class="nav-dropdown-item {% if 'assets' in request.url.path %}active{% endif %}">
+            Assets <span class="check">✓</span>
+        </a>
+    </div>
+</div>
+{% endmacro %}
+
+{# Persistent Tab Navigation #}
+{% macro nav_tabs(user_level=0) %}
+<nav class="nav-tabs-container" aria-label="Main navigation">
+    <div class="nav-tabs">
+        <a href="/" class="nav-tab {% if request.url.path == '/' %}active{% endif %}" aria-current="{% if request.url.path == '/' %}page{% endif %}">
+            <svg class="nav-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+            <span>Overview</span>
+        </a>
+        
+        <a href="/simulator" class="nav-tab {% if 'simulator' in request.url.path %}active{% endif %}">
+            <svg class="nav-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+            <span>Simulator</span>
+        </a>
+        
+        <a href="/spending-editor" class="nav-tab {% if 'spending-editor' in request.url.path %}active{% endif %}">
+            <svg class="nav-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="8" y1="6" x2="21" y2="6"></line>
+                <line x1="8" y1="12" x2="21" y2="12"></line>
+                <line x1="8" y1="18" x2="21" y2="18"></line>
+                <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                <line x1="3" y1="18" x2="3.01" y2="18"></line>
+            </svg>
+            <span>Budget</span>
+        </a>
+        
+        {# Assets unlocks at Level 2+ #}
+        {% if user_level >= 2 %}
+        <a href="/assets" class="nav-tab {% if 'assets' in request.url.path %}active{% endif %}">
+            <svg class="nav-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+            </svg>
+            <span>Assets</span>
+        </a>
+        {% else %}
+        <div class="nav-tab locked" title="Unlocks at Level 2">
+            <svg class="nav-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            <span>Assets</span>
+            <span class="unlock-badge">Lv2</span>
+        </div>
+        {% endif %}
+    </div>
+</nav>
+{% endmacro %}
+
+{# Page Header #}
+{% macro page_header(title, subtitle=None, actions=None, user_level=0) %}
+<header class="app-header">
+    <div class="header-brand">
+        <h1>{{ title }}</h1>
+        {% if subtitle and subtitle.strip() %}<p class="tagline">{{ subtitle }}</p>{% endif %}
+    </div>
+    <div class="header-controls">
+        {% if user %}
+        <div class="user-badge">
+            <span class="user-avatar">{{ user.name[0] if user.name else 'U' }}</span>
+            <span class="user-name">{{ user.name|default('User') }}</span>
+        </div>
+        {% endif %}
+    </div>
+</header>
+{{ nav_tabs(user_level) }}
+{% endmacro %}
+
+{# Dashboard Header #}
+{% macro dashboard_header(level_text=None, level_badge_class="badge-primary", tagline="", extra_classes="", tagline_style="", adjust_label="Adjust Spending", adjust_icon="edit", user_level=0) %}
+<header class="app-header {{ extra_classes }}">
+    <div class="header-brand">
+        <h1>Radiant</h1>
+        {% if tagline and tagline.strip() %}<p class="tagline" style="{{ tagline_style }}">{{ tagline }}</p>{% endif %}
+    </div>
+    <div class="header-controls">
+        {% if user %}
+        <div class="user-badge">
+            <span class="user-avatar">{{ user.name[0] if user.name else 'U' }}</span>
+            <span class="user-name">{{ user.name|default('User') }}</span>
+        </div>
+        {% endif %}
+        {% if level_text %}
+        <button class="level-pill {{ level_badge_class }}" onclick="document.getElementById('level-modal').showModal()">
+            {{ level_text }}
+        </button>
+        {% endif %}
+    </div>
+</header>
+{{ nav_tabs(user_level) }}
+
+{# Levels Modal #}
+<dialog id="level-modal" class="modal wealth-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="header-title">
+                <h2>Wealth Levels</h2>
+                <p class="subtitle">Your journey to financial freedom</p>
+            </div>
+            <button onclick="document.getElementById('level-modal').close()" class="close-btn">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+        </div>
+        
+        <div class="wealth-ladder">
+            <!-- Level 5 -->
+            <div class="ladder-step {% if 'Level 5' in level_text|default('') %}active{% endif %}" data-level="5">
+                <div class="step-marker">
+                    <div class="marker-node">5</div>
+                    <div class="marker-line"></div>
+                </div>
+                <div class="step-content">
+                    <div class="step-header">
+                        <h3>Abundance</h3>
+                        <span class="step-tag">Legacy</span>
+                    </div>
+                    <p>Wealth works for you. Focus on impact, philanthropy, and generational growth.</p>
+                </div>
+            </div>
+
+            <!-- Level 4 -->
+            <div class="ladder-step {% if 'Level 4' in level_text|default('') %}active{% endif %}" data-level="4">
+                <div class="step-marker">
+                    <div class="marker-node">4</div>
+                    <div class="marker-line"></div>
+                </div>
+                <div class="step-content">
+                    <div class="step-header">
+                        <h3>Growth</h3>
+                        <span class="step-tag">Expansion</span>
+                    </div>
+                    <p>Diversifying income streams and optimizing for tax efficiency and scale.</p>
+                </div>
+            </div>
+
+            <!-- Level 3 -->
+            <div class="ladder-step {% if 'Level 3' in level_text|default('') %}active{% endif %}" data-level="3">
+                <div class="step-marker">
+                    <div class="marker-node">3</div>
+                    <div class="marker-line"></div>
+                </div>
+                <div class="step-content">
+                    <div class="step-header">
+                        <h3>Accumulation</h3>
+                        <span class="step-tag">Compounding</span>
+                    </div>
+                    <p>Investing in assets that grow over time. Your money starts making money.</p>
+                </div>
+            </div>
+
+            <!-- Level 2 -->
+            <div class="ladder-step {% if 'Level 2' in level_text|default('') %}active{% endif %}" data-level="2">
+                <div class="step-marker">
+                    <div class="marker-node">2</div>
+                    <div class="marker-line"></div>
+                </div>
+                <div class="step-content">
+                    <div class="step-header">
+                        <h3>Stability</h3>
+                        <span class="step-tag">Security</span>
+                    </div>
+                    <p>Building the fortress. High-interest debt is gone; emergency fund is funded.</p>
+                </div>
+            </div>
+
+            <!-- Level 1 -->
+            <div class="ladder-step {% if 'Level 1' in level_text|default('') %}active{% endif %}" data-level="1">
+                <div class="step-marker">
+                    <div class="marker-node">1</div>
+                </div>
+                <div class="step-content">
+                    <div class="step-header">
+                        <h3>Clarity</h3>
+                        <span class="step-tag">Foundation</span>
+                    </div>
+                    <p>Understanding the flow. Tracking income and expenses to stop the bleed.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</dialog>
+{% endmacro %}

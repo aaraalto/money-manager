@@ -1,6 +1,6 @@
-{% extends "templates/layouts/base.html" %}
-{% from "templates/components/atoms.html" import button, icon %}
-{% from "templates/components/molecules.html" import card with context %}
+{% extends "layouts/base.html" %}
+{% from "components/atoms.html" import button, icon %}
+{% from "components/molecules.html" import card, page_header with context %}
 
 {% block title %}Radiant - Assets{% endblock %}
 
@@ -9,8 +9,8 @@
     .assets-grid {
         display: grid;
         grid-template-columns: 2fr 1fr;
-        gap: 2rem;
-        margin-top: 1rem;
+        gap: var(--space-8);
+        margin-top: var(--space-4);
     }
     
     @media (max-width: 900px) {
@@ -20,16 +20,16 @@
     }
 
     .asset-group {
-        margin-bottom: 2rem;
+        margin-bottom: var(--space-8);
     }
     
     .asset-group-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding-bottom: 0.5rem;
+        padding-bottom: var(--space-2);
         border-bottom: 1px solid var(--border-color);
-        margin-bottom: 1rem;
+        margin-bottom: var(--space-4);
     }
     
     .asset-group-title {
@@ -44,22 +44,23 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 1rem;
+        padding: var(--space-4);
         background: var(--bg-card);
         border: 1px solid var(--border-color);
-        border-radius: 12px;
-        margin-bottom: 0.8rem;
-        transition: transform 0.2s;
+        border-radius: var(--radius-md);
+        margin-bottom: var(--space-3);
+        transition: transform 0.2s, border-color 0.2s;
     }
     
     .asset-row:hover {
         transform: translateY(-2px);
-        border-color: var(--primary-color);
+        border-color: var(--primary);
     }
     
     .asset-info {
         display: flex;
         flex-direction: column;
+        gap: var(--space-1);
     }
     
     .asset-name {
@@ -72,15 +73,15 @@
         font-size: 0.9rem;
         color: var(--text-secondary);
         display: flex;
-        gap: 0.8rem;
+        gap: var(--space-3);
     }
     
     .asset-apy {
-        color: var(--success-color);
+        color: var(--success);
     }
     
     .asset-value {
-        font-family: 'JetBrains Mono', monospace;
+        font-family: var(--font-mono);
         font-size: 1.2rem;
         font-weight: 700;
     }
@@ -89,9 +90,9 @@
     .idea-card {
         background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
         border: 1px solid var(--border-color);
-        border-radius: 16px;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
+        border-radius: var(--radius-lg);
+        padding: var(--space-6);
+        margin-bottom: var(--space-4);
         position: relative;
         overflow: hidden;
     }
@@ -103,17 +104,17 @@
         left: 0;
         width: 4px;
         height: 100%;
-        background: var(--primary-color);
+        background: var(--primary);
     }
     
-    .idea-card.warning::before { background: var(--danger-color); }
-    .idea-card.optimization::before { background: var(--success-color); }
-    .idea-card.opportunity::before { background: var(--accent-color); }
+    .idea-card.warning::before { background: var(--danger); }
+    .idea-card.optimization::before { background: var(--success); }
+    .idea-card.opportunity::before { background: var(--accent); }
     
     .idea-header {
         display: flex;
         justify-content: space-between;
-        margin-bottom: 0.5rem;
+        margin-bottom: var(--space-2);
     }
     
     .idea-title {
@@ -124,10 +125,10 @@
     .idea-impact {
         font-size: 0.9rem;
         font-weight: 700;
-        color: var(--success-color);
-        background: rgba(16, 185, 129, 0.1);
-        padding: 2px 8px;
-        border-radius: 4px;
+        color: var(--success);
+        background: var(--success-dim);
+        padding: var(--space-1) var(--space-2);
+        border-radius: var(--radius-sm);
     }
     
     .idea-desc {
@@ -137,10 +138,10 @@
     }
     
     .net-worth-hero {
-        padding: 2rem;
+        padding: var(--space-8);
         background: var(--bg-card);
-        border-radius: 24px;
-        margin-bottom: 2rem;
+        border-radius: var(--radius-xl);
+        margin-bottom: var(--space-8);
         display: flex;
         justify-content: space-between;
         align-items: flex-end;
@@ -150,7 +151,7 @@
     .nw-label {
         font-size: 1rem;
         color: var(--text-secondary);
-        margin-bottom: 0.5rem;
+        margin-bottom: var(--space-2);
     }
     
     .nw-value {
@@ -165,12 +166,45 @@
     .nw-sub {
         font-size: 0.9rem;
         color: var(--text-secondary);
-        margin-top: 0.5rem;
+        margin-top: var(--space-2);
+    }
+    
+    .insights-sidebar h3 {
+        margin-top: 0;
+        margin-bottom: var(--space-2);
+    }
+    
+    .insights-sidebar > p {
+        margin-bottom: var(--space-6);
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
+    
+    .projection-card {
+        margin-top: var(--space-8);
+    }
+    
+    .projection-card h4 {
+        margin-top: 0;
+        margin-bottom: var(--space-3);
+    }
+    
+    .projection-card p {
+        margin-bottom: var(--space-2);
+    }
+    
+    .projection-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--success);
+        font-family: var(--font-mono);
     }
 </style>
 {% endblock %}
 
 {% block content %}
+    {{ page_header("Assets", user_level=user.current_level|default(0)) }}
+
     <div class="net-worth-hero">
         <div>
             <div class="nw-label">Net Worth</div>
@@ -220,9 +254,7 @@
         
         <div class="insights-sidebar">
             <h3>Idea Space</h3>
-            <p style="margin-bottom: 1.5rem; font-size: 0.9rem; color: var(--text-secondary);">
-                Systemic insights to optimize your wealth engine.
-            </p>
+            <p>Systemic insights to optimize your wealth engine.</p>
             
             {% for idea in data.ideas %}
             <div class="idea-card {{ idea.type }}">
@@ -246,19 +278,15 @@
             {% endif %}
             
             <!-- Static Projection Card -->
-            <div class="card" style="margin-top: 2rem;">
-                <div class="card-header">
-                    <h4>Projected Growth</h4>
-                </div>
-                <div class="card-body">
-                    <p>Based on current APYs, your passive income next year will be approximately:</p>
-                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--success-color); margin-top: 0.5rem;">
-                        {% set passive = namespace(value=0) %}
-                        {% for asset in data.assets %}
-                            {% set passive.value = passive.value + (asset.value * asset.apy) %}
-                        {% endfor %}
-                        ${{ "{:,.0f}".format(passive.value) }}
-                    </div>
+            <div class="card projection-card">
+                <h4>Projected Growth</h4>
+                <p>Based on current APYs, your passive income next year will be approximately:</p>
+                <div class="projection-value">
+                    {% set passive = namespace(value=0) %}
+                    {% for asset in data.assets %}
+                        {% set passive.value = passive.value + (asset.value * asset.apy) %}
+                    {% endfor %}
+                    ${{ "{:,.0f}".format(passive.value) }}
                 </div>
             </div>
         </div>

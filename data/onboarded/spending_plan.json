@@ -1,0 +1,22 @@
+[
+  {
+    "id": "55f8b82e-207b-4269-a23e-d19ed8fe2c6e",
+    "category": "A new one",
+    "amount": 120.0,
+    "type": "Need",
+    "owner": "Me",
+    "description": null,
+    "notes": null,
+    "roi_potential": null
+  },
+  {
+    "id": "2feace77-87ec-411b-a62d-6dfdb0a954d0",
+    "category": "",
+    "amount": 0.0,
+    "type": "Want",
+    "owner": "Me",
+    "description": null,
+    "notes": null,
+    "roi_potential": null
+  }
+]
