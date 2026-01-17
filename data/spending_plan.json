@@ -98,5 +98,15 @@
     "description": null,
     "notes": null,
     "roi_potential": null
+  },
+  {
+    "id": "5fb3591d-6919-465c-966a-3235b9986e63",
+    "category": "Debt Repayment",
+    "amount": 500.0,
+    "type": "Savings",
+    "owner": "Me",
+    "description": null,
+    "notes": null,
+    "roi_potential": null
   }
 ]

@@ -213,6 +213,19 @@
     color: var(--danger);
 }
 
+/* New supportive severity variants */
+.alert-priority {
+    background: var(--warning-dim);
+    border-color: var(--warning);
+    color: var(--warning);
+}
+
+.alert-opportunity {
+    background: var(--primary-dim);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
 /* Progress Bar */
 .progress {
     height: 8px;

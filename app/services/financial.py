@@ -6,6 +6,7 @@ from app.domain.net_worth import get_net_worth
 from app.domain.growth import project_compound_growth
 from app.domain.debt import simulate_debt_payoff
 from app.data.repository import FileRepository
+from app.core.config import FINANCIAL
 
 class FinancialService:
     def __init__(self, repo: FileRepository):
@@ -74,20 +75,20 @@ class FinancialService:
         
         # 3. Projection (Wealth Growth)
         investable_assets = sum(a.value for a in assets if a.type in [AssetType.EQUITY, AssetType.RETIREMENT, AssetType.CRYPTO])
-        # Assume we invest 50% of surplus + any existing "Savings" category
+        # Assume we invest configured percentage of surplus + any existing "Savings" category
         savings_category = sum(s.amount for s in spending_list if s.type == "Savings")
-        monthly_contribution = max(0, (surplus * 0.5) + savings_category)
+        monthly_contribution = max(0, (surplus * FINANCIAL.SURPLUS_INVESTMENT_ALLOCATION) + savings_category)
         
         projection = project_compound_growth(
             principal=investable_assets,
-            rate=0.07,
+            rate=FINANCIAL.DEFAULT_INVESTMENT_RETURN,
             years=30,
             monthly_contribution=monthly_contribution
         )
         
         # 4. Debt Payoff
         # Calculate potential extra payment from surplus
-        extra_payment = max(0, surplus * 0.5) # Use other half of surplus for debt
+        extra_payment = max(0, surplus * FINANCIAL.SURPLUS_DEBT_ALLOCATION)
         
         snowball = simulate_debt_payoff(liabilities, "snowball", extra_payment)
         avalanche = simulate_debt_payoff(liabilities, "avalanche", extra_payment)
@@ -178,28 +179,28 @@ class FinancialService:
         cash_assets = [a for a in assets if a.type == AssetType.CASH]
         total_cash = sum(a.value for a in cash_assets)
         for a in cash_assets:
-            if a.apy < 0.03 and a.value > 1000:
+            if a.apy < FINANCIAL.LOW_YIELD_THRESHOLD and a.value > FINANCIAL.HYSA_OPTIMIZATION_MIN_BALANCE:
                  ideas.append({
                      "title": f"Optimize {a.name}",
-                     "description": f"Your cash in {a.name} is earning only {a.apy*100:.1f}%. Consider a HYSA earning ~4.5%.",
-                     "impact": f"+${a.value * (0.045 - a.apy):.0f}/yr",
+                     "description": f"Your cash in {a.name} is earning only {a.apy*100:.1f}%. Consider a HYSA earning ~{FINANCIAL.DEFAULT_HYSA_APY*100:.1f}%.",
+                     "impact": f"+${a.value * (FINANCIAL.DEFAULT_HYSA_APY - a.apy):.0f}/yr",
                      "type": "optimization"
                  })
 
         # 2. Emergency Fund Check
         monthly_burn = sum(s.amount for s in spending)
         months_of_runway = total_cash / monthly_burn if monthly_burn > 0 else 0
-        if months_of_runway < 3:
+        if months_of_runway < FINANCIAL.EMERGENCY_FUND_WARNING_MONTHS:
              ideas.append({
-                 "title": "Build Emergency Fund",
-                 "description": f"You have {months_of_runway:.1f} months of liquid runway. Aim for 3-6 months.",
+                 "title": "Strengthen Your Safety Net",
+                 "description": f"You've got {months_of_runway:.1f} months covered—building to {FINANCIAL.EMERGENCY_FUND_TARGET_MONTHS} months gives extra security.",
                  "impact": "Security",
-                 "type": "warning"
+                 "type": "opportunity"
              })
-        elif months_of_runway > 12:
+        elif months_of_runway > FINANCIAL.EXCESS_CASH_MONTHS:
               ideas.append({
-                 "title": "Excess Cash Drag",
-                 "description": f"You have {months_of_runway:.1f} months of cash. Inflation is eating it. Invest the excess.",
+                 "title": "Put Your Cash to Work",
+                 "description": f"With {months_of_runway:.1f} months saved, you could invest the extra and let it grow.",
                  "impact": "Growth",
                  "type": "opportunity"
              })
@@ -207,12 +208,12 @@ class FinancialService:
         # 3. Concentration Risk
         if total_assets > 0:
             for a in assets:
-                if a.value / total_assets > 0.5 and len(assets) > 1:
+                if a.value / total_assets > FINANCIAL.CONCENTRATION_WARNING_THRESHOLD and len(assets) > 1:
                      ideas.append({
-                         "title": f"Concentration in {a.name}",
-                         "description": f"{a.name} makes up {a.value/total_assets*100:.0f}% of your assets. Diversify to reduce risk.",
+                         "title": f"Diversification Opportunity",
+                         "description": f"{a.name} makes up {a.value/total_assets*100:.0f}% of your assets. Spreading it out could reduce risk.",
                          "impact": "Risk Reduction",
-                         "type": "warning"
+                         "type": "opportunity"
                      })
 
         # Group Assets by Type

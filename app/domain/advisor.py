@@ -5,7 +5,7 @@ class FinancialInsight:
     def __init__(self, title: str, description: str, severity: str = "info", action_item: str = None):
         self.title = title
         self.description = description
-        self.severity = severity # info, warning, critical, success
+        self.severity = severity  # info, opportunity, priority, success
         self.action_item = action_item
 
     def dict(self):
@@ -44,17 +44,17 @@ def generate_insights(
     
     if free_cash_flow < 0:
         insights.append(FinancialInsight(
-            title="Cash Flow Alert",
-            description=f"You're spending ${abs(free_cash_flow):,.0f} more than you make each month.",
-            severity="critical",
-            action_item="Review 'Wants' in your spending plan immediately."
+            title="Cash Flow Opportunity",
+            description=f"There's a ${abs(free_cash_flow):,.0f} gap between income and spending. Let's close it together.",
+            severity="priority",
+            action_item="Check your 'Wants' category—small tweaks can make a big difference."
         ))
     elif free_cash_flow < (total_monthly_income * 0.1):
         insights.append(FinancialInsight(
-            title="Savings Check-in",
-            description="You're saving less than 10% of your income right now.",
-            severity="warning",
-            action_item="Small tweaks add up. Try trimming one variable expense."
+            title="Room to Grow",
+            description="You're saving about 10% of your income—there's room to grow.",
+            severity="opportunity",
+            action_item="One small cut could boost your savings rate."
         ))
     else:
         insights.append(FinancialInsight(
@@ -71,28 +71,28 @@ def generate_insights(
     
     if months_runway < 1:
         insights.append(FinancialInsight(
-            title="Emergency Alert",
-            description=f"You have less than 1 month of expenses (${cash_assets:,.0f}) covered. Let's fix this.",
-            severity="critical",
-            action_item="Pause extra debt payments. Build $1,000 emergency fund immediately."
+            title="Safety Net Check",
+            description=f"You're building toward 1 month of expenses covered (currently ${cash_assets:,.0f}). Let's strengthen this.",
+            severity="priority",
+            action_item="Consider prioritizing cash savings—even $500 helps."
         ))
     elif months_runway < 3:
         insights.append(FinancialInsight(
-            title="Safety Net Check",
-            description=f"You have {months_runway:.1f} months of expenses saved. Goal is 3-6 months.",
-            severity="warning",
-            action_item="Prioritize cash savings over low-interest debt."
+            title="Growing Your Safety Net",
+            description=f"You're at {months_runway:.1f} months of expenses saved—next milestone is 3 months.",
+            severity="opportunity",
+            action_item="Keep building! Consider automating a small monthly transfer."
         ))
 
-    # 3. High Interest Debt Alert
+    # 3. High Interest Debt Focus
     high_interest_debts = [l for l in liabilities if l.interest_rate > 0.07]
     if high_interest_debts:
         avg_rate = sum(d.interest_rate for d in high_interest_debts) / len(high_interest_debts)
         insights.append(FinancialInsight(
-            title="Debt Alert",
-            description=f"You have {len(high_interest_debts)} high-interest loans slowing you down (Avg: {avg_rate*100:.1f}%).",
-            severity="warning",
-            action_item="Use the Avalanche method to attack these aggressively."
+            title="High-Interest Focus",
+            description=f"You have {len(high_interest_debts)} higher-rate loans (Avg: {avg_rate*100:.1f}%)—let's prioritize these.",
+            severity="opportunity",
+            action_item="The Avalanche method works great here—it saves you the most over time."
         ))
 
     return insights

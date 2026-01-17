@@ -225,13 +225,43 @@ export function showError(error) {
     if (!loadingEl) return;
     
     console.error("Failed to load data:", error);
-    loadingEl.innerHTML = `
-        <div class="alert alert-danger" style="max-width: 400px; margin: 0 auto;">
-            <div class="alert-content">
-                <div class="alert-title">Connection Error</div>
-                <div class="alert-description">${error.message}</div>
-                <button onclick="window.location.reload()" class="btn-nav" style="margin-top: 10px; background: var(--bg-card); color: var(--text-primary);">Retry</button>
-            </div>
-        </div>
-    `;
+    
+    // Escape error message to prevent XSS
+    const errorMessage = error?.message || "Unknown error occurred";
+    const escapedMessage = errorMessage
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#x27;");
+    
+    // Use textContent for safe insertion instead of innerHTML
+    const alertDiv = document.createElement("div");
+    alertDiv.className = "alert alert-warning";
+    alertDiv.style.cssText = "max-width: 400px; margin: 0 auto;";
+    
+    const contentDiv = document.createElement("div");
+    contentDiv.className = "alert-content";
+    
+    const titleDiv = document.createElement("div");
+    titleDiv.className = "alert-title";
+    titleDiv.textContent = "Having trouble connecting";
+    
+    const descDiv = document.createElement("div");
+    descDiv.className = "alert-description";
+    descDiv.textContent = "We couldn't load your data. Please check your connection and try again.";
+    
+    const retryBtn = document.createElement("button");
+    retryBtn.className = "btn-nav";
+    retryBtn.style.cssText = "margin-top: 10px; background: var(--bg-card); color: var(--text-primary);";
+    retryBtn.textContent = "Retry";
+    retryBtn.onclick = () => window.location.reload();
+    
+    contentDiv.appendChild(titleDiv);
+    contentDiv.appendChild(descDiv);
+    contentDiv.appendChild(retryBtn);
+    alertDiv.appendChild(contentDiv);
+    
+    loadingEl.innerHTML = "";
+    loadingEl.appendChild(alertDiv);
 }

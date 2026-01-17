@@ -2,16 +2,16 @@
 {% from "templates/components/atoms.html" import button, icon %}
 {% from "templates/components/molecules.html" import card, stat, kpi_box, alert, dashboard_header with context %}
 
-{% block title %}Radiant - Debt Resolution{% endblock %}
+{% block title %}Radiant - Your Freedom Plan{% endblock %}
 
 {% block extra_js %}
 <script type="module" src="/static/js/modules/main.js"></script>
 {% endblock %}
 
     {% block content %}
-    {{ dashboard_header("Level 1: Focus Mode", "badge badge-warning", "", "", "", "Adjust Strategy", "sliders") }}
+    {{ dashboard_header("Level 1: Clearing the Path", "badge badge-warning", "", "", "", "Adjust Strategy", "sliders") }}
 
-    <div id="loading">Calculating payoff trajectory...</div>
+    <div id="loading">Building your personalized plan...</div>
 
     <div id="dashboard" class="hidden">
         <!-- Hero Section: Daily Capacity -->
@@ -41,30 +41,39 @@
         </div>
 
         <div class="section-header fade-in-up delay-1">
-            <h3>The War Room</h3>
-            <p>Strategic Debt Elimination</p>
+            <h3>Your Debt Freedom Plan</h3>
+            <p>Smart Strategy, Clear Progress</p>
         </div>
 
         <!-- Level 1 Focus: Debt Payoff -->
         <div class="dashboard-overview fade-in-up delay-2">
-             {% call card("Debt Resolution Status", "shield") %}
+             {% call card("Your Progress", "shield") %}
                 <div class="stat">
-                    <div class="stat-label">Total Liabilities</div>
+                    <div class="stat-label">Remaining Balance</div>
                     <div class="stat-value" id="nw-debt">--</div>
                 </div>
                 <div class="separator"></div>
                 <div class="stat">
-                    <div class="stat-label">Payoff Velocity</div>
+                    <div class="stat-label">Monthly Progress</div>
                     <div class="stat-value text-success" id="payoff-velocity">--</div>
                     <div class="stat-change positive">per month</div>
                 </div>
             {% endcall %}
 
             {% call card("Current Strategy", "crosshair") %}
-                 {{ alert("Avalanche Method", "Targeting highest interest rate (24.99%) first to minimize loss.", "info") }}
+                 {{ alert("Avalanche Method", "Focusing on highest interest first—this saves you the most money over time.", "info") }}
                  <div class="kpi-row" style="margin-top: 1rem;">
                      {{ kpi_box("Freedom Date", id="freedom-date") }}
                      {{ kpi_box("Interest Saved", id="interest-saved") }}
+                 </div>
+                 <div class="strategy-action" style="margin-top: var(--space-4); text-align: center;">
+                     <a href="/simulator" class="btn-strategy">
+                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
+                             <circle cx="12" cy="12" r="3"></circle>
+                             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                         </svg>
+                         Adjust Strategy
+                     </a>
                  </div>
             {% endcall %}
         </div>
@@ -77,4 +86,33 @@
             {% endcall %}
         </div>
     </div>
+    <style>
+        .btn-strategy {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-3) var(--space-5);
+            background: var(--bg-subtle);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 100px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s var(--ease-smooth);
+        }
+        
+        .btn-strategy:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .strategy-action {
+            border-top: 1px solid var(--border-color);
+            padding-top: var(--space-4);
+        }
+    </style>
     {% endblock %}

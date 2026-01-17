@@ -7,7 +7,11 @@ from typing import Dict, List, Optional, Type, TypeVar, Union, Any
 from datetime import datetime
 from uuid import UUID
 
-from app.models import Asset, Liability, IncomeSource, SpendingCategory, Transaction, UserProfile
+from app.models import Asset, Liability, IncomeSource, SpendingCategory, Transaction, UserProfile, AssetType
+from app.core.logging import get_logger
+
+# Module logger
+logger = get_logger("repository")
 
 T = TypeVar("T", bound=Union[Asset, Liability, IncomeSource])
 
@@ -70,14 +74,27 @@ class FileRepository:
                     return json.load(f)
 
             data = await asyncio.to_thread(read_json)
-            items = [model(**item) for item in data]
+            if not isinstance(data, list):
+                logger.warning(f"File {file_path} does not contain a list, got {type(data)}")
+                return []
+            
+            items = []
+            for item in data:
+                try:
+                    items.append(model(**item))
+                except Exception as e:
+                    logger.warning(f"Skipping invalid item in {file_path}: {e}")
+                    continue
             
             # Update cache
             self._cache[file_str] = items
             self._mtimes[file_str] = mtime
             return items
         except (json.JSONDecodeError, OSError) as e:
-            print(f"Error loading {file_path}: {e}")
+            logger.error(f"Error loading {file_path}: {e}")
+            return []
+        except Exception as e:
+            logger.error(f"Unexpected error loading {file_path}: {e}")
             return []
 
     async def get_assets(self) -> List[Asset]:
@@ -120,11 +137,11 @@ class FileRepository:
                                 try:
                                     clean_row['amount'] = float(clean_row['amount'])
                                 except ValueError:
-                                    print(f"Warning: Could not convert amount '{clean_row['amount']}' to float, skipping row")
+                                    logger.warning(f"Could not convert amount '{clean_row['amount']}' to float, skipping row")
                                     continue
                             items.append(SpendingCategory(**clean_row))
                 except Exception as e:
-                    print(f"Error reading spending file: {e}")
+                    logger.error(f"Error reading spending file: {e}")
                 return items
              
              items = await asyncio.to_thread(read_csv)
@@ -169,7 +186,7 @@ class FileRepository:
                         if not row: continue
                         transactions.append(Transaction(**row))
             except Exception as e:
-                print(f"Error reading transactions: {e}")
+                logger.error(f"Error reading transactions: {e}")
             return transactions
 
         return await asyncio.to_thread(read_transactions)
@@ -206,7 +223,7 @@ class FileRepository:
             self._mtimes[file_str] = mtime
             return profile
         except (json.JSONDecodeError, OSError) as e:
-            print(f"Error loading {self.user_file}: {e}")
+            logger.error(f"Error loading {self.user_file}: {e}")
             # Fallback to default in case of error
             return UserProfile(name="Euclid")
 
@@ -232,3 +249,83 @@ class FileRepository:
             stats = await asyncio.to_thread(self.user_file.stat)
             self._mtimes[file_str] = stats.st_mtime
             self._cache[file_str] = profile
+
+    async def save_income(self, items: List[IncomeSource]):
+        """Save income sources to JSON file."""
+        def write_json():
+            self.income_file.parent.mkdir(exist_ok=True)
+            with open(self.income_file, "w") as f:
+                data = []
+                for item in items:
+                    try:
+                        d = item.model_dump()
+                    except AttributeError:
+                        d = item.dict()
+                    data.append(d)
+                json.dump(data, f, indent=2, default=str)
+        
+        await asyncio.to_thread(write_json)
+        # Invalidate cache
+        file_str = str(self.income_file)
+        if file_str in self._mtimes:
+            del self._mtimes[file_str]
+        if file_str in self._cache:
+            del self._cache[file_str]
+
+    async def save_liabilities(self, items: List[Liability]):
+        """Save liabilities to JSON file."""
+        def write_json():
+            self.liabilities_file.parent.mkdir(exist_ok=True)
+            with open(self.liabilities_file, "w") as f:
+                data = []
+                for item in items:
+                    try:
+                        d = item.model_dump()
+                    except AttributeError:
+                        d = item.dict()
+                    # Convert UUIDs to strings
+                    if 'id' in d and isinstance(d['id'], UUID):
+                        d['id'] = str(d['id'])
+                    # Convert enum values to strings
+                    if 'tags' in d:
+                        d['tags'] = [t.value if hasattr(t, 'value') else t for t in d['tags']]
+                    data.append(d)
+                json.dump(data, f, indent=2, default=str)
+        
+        await asyncio.to_thread(write_json)
+        # Invalidate cache
+        file_str = str(self.liabilities_file)
+        if file_str in self._mtimes:
+            del self._mtimes[file_str]
+        if file_str in self._cache:
+            del self._cache[file_str]
+
+    async def save_assets(self, items: List[Asset]):
+        """Save assets to JSON file."""
+        def write_json():
+            self.assets_file.parent.mkdir(exist_ok=True)
+            with open(self.assets_file, "w") as f:
+                data = []
+                for item in items:
+                    try:
+                        d = item.model_dump()
+                    except AttributeError:
+                        d = item.dict()
+                    # Convert UUIDs to strings
+                    if 'id' in d and isinstance(d['id'], UUID):
+                        d['id'] = str(d['id'])
+                    # Convert enum values to strings
+                    if 'type' in d and hasattr(d['type'], 'value'):
+                        d['type'] = d['type'].value
+                    if 'liquidity' in d and hasattr(d['liquidity'], 'value'):
+                        d['liquidity'] = d['liquidity'].value
+                    data.append(d)
+                json.dump(data, f, indent=2, default=str)
+        
+        await asyncio.to_thread(write_json)
+        # Invalidate cache
+        file_str = str(self.assets_file)
+        if file_str in self._mtimes:
+            del self._mtimes[file_str]
+        if file_str in self._cache:
+            del self._cache[file_str]

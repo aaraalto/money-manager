@@ -2,62 +2,273 @@
 {% from "templates/components/atoms.html" import button, icon %}
 {% from "templates/components/molecules.html" import card, stat, kpi_box, alert, dashboard_header with context %}
 
-{% block title %}Radiant - Stability{% endblock %}
+{% block title %}Radiant - Building Security{% endblock %}
 
 {% block extra_js %}
 <script type="module" src="/static/js/modules/main.js"></script>
 {% endblock %}
 
 {% block content %}
-    {{ dashboard_header("Level 2: Stability", "badge badge-success", "", "", "", "Review Budget", "list") }}
+    {{ dashboard_header("Level 2: Building Security", "badge badge-success", "", "", "", "Review Budget", "list") }}
 
-    <div id="loading">Checking defenses...</div>
+    <div id="loading">Loading your progress...</div>
 
     <div id="dashboard" class="hidden">
         <!-- Level 2 Focus: Emergency Fund & Security -->
-        <div class="dashboard-overview">
-             {% call card("Safety Net", "shield") %}
-                <div class="stat">
-                    <div class="stat-label">Emergency Fund</div>
-                    <div class="stat-value text-success" id="nw-liquid">--</div>
-                    <div class="stat-change">
-                        <span id="runway-months">--</span> months runway
+        
+        <!-- Hero: Emergency Fund Progress -->
+        <div class="ef-hero fade-in-up">
+            <div class="ef-visual">
+                <div class="ef-ring">
+                    <svg viewBox="0 0 120 120" class="ef-progress-ring">
+                        <circle cx="60" cy="60" r="52" class="ef-track"></circle>
+                        <circle cx="60" cy="60" r="52" class="ef-progress" id="ef-progress-ring"></circle>
+                    </svg>
+                    <div class="ef-center">
+                        <span class="ef-months" id="ef-months">--</span>
+                        <span class="ef-label">months</span>
                     </div>
                 </div>
-                <div class="separator"></div>
-                <div class="progress" style="margin-top: 1rem;">
-                    <div class="progress-bar" style="width: 60%;"></div>
+            </div>
+            <div class="ef-details">
+                <h2>Building Your Safety Net</h2>
+                <p>You're debt-free! Now focus on building 6 months of expenses.</p>
+                
+                <div class="ef-stats">
+                    <div class="ef-stat">
+                        <span class="ef-stat-label">Current Fund</span>
+                        <span class="ef-stat-value" id="nw-liquid">--</span>
+                    </div>
+                    <div class="ef-stat">
+                        <span class="ef-stat-label">Target (6 mo)</span>
+                        <span class="ef-stat-value" id="ef-target">--</span>
+                    </div>
+                    <div class="ef-stat">
+                        <span class="ef-stat-label">Remaining</span>
+                        <span class="ef-stat-value text-warning" id="ef-remaining">--</span>
+                    </div>
                 </div>
-                <p class="text-secondary" style="font-size: 0.85rem; margin-top: 0.5rem;">Goal: 6 Months Expenses</p>
+                
+                <div class="ef-eta">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    <span>At current rate: <strong id="ef-eta">--</strong></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-overview fade-in-up delay-1">
+            {% call card("Net Worth Growth", "trending-up") %}
+                <div class="growth-container">
+                    <div class="growth-main">
+                        <div class="label-subtle">Total Net Worth</div>
+                        <div class="value-hero" id="nw-total">--</div>
+                    </div>
+                    <div class="growth-details">
+                        <div class="detail-item">
+                            <div class="detail-label">Monthly Growth</div>
+                            <div class="detail-value text-success" id="nw-monthly-growth">--</div>
+                        </div>
+                        <div class="detail-divider"></div>
+                        <div class="detail-item">
+                            <div class="detail-label">Savings Rate</div>
+                            <div class="detail-value" id="savings-rate">--</div>
+                        </div>
+                    </div>
+                </div>
             {% endcall %}
 
-            {% call card("Net Worth Growth", "trending-up") %}
-                 <div class="growth-container">
-                     <div class="growth-main">
-                         <div class="label-subtle">Total Net Worth</div>
-                         <div class="value-hero" id="nw-total">--</div>
-                     </div>
-                     <div class="growth-details">
-                         <div class="detail-item">
-                             <div class="detail-label">Monthly Growth</div>
-                             <div class="detail-value text-success" id="nw-monthly-growth">--</div>
-                         </div>
-                         <div class="detail-divider"></div>
-                         <div class="detail-item">
-                             <div class="detail-label">Savings Rate</div>
-                             <div class="detail-value" id="savings-rate">--</div>
-                         </div>
-                     </div>
-                 </div>
+            {% call card("Daily Safe-to-Spend", "activity") %}
+                <div class="daily-spend-compact">
+                    <div class="spend-value-wrapper">
+                        <span id="daily-allowance-value" class="spend-value">--</span>
+                    </div>
+                    <p class="spend-context-text">Guilt-free capital after savings</p>
+                    <div class="spend-metrics-compact">
+                        <span class="metric-label">Monthly:</span>
+                        <span class="metric-value" id="monthly-allowance">--</span>
+                    </div>
+                </div>
             {% endcall %}
         </div>
 
-        <div class="grid">
-            <!-- Begin showing investment projection lightly -->
+        <div class="grid fade-in-up delay-2">
+            <!-- Wealth Projection -->
             {% call card("Wealth Trajectory", "activity") %}
+                <p class="card-hint">Your path to financial independence</p>
                 <div class="chart-container" id="chart-projection"></div>
                 <div class="reasoning" id="proj-context"></div>
             {% endcall %}
         </div>
     </div>
+
+    <style>
+        .ef-hero {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: var(--space-8);
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: var(--space-8);
+            margin-bottom: var(--space-6);
+            align-items: center;
+        }
+        
+        @media (max-width: 768px) {
+            .ef-hero {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            .ef-visual {
+                justify-content: center;
+            }
+        }
+        
+        .ef-visual {
+            display: flex;
+            align-items: center;
+        }
+        
+        .ef-ring {
+            position: relative;
+            width: 160px;
+            height: 160px;
+        }
+        
+        .ef-progress-ring {
+            transform: rotate(-90deg);
+        }
+        
+        .ef-track {
+            fill: none;
+            stroke: var(--bg-subtle);
+            stroke-width: 10;
+        }
+        
+        .ef-progress {
+            fill: none;
+            stroke: var(--success);
+            stroke-width: 10;
+            stroke-linecap: round;
+            stroke-dasharray: 326.7;
+            stroke-dashoffset: 130.7; /* 60% progress = 40% offset */
+            transition: stroke-dashoffset 1s ease;
+        }
+        
+        .ef-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+        
+        .ef-months {
+            display: block;
+            font-family: var(--font-mono);
+            font-size: 2.5rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+        
+        .ef-label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .ef-details h2 {
+            margin: 0 0 var(--space-2);
+            font-size: 1.5rem;
+        }
+        
+        .ef-details > p {
+            color: var(--text-secondary);
+            margin: 0 0 var(--space-4);
+        }
+        
+        .ef-stats {
+            display: flex;
+            gap: var(--space-6);
+            margin-bottom: var(--space-4);
+            flex-wrap: wrap;
+        }
+        
+        .ef-stat {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .ef-stat-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-tertiary);
+            letter-spacing: 0.05em;
+        }
+        
+        .ef-stat-value {
+            font-family: var(--font-mono);
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        
+        .ef-eta {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-2) var(--space-4);
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 100px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        
+        .ef-eta strong {
+            color: var(--success);
+        }
+        
+        .daily-spend-compact {
+            text-align: center;
+            padding: var(--space-4);
+        }
+        
+        .daily-spend-compact .spend-value {
+            font-family: var(--font-mono);
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        
+        .spend-context-text {
+            color: var(--text-tertiary);
+            font-size: 0.85rem;
+            margin: var(--space-2) 0;
+        }
+        
+        .spend-metrics-compact {
+            display: flex;
+            justify-content: center;
+            gap: var(--space-2);
+            font-size: 0.9rem;
+        }
+        
+        .spend-metrics-compact .metric-label {
+            color: var(--text-tertiary);
+        }
+        
+        .spend-metrics-compact .metric-value {
+            font-family: var(--font-mono);
+            font-weight: 500;
+        }
+        
+        .card-hint {
+            color: var(--text-tertiary);
+            font-size: 0.85rem;
+            margin-bottom: var(--space-4);
+        }
+    </style>
 {% endblock %}

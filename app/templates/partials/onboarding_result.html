@@ -20,13 +20,17 @@
     
     <h1 style="font-size: 2rem;">
         {% if level == 0 %}
-            Crisis Mode
+            Building Balance
         {% elif level == 1 %}
-            Solvency Seeker
+            Clearing the Path
         {% elif level == 2 %}
-            Stability Builder
+            Building Security
+        {% elif level == 3 %}
+            Building Wealth
+        {% elif level == 4 %}
+            Financial Independence
         {% else %}
-            Growth Architect
+            Abundance
         {% endif %}
     </h1>
     
@@ -36,18 +40,32 @@
     
     <p>
         {% if level == 0 %}
-            Your expenses exceed your income. Immediate action is required to stop the bleeding.
+            Your spending is outpacing income right now. Let's create a plan to turn that around.
         {% elif level == 1 %}
-            You are solvent, but debt is weighing you down. Your mission is to destroy it.
+            You're earning more than you spend—great foundation! Let's channel that into clearing your debt.
         {% elif level == 2 %}
-            You are debt-free! Now it's time to build a full 6-month safety net.
+            Debt-free! Now let's build a safety net that gives you peace of mind.
+        {% elif level == 3 %}
+            Strong foundation in place. Time to focus on growth and building wealth.
+        {% elif level == 4 %}
+            You're approaching the point where work becomes optional. Let's keep the momentum going.
         {% else %}
-            You have a strong foundation. It's time to optimize for wealth and freedom.
+            You've built something amazing. Time to live your rich life and create lasting impact.
         {% endif %}
     </p>
     
     <form hx-post="/api/onboarding/complete" hx-target="body">
-        <button type="submit" class="btn-primary">Enter the War Room</button>
+        <button type="submit" class="btn-primary">
+            {% if level == 0 %}
+                Let's Get Started
+            {% elif level == 1 %}
+                See Your Roadmap
+            {% elif level == 2 %}
+                Start Building
+            {% else %}
+                Explore Opportunities
+            {% endif %}
+        </button>
     </form>
 </div>
 
