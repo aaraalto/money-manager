@@ -3,175 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Select User - Radiant</title>
-    
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;700&display=swap" rel="stylesheet">
-
+    <title>Select User - Money Manager</title>
     <link rel="stylesheet" href="/static/css/variables.css">
     <link rel="stylesheet" href="/static/css/components.css">
     <style>
         body {
-            background-color: var(--bg-body);
-            color: var(--text-primary);
-            font-family: var(--font-body);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-main);
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            height: 100vh;
             margin: 0;
-            padding: var(--space-8);
         }
         .container {
             text-align: center;
-            max-width: 1200px;
-            padding: var(--space-6);
-        }
-        h1 {
-            font-family: var(--font-heading);
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: var(--space-2);
-            background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .subtitle {
-            color: var(--text-secondary);
-            font-size: 1.1rem;
-            margin-bottom: var(--space-10);
+            max-width: 600px;
         }
         .user-cards {
             display: flex;
-            gap: var(--space-6);
+            gap: 20px;
             justify-content: center;
-            flex-wrap: wrap;
+            margin-top: 40px;
         }
         .user-card {
-            background: var(--bg-card);
+            background: var(--surface-color);
             border: 1px solid var(--border-color);
-            border-radius: var(--radius-lg);
-            padding: var(--space-8);
+            border-radius: var(--radius-md);
+            padding: 30px;
             cursor: pointer;
-            transition: all 0.2s var(--ease-smooth);
-            width: 240px;
+            transition: all 0.2s;
+            width: 200px;
             text-decoration: none;
             color: inherit;
             display: flex;
             flex-direction: column;
             align-items: center;
-            position: relative;
-            overflow: hidden;
         }
         .user-card:hover {
-            transform: translateY(-4px);
-            border-color: var(--primary);
-            box-shadow: var(--shadow-md);
-            background: var(--bg-subtle);
+            transform: translateY(-5px);
+            border-color: var(--primary-color);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
         .avatar {
             width: 80px;
             height: 80px;
             border-radius: 50%;
-            background: var(--bg-subtle);
-            margin: 0 auto var(--space-4);
+            background: var(--bg-color);
+            margin: 0 auto 20px;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 32px;
+            font-weight: bold;
             border: 2px solid var(--border-color);
-            overflow: hidden;
         }
-        .avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        h2 { 
-            margin: 0 0 var(--space-2); 
-            font-family: var(--font-heading);
-            font-size: 1.25rem;
-            color: var(--text-primary);
-        }
-        .level-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            background: var(--bg-subtle);
-            border-radius: 100px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-            margin-bottom: var(--space-2);
-            border: 1px solid var(--border-subtle);
-        }
-        .desc { 
-            color: var(--text-tertiary); 
-            font-size: 0.9rem; 
-            line-height: 1.5; 
-        }
-        /* Specific colors for higher levels if desired, or keep uniform */
-        .user-card[data-level="5"] .level-badge {
-            color: var(--primary);
-            border-color: var(--primary-dim);
-            background: var(--primary-dim);
-        }
+        h2 { margin: 0 0 10px; font-size: 1.5rem;}
+        p { color: var(--text-muted); font-size: 0.9rem; margin: 0; line-height: 1.4; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Who is managing money?</h1>
-        <p class="subtitle">Select a persona to explore their financial journey.</p>
+        <h1>Select Demo Persona</h1>
+        <p class="subtitle">Choose a user profile to explore the application</p>
         
         <div class="user-cards">
-            <!-- Level 1 -->
-            <a href="/demo-select?user=euclid" class="user-card" data-level="1">
-                <div class="avatar">
-                    <img src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=160&h=160" alt="Euclid">
-                </div>
+            <a href="/onboarding" class="user-card" style="border-color: var(--primary-color);">
+                <div class="avatar" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">+</div>
+                <h2>Start Fresh</h2>
+                <p>New User</p>
+                <p>Go through onboarding</p>
+            </a>
+            <a href="/demo-select?user=euclid" class="user-card">
+                <div class="avatar">E</div>
                 <h2>Euclid</h2>
-                <div class="level-badge">Level 1</div>
-                <p class="desc">Starting the journey. Negative net worth, focused on clarity.</p>
+                <p>Level 1</p>
+                <p>Negative Net Worth</p>
             </a>
-            
-            <!-- Level 2 -->
-            <a href="/demo-select?user=bill" class="user-card" data-level="2">
-                <div class="avatar">
-                    <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=160&h=160" alt="Bill">
-                </div>
+            <a href="/demo-select?user=bill" class="user-card">
+                <div class="avatar">B</div>
                 <h2>Bill</h2>
-                <div class="level-badge">Level 2</div>
-                <p class="desc">Building stability. Positive net worth, paying off debts.</p>
-            </a>
-
-            <!-- Level 3 -->
-            <a href="/demo-select?user=level3" class="user-card" data-level="3">
-                <div class="avatar">
-                    <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=160&h=160" alt="Ada">
-                </div>
-                <h2>Ada</h2>
-                <div class="level-badge">Level 3</div>
-                <p class="desc">Accumulation phase. Debt-free, building diversified assets.</p>
-            </a>
-
-            <!-- Level 4 -->
-            <a href="/demo-select?user=level4" class="user-card" data-level="4">
-                <div class="avatar">
-                    <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=160&h=160" alt="Grace">
-                </div>
-                <h2>Grace</h2>
-                <div class="level-badge">Level 4</div>
-                <p class="desc">Growth & Expansion. Optimizing portfolio and tax efficiency.</p>
-            </a>
-
-            <!-- Level 5 -->
-            <a href="/demo-select?user=level5" class="user-card" data-level="5">
-                <div class="avatar">
-                    <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=160&h=160" alt="Turing">
-                </div>
-                <h2>Turing</h2>
-                <div class="level-badge">Level 5</div>
-                <p class="desc">Abundance. Wealth preservation, legacy, and philanthropy.</p>
+                <p>Level 2</p>
+                <p>Positive Net Worth</p>
             </a>
         </div>
     </div>

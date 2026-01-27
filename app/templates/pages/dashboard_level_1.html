@@ -1,0 +1,120 @@
+{% extends "layouts/base.html" %}
+{% from "components/atoms.html" import button, icon %}
+{% from "components/molecules.html" import card, stat, kpi_box, alert, dashboard_header with context %}
+
+{% block title %}Radiant - Debt Resolution{% endblock %}
+
+{% block extra_js %}
+<script type="module" src="/static/js/modules/main.js"></script>
+{% endblock %}
+
+{% block content %}
+    {{ dashboard_header("Level 1: Clearing the Path", "badge badge-warning", "", "", "", "Adjust Strategy", "sliders", user.current_level|default(1)) }}
+
+    <div id="loading">Calculating payoff trajectory...</div>
+
+    <div id="dashboard" class="hidden">
+        <!-- Hero Section: Daily Capacity -->
+        <div class="hero-allowance-container fade-in-up">
+             <div class="hero-content">
+                 <div class="hero-label">Daily Safe-to-Spend</div>
+                 <div class="hero-value-row">
+                    <div class="hero-allowance-value" id="hero-safe-spend">--</div>
+                 </div>
+                 <div class="hero-allowance-sub">Guilt-free capital. After all obligations.</div>
+             </div>
+             
+             <div class="system-integrity-panel">
+                 <div class="integrity-item" id="status-fixed">
+                     <div class="led-indicator"></div>
+                     <span class="integrity-label">Fixed Costs</span>
+                 </div>
+                 <div class="integrity-item" id="status-debt">
+                     <div class="led-indicator"></div>
+                     <span class="integrity-label">Debt Strategy</span>
+                 </div>
+                 <div class="integrity-item" id="status-savings">
+                     <div class="led-indicator"></div>
+                     <span class="integrity-label">Auto-Savings</span>
+                 </div>
+             </div>
+        </div>
+
+        <div class="section-header fade-in-up delay-1">
+            <h3>The War Room</h3>
+            <p>Strategic Debt Elimination</p>
+        </div>
+
+        <!-- Level 1 Focus: Debt Payoff -->
+        <div class="dashboard-overview fade-in-up delay-2">
+             {% call card("Debt Resolution Status", "shield") %}
+                <div class="stat">
+                    <div class="stat-label">Total Liabilities</div>
+                    <div class="stat-value" id="nw-debt">--</div>
+                </div>
+                <div class="separator"></div>
+                <div class="stat">
+                    <div class="stat-label">Payoff Velocity</div>
+                    <div class="stat-value text-success" id="payoff-velocity">--</div>
+                    <div class="stat-change positive">per month</div>
+                </div>
+            {% endcall %}
+
+            {% call card("Current Strategy", "crosshair") %}
+                 {{ alert("Avalanche Method", "Targeting highest interest rate (24.99%) first to minimize loss.", "info") }}
+                 <div class="kpi-row">
+                     {{ kpi_box("Freedom Date", id="freedom-date") }}
+                     {{ kpi_box("Interest Saved", id="interest-saved") }}
+                 </div>
+                 <div class="strategy-action">
+                     <a href="/simulator" class="btn-strategy">
+                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
+                             <circle cx="12" cy="12" r="3"></circle>
+                             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                         </svg>
+                         Adjust Strategy
+                     </a>
+                 </div>
+            {% endcall %}
+        </div>
+
+        <div class="grid fade-in-up delay-3">
+            <!-- Debt Payoff Chart is the Hero here -->
+            {% call card("Freedom Trajectory", "trending-down") %}
+                <div class="chart-container" id="chart-debt"></div>
+                <div class="reasoning" id="debt-reasoning"></div>
+            {% endcall %}
+        </div>
+    </div>
+    <style>
+        .btn-strategy {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-3) var(--space-5);
+            background: var(--bg-subtle);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 100px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s var(--ease-smooth);
+        }
+        
+        .btn-strategy:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .strategy-action {
+            border-top: 1px solid var(--border-color);
+            padding-top: var(--space-4);
+            margin-top: var(--space-4);
+            text-align: center;
+        }
+    </style>
+    {% endblock %}

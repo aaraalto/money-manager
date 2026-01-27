@@ -255,21 +255,18 @@ def audit(args):
         print("\nPASSED: Data integrity verified.")
 
 def serve(args):
-    print(f"\033[32m{RADIANT_BANNER}\033[0m")
+    print_banner()
+    print(f"\n{Colors.DIM}{TAGLINE}{Colors.RESET}")
     port = args.port
-    print(f"\n🚀 System Initialized. Starting Radiant Server...")
-    print(f"   • Dashboard:     http://localhost:{port}")
-    print(f"   • API Docs:      http://localhost:{port}/docs")
-    print("\n   Use 'Ctrl+C' to stop the server.")
-    print("-" * 60)
+    print(f"\n  {Colors.WHITE}Server running at{Colors.RESET} {Colors.GREEN2}http://localhost:{port}{Colors.RESET}")
+    print(f"\n  {Colors.DIM}Press Ctrl+C to stop{Colors.RESET}\n")
     
     import uvicorn
-    # Configure logging to be cleaner if possible, or just run
-    uvicorn.run("app.main:app", host="127.0.0.1", port=port, reload=args.reload, log_level="info")
+    uvicorn.run("app.main:app", host="127.0.0.1", port=port, reload=args.reload, log_level="warning")
 
 def main():
-    parser = argparse.ArgumentParser(description="Wealth OS CLI Manager")
-    subparsers = parser.add_subparsers(dest="command", help="Command to execute")
+    parser = argparse.ArgumentParser(description="Radiant - Personal Finance Tool")
+    subparsers = parser.add_subparsers(dest="command", help="Available commands")
     
     # Add Asset
     asset_parser = subparsers.add_parser("add-asset", help="Add a new asset")
@@ -326,19 +323,49 @@ def main():
     if hasattr(args, "func"):
         args.func(args)
     else:
-        print(f"\033[32m{RADIANT_BANNER}\033[0m")
-        print("Welcome to Radiant - Your Personal Financial OS")
-        print("Use './manage.sh --help' to see available commands.\n")
-        parser.print_help()
+        print_welcome()
 
-RADIANT_BANNER = r"""
-██████╗  █████╗ ██████╗ ██╗ █████╗ ███╗   ██╗████████╗
-██╔══██╗██╔══██╗██╔══██╗██║██╔══██╗████╗  ██║╚══██╔══╝
-██████╔╝███████║██║  ██║██║███████║██╔██╗ ██║   ██║   
-██╔══██╗██╔══██║██║  ██║██║██╔══██║██║╚██╗██║   ██║   
-██║  ██║██║  ██║██████╔╝██║██║  ██║██║ ╚████║   ██║   
-╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝   ╚═╝   
-"""
+# ANSI color codes
+class Colors:
+    RESET = "\033[0m"
+    BOLD = "\033[1m"
+    DIM = "\033[2m"
+    # Green gradient (256-color mode) - bright to darker
+    GREEN1 = "\033[38;5;48m"   # Brightest
+    GREEN2 = "\033[38;5;41m"
+    GREEN3 = "\033[38;5;35m"
+    GREEN4 = "\033[38;5;29m"
+    GREEN5 = "\033[38;5;23m"
+    GREEN6 = "\033[38;5;22m"   # Darkest
+    WHITE = "\033[97m"
+    GRAY = "\033[90m"
+
+BANNER_LINES = [
+    "  ██████╗  █████╗ ██████╗ ██╗ █████╗ ███╗   ██╗████████╗",
+    "  ██╔══██╗██╔══██╗██╔══██╗██║██╔══██╗████╗  ██║╚══██╔══╝",
+    "  ██████╔╝███████║██║  ██║██║███████║██╔██╗ ██║   ██║   ",
+    "  ██╔══██╗██╔══██║██║  ██║██║██╔══██║██║╚██╗██║   ██║   ",
+    "  ██║  ██║██║  ██║██████╔╝██║██║  ██║██║ ╚████║   ██║   ",
+    "  ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝   ╚═╝   ",
+]
+
+GRADIENT = [Colors.GREEN1, Colors.GREEN2, Colors.GREEN3, Colors.GREEN4, Colors.GREEN5, Colors.GREEN6]
+
+TAGLINE = "  See your money clearly. Take control of your future."
+
+def print_banner():
+    print()
+    for i, line in enumerate(BANNER_LINES):
+        print(f"{GRADIENT[i]}{line}{Colors.RESET}")
+
+def print_welcome():
+    print_banner()
+    print(f"\n{Colors.DIM}{TAGLINE}{Colors.RESET}")
+    print(f"\n  {Colors.GRAY}┌─ Quick Start ─────────────────────────────────────┐{Colors.RESET}")
+    print(f"  {Colors.GRAY}│{Colors.RESET}  {Colors.WHITE}{Colors.BOLD}serve{Colors.RESET}        Start the app                       {Colors.GRAY}│{Colors.RESET}")
+    print(f"  {Colors.GRAY}│{Colors.RESET}  {Colors.WHITE}{Colors.BOLD}--help{Colors.RESET}       See all commands                    {Colors.GRAY}│{Colors.RESET}")
+    print(f"  {Colors.GRAY}└───────────────────────────────────────────────────┘{Colors.RESET}")
+    print()
 
 if __name__ == "__main__":
     main()

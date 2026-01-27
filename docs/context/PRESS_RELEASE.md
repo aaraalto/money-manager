@@ -29,5 +29,5 @@ Radiant is a personal finance platform focused on financial empowerment through 
 
 **Media Contact:**
 Press Team
-press@radiant-app.com
+[Contact information]
 

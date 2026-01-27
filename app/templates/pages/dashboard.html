@@ -1,0 +1,281 @@
+{% extends "layouts/base.html" %}
+{% from "components/atoms.html" import button, icon %}
+{% from "components/molecules.html" import card, stat, kpi_box, alert, dashboard_header with context %}
+
+{% block title %}Radiant - Crisis Mode{% endblock %}
+
+{% block extra_js %}
+<script type="module" src="/static/js/modules/main.js"></script>
+{% endblock %}
+
+{% block content %}
+    {{ dashboard_header("Level 0: Building Balance", "badge badge-warning", "", "", "", "Review Budget", "list", user.current_level|default(0)) }}
+
+    <div id="loading">Analyzing cash flow...</div>
+
+    <div id="dashboard" class="hidden">
+        <!-- Crisis Alert Banner -->
+        <div class="crisis-banner fade-in-up">
+            <div class="crisis-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+            </div>
+            <div class="crisis-content">
+                <h2>Cash Flow Emergency</h2>
+                <p>Your expenses exceed your income. Immediate action required to stop the bleeding.</p>
+            </div>
+        </div>
+
+        <!-- Level 0 Focus: Stop the Bleeding -->
+        <div class="dashboard-overview fade-in-up delay-1">
+            <!-- 1. Monthly Deficit -->
+            {% call card("Monthly Deficit", "alert-triangle") %}
+                <div class="deficit-container">
+                    <div class="deficit-header">
+                        <span class="label-mono">Monthly Shortfall</span>
+                        <div class="deficit-value-wrapper">
+                            <span id="monthly-deficit" class="deficit-value text-danger">--</span>
+                        </div>
+                    </div>
+                    
+                    <div class="deficit-breakdown">
+                        <div class="breakdown-item">
+                            <span class="breakdown-label">Income</span>
+                            <span class="breakdown-value text-success" id="crisis-income">--</span>
+                        </div>
+                        <div class="breakdown-divider">-</div>
+                        <div class="breakdown-item">
+                            <span class="breakdown-label">Expenses</span>
+                            <span class="breakdown-value text-danger" id="crisis-expenses">--</span>
+                        </div>
+                    </div>
+                    
+                    <div class="runway-warning">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <span>Runway: <strong id="crisis-runway">--</strong> days</span>
+                    </div>
+                </div>
+            {% endcall %}
+
+            <!-- 2. Quick Wins -->
+            {% call card("Immediate Actions", "zap") %}
+                <div class="actions-list">
+                    <div class="action-item priority-high">
+                        <div class="action-icon">1</div>
+                        <div class="action-content">
+                            <strong>Cut Non-Essentials</strong>
+                            <p>Review subscriptions and discretionary spending</p>
+                        </div>
+                        <a href="/spending-editor" class="action-btn">Review</a>
+                    </div>
+                    <div class="action-item priority-medium">
+                        <div class="action-icon">2</div>
+                        <div class="action-content">
+                            <strong>Negotiate Bills</strong>
+                            <p>Call providers to reduce fixed costs</p>
+                        </div>
+                    </div>
+                    <div class="action-item priority-low">
+                        <div class="action-icon">3</div>
+                        <div class="action-content">
+                            <strong>Increase Income</strong>
+                            <p>Side gigs, overtime, or selling items</p>
+                        </div>
+                    </div>
+                </div>
+            {% endcall %}
+        </div>
+
+        <!-- Expense Breakdown for Analysis -->
+        <div class="grid fade-in-up delay-2">
+            {% call card("Expense Analysis", "pie-chart") %}
+                <p class="card-subtitle">Find where your money is going</p>
+                <div class="expense-composition-wrapper" style="display: flex; flex-direction: column; align-items: center; height: 100%;">
+                    <div class="chart-container" id="chart-spending" style="width: 100%; height: 400px;"></div>
+                </div>
+            {% endcall %}
+        </div>
+    </div>
+
+    <style>
+        .crisis-banner {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.05) 100%);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: var(--radius-xl);
+            padding: var(--space-6);
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+            margin-bottom: var(--space-6);
+        }
+        
+        .crisis-icon {
+            flex-shrink: 0;
+            width: 48px;
+            height: 48px;
+            background: rgba(239, 68, 68, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--danger);
+        }
+        
+        .crisis-icon svg {
+            width: 24px;
+            height: 24px;
+        }
+        
+        .crisis-content h2 {
+            margin: 0 0 var(--space-1);
+            color: var(--danger);
+            font-size: 1.25rem;
+        }
+        
+        .crisis-content p {
+            margin: 0;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .deficit-container {
+            text-align: center;
+        }
+        
+        .deficit-header {
+            margin-bottom: var(--space-4);
+        }
+        
+        .deficit-value {
+            font-family: var(--font-mono);
+            font-size: 3rem;
+            font-weight: 700;
+            letter-spacing: -2px;
+        }
+        
+        .deficit-breakdown {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: var(--space-4);
+            margin: var(--space-4) 0;
+            padding: var(--space-4);
+            background: var(--bg-subtle);
+            border-radius: var(--radius-lg);
+        }
+        
+        .breakdown-item {
+            text-align: center;
+        }
+        
+        .breakdown-label {
+            display: block;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-tertiary);
+            margin-bottom: var(--space-1);
+        }
+        
+        .breakdown-value {
+            font-family: var(--font-mono);
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        
+        .breakdown-divider {
+            font-size: 1.5rem;
+            color: var(--text-tertiary);
+        }
+        
+        .runway-warning {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-2) var(--space-4);
+            background: rgba(239, 68, 68, 0.1);
+            border-radius: 100px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        
+        .runway-warning strong {
+            color: var(--danger);
+        }
+        
+        .actions-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+        }
+        
+        .action-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-4);
+            background: var(--bg-subtle);
+            border-radius: var(--radius-lg);
+            border-left: 3px solid;
+        }
+        
+        .action-item.priority-high { border-left-color: var(--danger); }
+        .action-item.priority-medium { border-left-color: var(--warning); }
+        .action-item.priority-low { border-left-color: var(--text-tertiary); }
+        
+        .action-icon {
+            width: 28px;
+            height: 28px;
+            background: var(--bg-card);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+        
+        .action-content {
+            flex: 1;
+        }
+        
+        .action-content strong {
+            display: block;
+            margin-bottom: 2px;
+        }
+        
+        .action-content p {
+            margin: 0;
+            font-size: 0.8rem;
+            color: var(--text-tertiary);
+        }
+        
+        .action-btn {
+            padding: var(--space-2) var(--space-4);
+            background: var(--primary);
+            color: white;
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        
+        .action-btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+        
+        .card-subtitle {
+            color: var(--text-tertiary);
+            font-size: 0.9rem;
+            margin-bottom: var(--space-4);
+        }
+    </style>
+{% endblock %}

@@ -7,14 +7,7 @@
     
     /* Typography - Tighter scaling for Simulator */
     --sim-kpi-value-size: clamp(1.8rem, 3vw, 2.5rem);
-    --sim-rotary-size: clamp(4rem, 7vw, 6rem);
-}
-
-/* Global Resets */
-body {
-    overflow-x: hidden;
-    width: 100%;
-    cursor: auto; /* Override any potential weirdness */
+    --sim-rotary-size: clamp(3rem, 5vw, 4.5rem);
 }
 
 /* Back Link Styling */
@@ -61,11 +54,6 @@ h1 {
     animation: fadeInDown 0.6s var(--ease-smooth);
 }
 
-.app-header h1 {
-    margin-bottom: 0;
-    text-align: left;
-}
-
 @keyframes fadeInDown {
     from {
         opacity: 0;
@@ -83,30 +71,23 @@ h1 {
     grid-template-columns: 1fr;
     width: 100%;
     gap: var(--space-6);
-    align-items: stretch; /* Changed from start to stretch for full height */
+    align-items: start;
     padding-bottom: var(--space-16); /* Ensure scroll space on mobile */
-    min-height: calc(100vh - 140px); /* Minimum height */
 }
 
 @media (min-width: 1024px) {
     .simulation-layout {
         grid-template-columns: 40% 1fr; /* 40/60 Split */
-        gap: var(--space-8); /* Slightly tighter gap */
-        align-items: stretch; /* Ensure full height columns */
+        gap: var(--space-10);
+        align-items: start; /* Align top */
         padding-bottom: 0;
     }
 
     .controls-section {
-        position: relative; /* Changed from sticky to relative */
-        /* Removed max-height and top to allow flex centering */
-        padding-top: 0; 
-        padding-bottom: 0;
-        display: flex;
-        flex-direction: column;
-        justify-content: center; /* Center vertically */
-        align-items: center; /* Center horizontally */
-        height: 100%; /* Full height */
-        min-height: 600px; /* Ensure enough height for graph */
+        position: sticky;
+        top: var(--space-8);
+        max-height: calc(100vh - var(--space-16));
+        overflow-y: auto; /* Allow scrolling within controls if needed */
     }
 }
 
@@ -114,19 +95,9 @@ h1 {
 .controls-section {
     display: flex;
     flex-direction: column;
-    gap: var(--space-6);
+    gap: var(--space-8);
     /* Add padding to prevent edge touches from triggering drag accidentally */
     padding: var(--space-4) 0; 
-}
-
-/* Wrapper for Rotary to center it */
-.rotary-container-wrapper {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-    flex: 1;
 }
 
 .control-panel {
@@ -148,16 +119,16 @@ h1 {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: var(--space-4);
+    margin-bottom: var(--space-6);
     padding: 0 var(--space-4);
-    gap: var(--space-4); /* Add gap between metrics */
+    gap: var(--space-6);
 }
 
 .hero-metric {
     display: flex;
     flex-direction: column;
-    gap: var(--space-1);
-    flex: 1; /* Distribute space evenly */
+    gap: var(--space-2);
+    flex: 1;
 }
 
 .hero-metric .label {
@@ -217,7 +188,6 @@ h1 {
 
 /* Generated Output Card */
 .generated-card {
-    position: relative;
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-xl);
@@ -631,8 +601,8 @@ h1 {
 /* Rotary Dial */
 .rotary-container {
     position: relative;
-    width: min(85vw, 420px); /* Adjusted for shadow overflow */
-    height: min(85vw, 420px);
+    width: min(80vw, 350px); /* Slightly smaller max width */
+    height: min(80vw, 350px);
     margin: 0 auto;
     user-select: none;
     display: flex;
@@ -643,8 +613,8 @@ h1 {
 
 @media (min-width: 1024px) {
     .rotary-container {
-        width: min(60vh, 440px); /* More balanced size */
-        height: min(60vh, 440px);
+        width: min(60vh, 400px);
+        height: min(60vh, 400px);
     }
 }
 
@@ -822,9 +792,9 @@ h1 {
 
 .rotary-label {
     display: block;
-    font-size: clamp(0.85rem, 1.5vw, 1rem);
+    font-size: clamp(0.75rem, 1.2vw, 0.9rem);
     color: var(--text-tertiary);
-    margin-top: var(--space-2);
+    margin-top: var(--space-1);
     text-transform: uppercase;
     letter-spacing: 3px;
     font-weight: 500;
@@ -832,31 +802,31 @@ h1 {
 
 /* Divider & Limit Display */
 .rotary-divider {
-    width: 60px;
+    width: 40px;
     height: 1px;
     background: var(--border-color);
-    margin: var(--space-5) 0;
+    margin: var(--space-4) 0;
     transition: background-color 0.3s var(--ease-smooth);
 }
 
 .rotary-limit-display {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
     pointer-events: auto; /* Allow tooltip hover */
 }
 
 .limit-label {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     text-transform: uppercase;
-    letter-spacing: 1.5px;
+    letter-spacing: 1px;
     color: var(--text-tertiary);
     display: inline-block;
 }
 
 .limit-value {
     font-family: var(--font-mono);
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     color: var(--text-secondary);
     font-weight: 500;
 }
@@ -882,6 +852,45 @@ h1 {
 
 .is-over-limit .limit-value {
     color: var(--danger);
+}
+
+/* Dragging State */
+.is-dragging .rotary-knob-visual {
+    cursor: grabbing;
+}
+
+.is-dragging .rotary-progress {
+    stroke: var(--primary);
+    filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.3));
+}
+
+.is-dragging .rotary-amount {
+    color: var(--primary);
+}
+
+/* Preview State - Subtle indicator during live preview */
+.is-previewing::after {
+    content: '';
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 8px;
+    height: 8px;
+    background: var(--primary);
+    border-radius: 50%;
+    opacity: 0.8;
+    animation: previewPulse 1s ease-in-out infinite;
+}
+
+@keyframes previewPulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 0.5;
+    }
 }
 
 /* Shake Animation */
@@ -913,120 +922,3 @@ h1 {
     }
 }
 
-/* --- EMPTY STATE (Quiet & Inevitable) --- */
-.empty-state-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: var(--space-10) var(--space-6);
-    text-align: center;
-    min-height: 300px;
-    color: var(--text-secondary);
-}
-
-.empty-icon {
-    color: var(--text-tertiary);
-    margin-bottom: var(--space-4);
-    opacity: 0.6;
-    transition: transform 0.3s var(--ease-smooth);
-}
-
-.empty-state-wrapper:hover .empty-icon {
-    transform: scale(1.05);
-    opacity: 0.8;
-}
-
-.empty-state-wrapper h3 {
-    font-family: var(--font-body);
-    font-weight: 500;
-    font-size: 1.1rem;
-    margin-bottom: var(--space-2);
-    color: var(--text-primary);
-}
-
-.empty-state-wrapper p {
-    font-size: 0.9rem;
-    color: var(--text-tertiary);
-    margin-bottom: var(--space-6);
-    max-width: 280px;
-    line-height: 1.5;
-}
-
-.btn-quiet {
-    background: var(--bg-subtle);
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
-    padding: 0.6rem 1.2rem;
-    border-radius: 100px;
-    font-size: 0.85rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s var(--ease-smooth);
-}
-
-.btn-quiet:hover {
-    background: var(--bg-card-hover);
-    border-color: var(--primary);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-sm);
-}
-
-/* --- SKELETON LOADING (Fanatical Care) --- */
-/* 
-   We apply this when htmx-request is active.
-   We use a structured skeleton to preserve layout weight.
-*/
-
-.skeleton-wrapper {
-    width: 100%;
-    opacity: 0;
-    pointer-events: none;
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 10;
-    background: var(--bg-card);
-    transition: opacity 0.2s var(--ease-smooth);
-    height: 100%;
-}
-
-/* When container is loading, show skeleton overlay */
-.htmx-request .skeleton-wrapper {
-    opacity: 1;
-    pointer-events: auto;
-}
-
-.skeleton-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: var(--space-4);
-    border-bottom: 1px solid var(--border-subtle);
-}
-
-.skeleton-bar {
-    height: 1rem;
-    border-radius: 4px;
-    background: var(--bg-subtle);
-    overflow: hidden;
-    position: relative;
-}
-
-.skeleton-bar::after {
-    content: "";
-    position: absolute;
-    top: 0; 
-    left: 0;
-    width: 100%;
-    height: 100%;
-    transform: translateX(-100%);
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
-    animation: skeleton-shimmer 1.5s infinite;
-}
-
-@keyframes skeleton-shimmer {
-    100% {
-        transform: translateX(100%);
-    }
-}

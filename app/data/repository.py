@@ -7,19 +7,19 @@ from typing import Dict, List, Optional, Type, TypeVar, Union, Any
 from datetime import datetime
 from uuid import UUID
 
-from app.models import Asset, Liability, IncomeSource, SpendingCategory, Transaction, UserProfile
+from app.models import Asset, Liability, IncomeSource, SpendingCategory, Transaction, UserProfile, AssetType
+from app.core.logging import get_logger
 
-T = TypeVar("T", bound=Union[Asset, Liability, IncomeSource, SpendingCategory, UserProfile])
+# Module logger
+logger = get_logger("repository")
 
-# Singleton In-Memory Cache
-# Key: file_path string, Value: data object
-_GLOBAL_CACHE: Dict[str, Any] = {}
-# Key: file_path string, Value: last modification timestamp
-_GLOBAL_MTIMES: Dict[str, float] = {}
+T = TypeVar("T", bound=Union[Asset, Liability, IncomeSource])
 
 class FileRepository:
     def __init__(self, root_dir: Path = Path("data")):
         self.root_dir = root_dir
+        self._cache: Dict[str, Any] = {}
+        self._mtimes: Dict[str, float] = {}
 
     @property
     def assets_file(self) -> Path:
@@ -49,29 +49,23 @@ class FileRepository:
     def user_file(self) -> Path:
         return self.root_dir / "user.json"
 
-    async def _load_json_async(self, file_path: Path, model: Type[T], is_list: bool = True) -> Union[List[T], T]:
+    async def _load_json_async(self, file_path: Path, model: Type[T]) -> List[T]:
         """
         Loads JSON data asynchronously with caching based on file modification time.
-        Uses a global cache to persist across requests.
         """
         file_str = str(file_path)
         
         # Check if file exists
         if not await asyncio.to_thread(file_path.exists):
-            if is_list:
-                return []
-            # For single objects like UserProfile, we might need a default handler, 
-            # but strictly following this generic method, we return None or let caller handle.
-            # However, based on usage, we'll handle specifics in caller or return empty.
-            return [] if is_list else None
+            return []
 
         # Check modification time
         stats = await asyncio.to_thread(file_path.stat)
         mtime = stats.st_mtime
 
         # Return cached data if file hasn't changed
-        if file_str in _GLOBAL_CACHE and _GLOBAL_MTIMES.get(file_str) == mtime:
-            return _GLOBAL_CACHE[file_str]
+        if file_str in self._cache and self._mtimes.get(file_str) == mtime:
+            return self._cache[file_str]
 
         # Load data
         try:
@@ -80,33 +74,28 @@ class FileRepository:
                     return json.load(f)
 
             data = await asyncio.to_thread(read_json)
+            if not isinstance(data, list):
+                logger.warning(f"File {file_path} does not contain a list, got {type(data)}")
+                return []
             
-            # Helper function to clean up invalid UUID IDs
-            def clean_item(item: dict) -> dict:
-                """Remove invalid UUID IDs to let Pydantic generate new ones."""
-                if 'id' in item:
-                    try:
-                        # Try to parse as UUID - if it fails, remove it
-                        UUID(str(item['id']))
-                    except (ValueError, TypeError):
-                        # Not a valid UUID, remove it so model generates one
-                        item = item.copy()
-                        del item['id']
-                return item
-            
-            if is_list:
-                items = [model(**clean_item(item)) for item in data]
-                result = items
-            else:
-                result = model(**clean_item(data))
+            items = []
+            for item in data:
+                try:
+                    items.append(model(**item))
+                except Exception as e:
+                    logger.warning(f"Skipping invalid item in {file_path}: {e}")
+                    continue
             
             # Update cache
-            _GLOBAL_CACHE[file_str] = result
-            _GLOBAL_MTIMES[file_str] = mtime
-            return result
+            self._cache[file_str] = items
+            self._mtimes[file_str] = mtime
+            return items
         except (json.JSONDecodeError, OSError) as e:
-            print(f"Error loading {file_path}: {e}")
-            return [] if is_list else None
+            logger.error(f"Error loading {file_path}: {e}")
+            return []
+        except Exception as e:
+            logger.error(f"Unexpected error loading {file_path}: {e}")
+            return []
 
     async def get_assets(self) -> List[Asset]:
         return await self._load_json_async(self.assets_file, Asset)
@@ -118,40 +107,57 @@ class FileRepository:
         return await self._load_json_async(self.income_file, IncomeSource)
 
     async def get_spending_plan(self) -> List[SpendingCategory]:
-        # Check for CSV migration first
-        if not await asyncio.to_thread(self.spending_file.exists) and await asyncio.to_thread(self.spending_csv_file.exists):
-             return await self._migrate_spending_csv()
+        file_str = str(self.spending_file)
+        
+        # 1. Try loading JSON first
+        if await asyncio.to_thread(self.spending_file.exists):
+            stats = await asyncio.to_thread(self.spending_file.stat)
+            mtime = stats.st_mtime
 
-        return await self._load_json_async(self.spending_file, SpendingCategory)
-
-    async def _migrate_spending_csv(self) -> List[SpendingCategory]:
-        def read_csv():
-            items = []
-            try:
-                with open(self.spending_csv_file, "r") as f:
-                    reader = csv.DictReader(f, skipinitialspace=True)
-                    for row in reader:
-                        if not row or not row.get('category'): continue
-                        clean_row = {k: v.strip() if isinstance(v, str) else v for k, v in row.items()}
-                        if 'amount' in clean_row and isinstance(clean_row['amount'], str):
-                            try:
-                                clean_row['amount'] = float(clean_row['amount'])
-                            except ValueError:
-                                continue
-                        items.append(SpendingCategory(**clean_row))
-            except Exception as e:
-                print(f"Error reading spending file: {e}")
-            return items
+            if file_str in self._cache and self._mtimes.get(file_str) == mtime:
+                return self._cache[file_str]
             
-        items = await asyncio.to_thread(read_csv)
-        await self.save_spending_plan(items)
-        return items
+            items = await self._load_json_async(self.spending_file, SpendingCategory)
+            self._cache[file_str] = items
+            self._mtimes[file_str] = mtime
+            return items
+
+        # 2. Fallback to CSV migration
+        if await asyncio.to_thread(self.spending_csv_file.exists):
+             def read_csv():
+                items = []
+                try:
+                    with open(self.spending_csv_file, "r") as f:
+                        reader = csv.DictReader(f, skipinitialspace=True)
+                        for row in reader:
+                            if not row or not row.get('category'): continue
+                            clean_row = {k: v.strip() if isinstance(v, str) else v for k, v in row.items()}
+                            # Convert amount to float if it's a string
+                            if 'amount' in clean_row and isinstance(clean_row['amount'], str):
+                                try:
+                                    clean_row['amount'] = float(clean_row['amount'])
+                                except ValueError:
+                                    logger.warning(f"Could not convert amount '{clean_row['amount']}' to float, skipping row")
+                                    continue
+                            items.append(SpendingCategory(**clean_row))
+                except Exception as e:
+                    logger.error(f"Error reading spending file: {e}")
+                return items
+             
+             items = await asyncio.to_thread(read_csv)
+             # Save as JSON to complete migration
+             await self.save_spending_plan(items)
+             return items
+
+        return []
 
     async def save_spending_plan(self, items: List[SpendingCategory]):
         def write_json():
             self.spending_file.parent.mkdir(exist_ok=True)
             with open(self.spending_file, "w") as f:
+                 # Handle serialization safely
                 data = [item.dict() for item in items]
+                # Convert UUIDs to strings for JSON
                 for d in data:
                     if 'id' in d and isinstance(d['id'], UUID):
                         d['id'] = str(d['id'])
@@ -159,10 +165,12 @@ class FileRepository:
         
         await asyncio.to_thread(write_json)
         # Invalidate cache
-        if str(self.spending_file) in _GLOBAL_MTIMES:
-            del _GLOBAL_MTIMES[str(self.spending_file)]
+        if str(self.spending_file) in self._mtimes:
+            del self._mtimes[str(self.spending_file)]
 
     async def get_transactions(self) -> List[Transaction]:
+        # Similar logic for transactions if needed
+        # For now, implementing basic loading
         def read_transactions():
             if not self.transactions_file.exists():
                 return []
@@ -170,37 +178,68 @@ class FileRepository:
             try:
                 with open(self.transactions_file, "r") as f:
                     f.seek(0, os.SEEK_END)
-                    if f.tell() == 0: return []
+                    if f.tell() == 0:
+                        return []
                     f.seek(0)
                     reader = csv.DictReader(f)
                     for row in reader:
                         if not row: continue
                         transactions.append(Transaction(**row))
             except Exception as e:
-                print(f"Error reading transactions: {e}")
+                logger.error(f"Error reading transactions: {e}")
             return transactions
 
         return await asyncio.to_thread(read_transactions)
 
     async def get_user_profile(self) -> UserProfile:
+        file_str = str(self.user_file)
+        
+        # Check if file exists
         if not await asyncio.to_thread(self.user_file.exists):
+            # Create default profile if missing
             default_profile = UserProfile(name="Euclid")
             await self.save_user_profile(default_profile)
             return default_profile
 
-        profile = await self._load_json_async(self.user_file, UserProfile, is_list=False)
-        if profile is None:
+        # Check modification time
+        stats = await asyncio.to_thread(self.user_file.stat)
+        mtime = stats.st_mtime
+
+        # Return cached data if file hasn't changed
+        if file_str in self._cache and self._mtimes.get(file_str) == mtime:
+            return self._cache[file_str]
+
+        # Load data
+        try:
+            def read_json():
+                with open(self.user_file, "r") as f:
+                    return json.load(f)
+
+            data = await asyncio.to_thread(read_json)
+            profile = UserProfile(**data)
+            
+            # Update cache
+            self._cache[file_str] = profile
+            self._mtimes[file_str] = mtime
+            return profile
+        except (json.JSONDecodeError, OSError) as e:
+            logger.error(f"Error loading {self.user_file}: {e}")
+            # Fallback to default in case of error
             return UserProfile(name="Euclid")
-        return profile
 
     async def save_user_profile(self, profile: UserProfile):
         def write_json():
             self.user_file.parent.mkdir(exist_ok=True)
             with open(self.user_file, "w") as f:
+                # Use mode='json' (or model_dump for Pydantic v2) to serialize
+                # Since we might be on Pydantic v1 or v2, let's be safe. 
+                # Assuming Pydantic v1 based on existing code using .dict()
+                # If v2, use model_dump()
                 try:
                     data = profile.model_dump()
                 except AttributeError:
                     data = profile.dict()
+                # Handle UUID serialization
                 json.dump(data, f, indent=2, default=str)
         
         await asyncio.to_thread(write_json)
@@ -208,5 +247,85 @@ class FileRepository:
         file_str = str(self.user_file)
         if await asyncio.to_thread(self.user_file.exists):
             stats = await asyncio.to_thread(self.user_file.stat)
-            _GLOBAL_MTIMES[file_str] = stats.st_mtime
-            _GLOBAL_CACHE[file_str] = profile
+            self._mtimes[file_str] = stats.st_mtime
+            self._cache[file_str] = profile
+
+    async def save_income(self, items: List[IncomeSource]):
+        """Save income sources to JSON file."""
+        def write_json():
+            self.income_file.parent.mkdir(exist_ok=True)
+            with open(self.income_file, "w") as f:
+                data = []
+                for item in items:
+                    try:
+                        d = item.model_dump()
+                    except AttributeError:
+                        d = item.dict()
+                    data.append(d)
+                json.dump(data, f, indent=2, default=str)
+        
+        await asyncio.to_thread(write_json)
+        # Invalidate cache
+        file_str = str(self.income_file)
+        if file_str in self._mtimes:
+            del self._mtimes[file_str]
+        if file_str in self._cache:
+            del self._cache[file_str]
+
+    async def save_liabilities(self, items: List[Liability]):
+        """Save liabilities to JSON file."""
+        def write_json():
+            self.liabilities_file.parent.mkdir(exist_ok=True)
+            with open(self.liabilities_file, "w") as f:
+                data = []
+                for item in items:
+                    try:
+                        d = item.model_dump()
+                    except AttributeError:
+                        d = item.dict()
+                    # Convert UUIDs to strings
+                    if 'id' in d and isinstance(d['id'], UUID):
+                        d['id'] = str(d['id'])
+                    # Convert enum values to strings
+                    if 'tags' in d:
+                        d['tags'] = [t.value if hasattr(t, 'value') else t for t in d['tags']]
+                    data.append(d)
+                json.dump(data, f, indent=2, default=str)
+        
+        await asyncio.to_thread(write_json)
+        # Invalidate cache
+        file_str = str(self.liabilities_file)
+        if file_str in self._mtimes:
+            del self._mtimes[file_str]
+        if file_str in self._cache:
+            del self._cache[file_str]
+
+    async def save_assets(self, items: List[Asset]):
+        """Save assets to JSON file."""
+        def write_json():
+            self.assets_file.parent.mkdir(exist_ok=True)
+            with open(self.assets_file, "w") as f:
+                data = []
+                for item in items:
+                    try:
+                        d = item.model_dump()
+                    except AttributeError:
+                        d = item.dict()
+                    # Convert UUIDs to strings
+                    if 'id' in d and isinstance(d['id'], UUID):
+                        d['id'] = str(d['id'])
+                    # Convert enum values to strings
+                    if 'type' in d and hasattr(d['type'], 'value'):
+                        d['type'] = d['type'].value
+                    if 'liquidity' in d and hasattr(d['liquidity'], 'value'):
+                        d['liquidity'] = d['liquidity'].value
+                    data.append(d)
+                json.dump(data, f, indent=2, default=str)
+        
+        await asyncio.to_thread(write_json)
+        # Invalidate cache
+        file_str = str(self.assets_file)
+        if file_str in self._mtimes:
+            del self._mtimes[file_str]
+        if file_str in self._cache:
+            del self._cache[file_str]

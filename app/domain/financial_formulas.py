@@ -1,3 +1,69 @@
+from typing import List, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.models import IncomeSource, SpendingCategory
+
+# =============================================================================
+# FREQUENCY NORMALIZATION
+# =============================================================================
+
+# Multipliers to convert various frequencies to monthly amounts
+FREQUENCY_TO_MONTHLY: dict[str, float] = {
+    "monthly": 1.0,
+    "bi-weekly": 26 / 12,  # 26 pay periods / 12 months
+    "weekly": 52 / 12,      # 52 weeks / 12 months
+    "annually": 1 / 12,
+    "yearly": 1 / 12,
+    "quarterly": 1 / 3,
+    "semi-annually": 1 / 6,
+}
+
+
+def normalize_to_monthly(amount: float, frequency: str) -> float:
+    """
+    Converts an amount from any frequency to its monthly equivalent.
+    
+    Args:
+        amount: The amount in the given frequency.
+        frequency: One of 'monthly', 'bi-weekly', 'weekly', 'annually', etc.
+        
+    Returns:
+        The monthly equivalent amount.
+    """
+    multiplier = FREQUENCY_TO_MONTHLY.get(frequency.lower(), 1.0)
+    return amount * multiplier
+
+
+def calculate_total_monthly_income(sources: List["IncomeSource"]) -> float:
+    """
+    Calculates total monthly income from a list of income sources.
+    
+    Args:
+        sources: List of IncomeSource objects with amount and frequency.
+        
+    Returns:
+        Total monthly income across all sources.
+    """
+    return sum(normalize_to_monthly(s.amount, s.frequency) for s in sources)
+
+
+def calculate_total_monthly_spending(categories: List["SpendingCategory"]) -> float:
+    """
+    Calculates total monthly spending from a list of spending categories.
+    
+    Args:
+        categories: List of SpendingCategory objects.
+        
+    Returns:
+        Total monthly spending.
+    """
+    return sum(c.amount for c in categories)
+
+
+# =============================================================================
+# INTEREST & COMPOUND GROWTH
+# =============================================================================
+
 def calculate_monthly_interest(principal: float, annual_rate: float, periods_per_year: int = 12) -> float:
     """
     Calculates the interest accrued over one period (default: month) based on an annual interest rate.

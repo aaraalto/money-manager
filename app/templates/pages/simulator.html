@@ -1,0 +1,135 @@
+{% extends "layouts/base.html" %}
+{% from "components/atoms.html" import icon %}
+{% from "components/molecules.html" import page_header with context %}
+
+{% block title %}Radiant - Radiant{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="/static/css/simulator.css?v=6">
+    <!-- GSAP Plugins required for Draggable -->
+    <script src="/static/gsap-public/minified/Draggable.min.js"></script>
+    <script src="/static/gsap-public/minified/InertiaPlugin.min.js"></script>
+{% endblock %}
+
+{% block content %}
+    {{ page_header("Debt Simulator", user_level=user.current_level|default(0)) }}
+    
+    <div class="simulation-layout">
+        <!-- LEFT COLUMN: Controls -->
+        <div class="controls-section">
+            <div class="rotary-container-wrapper">
+                <div class="rotary-container" id="payment-rotary">
+                    <svg viewBox="0 0 400 400" class="rotary-svg">
+                        <!-- Track -->
+                        <circle cx="200" cy="200" r="160" class="rotary-track" />
+                        <!-- Progress -->
+                        <circle cx="200" cy="200" r="160" class="rotary-progress" />
+
+                        <!-- Knob Group -->
+                        <g class="rotary-knob-group">
+                            <!-- Latch/Handle Design - REMOVED per user request -->
+                        </g>
+                    </svg>
+
+                    <div class="rotary-center-content">
+                        <div class="rotary-value-display">
+                            <div class="value-group">
+                                <span class="rotary-currency">$</span>
+                                <input type="number" id="rotary-display" class="rotary-amount-input" value="500">
+                            </div>
+                            <span class="rotary-label">Monthly Allocation</span>
+                        </div>
+
+                        <div class="rotary-divider"></div>
+
+                        <div class="rotary-limit-display">
+                            <span class="limit-label term" data-tooltip="Free Cash Flow is your Income minus Fixed Expenses. It's the money you have available to allocate towards debt repayment or savings.">Free Cash Flow</span>
+                            <span class="limit-value" id="metric-fcf">--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: Projections -->
+        <div class="results-section">
+            <div id="loader" class="loader htmx-indicator">Simulating your future...</div>
+
+            <!-- Hero Metrics -->
+            <div class="hero-metrics-row">
+                <div class="hero-metric">
+                    <div class="label">Debt Free Date</div>
+                    <div class="value date" id="metric-date" style="font-size: clamp(2.5rem, 5vw, 3.5rem); letter-spacing: -2px;">--</div>
+                </div>
+                <div class="hero-metric secondary">
+                    <div class="label">Total Interest Saved</div>
+                    <div class="value positive" id="metric-savings" style="font-size: clamp(2.5rem, 5vw, 3.5rem); letter-spacing: -2px;">--</div>
+                </div>
+            </div>
+            
+            <div class="simulation-content-grid">
+                <!-- Table Card (Now Top Left) -->
+                <div class="generated-card table-card">
+                    <div class="card-header">
+                        <h3 class="card-title">Liabilities</h3>
+                        <div id="filter-container" class="filter-row">
+                            <!-- Filters load here via OOB -->
+                        </div>
+                    </div>
+
+                    <!-- Loading Skeleton Overlay -->
+                    <div class="skeleton-wrapper">
+                        <div class="skeleton-row"><div class="skeleton-bar" style="width: 40%"></div><div class="skeleton-bar" style="width: 15%"></div></div>
+                        <div class="skeleton-row"><div class="skeleton-bar" style="width: 60%"></div><div class="skeleton-bar" style="width: 20%"></div></div>
+                        <div class="skeleton-row"><div class="skeleton-bar" style="width: 30%"></div><div class="skeleton-bar" style="width: 15%"></div></div>
+                        <div class="skeleton-row"><div class="skeleton-bar" style="width: 45%"></div><div class="skeleton-bar" style="width: 25%"></div></div>
+                    </div>
+
+                    <div id="payment-table-container">
+                        <!-- Table loads here via OOB -->
+                    </div>
+                </div>
+
+                <!-- Chart Card Removed -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Form for HTMX -->
+    <form id="sim-form" onsubmit="return false;">
+        <input type="hidden" name="monthly_payment" id="hidden-payment-input" value="500"
+            hx-get="/partials/calculate" hx-trigger="change delay:200ms, load" hx-include="[name='filter_tag']"
+            hx-indicator="#loader, .table-card">
+
+        <!-- Hidden input for Filter State -->
+        <input type="hidden" name="filter_tag" value="All">
+        <input type="hidden" name="strategy" value="avalanche">
+    </form>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="/static/js/rotary.js"></script>
+    <script type="module">
+        import { setupInitialState, animateEntry } from '/static/js/modules/ui.js';
+        
+        // Set initial state immediately
+        setupInitialState();
+
+        gsap.registerPlugin(Draggable);
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize Rotary
+            const rotary = new RotaryKnob('#payment-rotary', {
+                minValue: 0,
+                maxValue: 5000,
+                initialValue: 500,
+                inputSelector: '#hidden-payment-input',
+                displaySelector: '#rotary-display',
+                limitSelector: '#metric-fcf'
+            });
+            
+            // Trigger entry animation
+            animateEntry();
+        });
+    </script>
+{% endblock %}

@@ -39,13 +39,13 @@ You need to find that missing $5,000.
 ### Phase 2: Aggressive Payoff (Months 1-12)
 We are using the **Avalanche Method** because your interest rates are criminal.
 1.  **The Target:** Set up an automatic transfer of **$4,000/mo** (from your surplus) to your debt.
-2.  **The Order:**
-    *   **CFU NN** (28.7%)
-    *   **Platinum** (28%)
-    *   **Sapphire** (28%)
-    *   **BOA** (24.5%)
-    *   **Discover** (24.2%)
-    *   **Apple** (20%)
+2.  **The Order:** Pay off debts from highest to lowest interest rate:
+    *   **Credit Card A** (28.7%)
+    *   **Credit Card B** (28%)
+    *   **Credit Card C** (28%)
+    *   **Credit Card D** (24.5%)
+    *   **Credit Card E** (24.2%)
+    *   **Credit Card F** (20%)
 3.  **Taxes & Student Loans:** Pay the minimums. They are 0% interest. Do not prioritize them.
 
 ### Phase 3: The Wealth Building (Year 2+)

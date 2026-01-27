@@ -24,11 +24,17 @@ class RotaryKnob {
             inputSelector: null,
             displaySelector: null,
             limitSelector: null, // New option for limit checking
+            previewEnabled: true, // Enable preview mode during drag
+            previewDebounceMs: 150, // Debounce delay for preview calls
+            previewUrl: null, // URL for preview endpoint (uses input's hx-get if null)
             ...options
         };
 
         this.value = this.options.initialValue;
         this.lastShakeTime = 0;
+        this.previewTimeout = null;
+        this.lastPreviewValue = null;
+        this.isDragging = false;
 
         // Elements
         this.knob = this.container.querySelector('.rotary-knob-group');
@@ -68,16 +74,30 @@ class RotaryKnob {
             inertia: true,
             bounds: { minRotation: 0, maxRotation: 360 }, // Standard 360 dial
 
+            onDragStart: function () {
+                self.isDragging = true;
+                self.container.classList.add('is-dragging');
+            },
             onDrag: function () {
                 self.handleRotation(this.rotation);
+                // Trigger debounced preview during drag
+                if (self.options.previewEnabled) {
+                    self.schedulePreview();
+                }
             },
             onThrowUpdate: function () {
                 self.handleRotation(this.rotation);
             },
             onDragEnd: function () {
+                self.isDragging = false;
+                self.container.classList.remove('is-dragging');
+                self.cancelPreview();
                 self.commitValue();
             },
             onThrowComplete: function () {
+                self.isDragging = false;
+                self.container.classList.remove('is-dragging');
+                self.cancelPreview();
                 self.commitValue();
             }
         });
@@ -243,5 +263,95 @@ class RotaryKnob {
             // Trigger HTMX
             this.hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
         }
+    }
+
+    /**
+     * Schedule a debounced preview request
+     */
+    schedulePreview() {
+        // Cancel any pending preview
+        this.cancelPreview();
+        
+        // Don't preview if value hasn't changed significantly
+        if (this.lastPreviewValue !== null && Math.abs(this.value - this.lastPreviewValue) < 50) {
+            return;
+        }
+
+        this.previewTimeout = setTimeout(() => {
+            this.triggerPreview();
+        }, this.options.previewDebounceMs);
+    }
+
+    /**
+     * Cancel any pending preview request
+     */
+    cancelPreview() {
+        if (this.previewTimeout) {
+            clearTimeout(this.previewTimeout);
+            this.previewTimeout = null;
+        }
+    }
+
+    /**
+     * Trigger a lightweight preview HTMX request
+     */
+    triggerPreview() {
+        if (!this.hiddenInput || !window.htmx) return;
+
+        this.lastPreviewValue = this.value;
+
+        // Get the HTMX config from the hidden input
+        const hxGet = this.hiddenInput.getAttribute('hx-get');
+        if (!hxGet) return;
+
+        // Build preview URL with preview=true flag
+        const previewUrl = this.options.previewUrl || hxGet;
+        const separator = previewUrl.includes('?') ? '&' : '?';
+        const url = `${previewUrl}${separator}preview=true&monthly_payment=${this.value}`;
+
+        // Add preview indicator to container
+        this.container.classList.add('is-previewing');
+
+        // Trigger lightweight HTMX request
+        // We only update specific elements (metrics), not the full response
+        fetch(url, {
+            headers: {
+                'HX-Request': 'true',
+                'HX-Preview': 'true'
+            }
+        })
+        .then(response => response.text())
+        .then(html => {
+            // Parse and only update metric elements (not table/chart)
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            // Update FCF metric if present
+            const fcfMetric = doc.getElementById('metric-fcf');
+            const targetFcf = document.getElementById('metric-fcf');
+            if (fcfMetric && targetFcf) {
+                targetFcf.outerHTML = fcfMetric.outerHTML;
+            }
+            
+            // Update date metric if present
+            const dateMetric = doc.getElementById('metric-date');
+            const targetDate = document.getElementById('metric-date');
+            if (dateMetric && targetDate) {
+                targetDate.outerHTML = dateMetric.outerHTML;
+            }
+            
+            // Update savings metric if present
+            const savingsMetric = doc.getElementById('metric-savings');
+            const targetSavings = document.getElementById('metric-savings');
+            if (savingsMetric && targetSavings) {
+                targetSavings.outerHTML = savingsMetric.outerHTML;
+            }
+        })
+        .catch(err => {
+            console.warn('Preview request failed:', err);
+        })
+        .finally(() => {
+            this.container.classList.remove('is-previewing');
+        });
     }
 }

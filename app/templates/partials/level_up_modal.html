@@ -1,0 +1,299 @@
+<!-- Level Up Celebration Modal -->
+<dialog id="level-up-modal" class="modal level-up-modal" open>
+    <div class="modal-content celebration">
+        <div class="celebration-header">
+            <div class="celebration-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                </svg>
+            </div>
+            <div class="confetti-container">
+                <div class="confetti"></div>
+                <div class="confetti"></div>
+                <div class="confetti"></div>
+                <div class="confetti"></div>
+                <div class="confetti"></div>
+            </div>
+        </div>
+        
+        <h2 class="celebration-title">Level Up!</h2>
+        
+        <div class="level-badge-container">
+            <div class="level-badge old">{{ previous_level }}</div>
+            <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+            <div class="level-badge new">{{ new_level }}</div>
+        </div>
+        
+        <h3 class="level-name">
+            {% if new_level == 1 %}
+                Clearing the Path
+            {% elif new_level == 2 %}
+                Building Security
+            {% elif new_level == 3 %}
+                Building Wealth
+            {% elif new_level == 4 %}
+                Financial Independence
+            {% elif new_level == 5 %}
+                Abundance
+            {% else %}
+                Building Balance
+            {% endif %}
+        </h3>
+        
+        <p class="celebration-message">
+            {% if new_level == 1 %}
+                You're earning more than you spend! Time to tackle that debt.
+            {% elif new_level == 2 %}
+                Debt-free! Now let's build your safety net.
+            {% elif new_level == 3 %}
+                Your safety net is solid. Time to grow your wealth.
+            {% elif new_level == 4 %}
+                Work is now optional. You've achieved financial independence!
+            {% elif new_level == 5 %}
+                You've built true abundance. Time to live your rich life.
+            {% else %}
+                Keep going! You're making progress.
+            {% endif %}
+        </p>
+        
+        {% if unlocked_feature %}
+        <div class="unlock-banner">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="unlock-icon">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
+            </svg>
+            <span>{{ unlocked_feature }} Unlocked!</span>
+        </div>
+        {% endif %}
+        
+        <button class="celebration-btn" onclick="document.getElementById('level-up-modal').close()">
+            Continue Your Journey
+        </button>
+    </div>
+</dialog>
+
+<style>
+    .level-up-modal {
+        border: none;
+        border-radius: var(--radius-xl);
+        background: var(--bg-card);
+        max-width: 420px;
+        padding: 0;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        animation: modalSlideIn 0.4s var(--ease-bounce);
+    }
+    
+    .level-up-modal::backdrop {
+        background: rgba(0, 0, 0, 0.75);
+        animation: fadeIn 0.3s ease;
+    }
+    
+    @keyframes modalSlideIn {
+        from {
+            opacity: 0;
+            transform: scale(0.9) translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    .celebration {
+        text-align: center;
+        padding: var(--space-8);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .celebration-header {
+        position: relative;
+        margin-bottom: var(--space-6);
+    }
+    
+    .celebration-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto;
+        background: linear-gradient(135deg, var(--warning) 0%, #f97316 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: pulseGlow 2s infinite;
+    }
+    
+    .celebration-icon svg {
+        width: 44px;
+        height: 44px;
+        color: white;
+    }
+    
+    @keyframes pulseGlow {
+        0%, 100% {
+            box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+        }
+        50% {
+            box-shadow: 0 0 20px 10px rgba(245, 158, 11, 0.2);
+        }
+    }
+    
+    .confetti-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        pointer-events: none;
+    }
+    
+    .confetti {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        background: var(--warning);
+        animation: confettiFall 3s ease-in-out infinite;
+    }
+    
+    .confetti:nth-child(1) { left: 10%; animation-delay: 0s; background: var(--success); }
+    .confetti:nth-child(2) { left: 30%; animation-delay: 0.2s; background: var(--primary); }
+    .confetti:nth-child(3) { left: 50%; animation-delay: 0.4s; background: var(--warning); }
+    .confetti:nth-child(4) { left: 70%; animation-delay: 0.6s; background: var(--success); }
+    .confetti:nth-child(5) { left: 90%; animation-delay: 0.8s; background: var(--primary); }
+    
+    @keyframes confettiFall {
+        0% {
+            transform: translateY(-20px) rotate(0deg);
+            opacity: 1;
+        }
+        100% {
+            transform: translateY(100px) rotate(720deg);
+            opacity: 0;
+        }
+    }
+    
+    .celebration-title {
+        font-family: var(--font-heading);
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0 0 var(--space-4);
+        background: linear-gradient(135deg, var(--warning) 0%, #f97316 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    
+    .level-badge-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--space-4);
+        margin-bottom: var(--space-4);
+    }
+    
+    .level-badge {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--font-mono);
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+    
+    .level-badge.old {
+        background: var(--bg-subtle);
+        color: var(--text-tertiary);
+        border: 2px solid var(--border-color);
+    }
+    
+    .level-badge.new {
+        background: linear-gradient(135deg, var(--warning) 0%, #f97316 100%);
+        color: white;
+        animation: scaleIn 0.5s var(--ease-bounce) 0.3s both;
+    }
+    
+    @keyframes scaleIn {
+        from {
+            transform: scale(0);
+        }
+        to {
+            transform: scale(1);
+        }
+    }
+    
+    .arrow-icon {
+        width: 24px;
+        height: 24px;
+        color: var(--text-tertiary);
+    }
+    
+    .level-name {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin: 0 0 var(--space-2);
+        color: var(--text-primary);
+    }
+    
+    .celebration-message {
+        color: var(--text-secondary);
+        margin: 0 0 var(--space-6);
+        line-height: 1.6;
+    }
+    
+    .unlock-banner {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-2);
+        padding: var(--space-3) var(--space-5);
+        background: var(--success-dim);
+        color: var(--success);
+        border-radius: 100px;
+        font-weight: 600;
+        margin-bottom: var(--space-6);
+        animation: slideUp 0.5s var(--ease-bounce) 0.5s both;
+    }
+    
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .unlock-icon {
+        width: 18px;
+        height: 18px;
+    }
+    
+    .celebration-btn {
+        width: 100%;
+        padding: var(--space-4);
+        background: linear-gradient(135deg, var(--primary) 0%, #818cf8 100%);
+        color: white;
+        border: none;
+        border-radius: 100px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .celebration-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+    }
+</style>
