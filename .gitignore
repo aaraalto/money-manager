@@ -8,12 +8,13 @@ venv/
 *.log
 .cursor/
 
-# Data files (optional, depending on if you want to commit your personal data)
-data/liabilities.json
-data/assets.json
-data/transactions.csv
-data/scenarios.json
-fin-advice/ramit_sethi_assessment.md
+# Personal financial data - DO NOT COMMIT
+data/bill/
+data/onboarded/
+data/*.json
+data/*.csv
+!data/.gitkeep
+docs/fin-advice/ramit_sethi_assessment.md
 
 # Frontend dependencies if installed via npm (though current setup is manual)
 node_modules/
