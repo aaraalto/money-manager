@@ -16,6 +16,7 @@ data/level4/
 data/level5/
 data/*.json
 data/*.csv
+data/*.db
 data/**/*.json
 data/**/*.csv
 !data/.gitkeep
