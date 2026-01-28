@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Optional
 from uuid import UUID, uuid4
-from datetime import date
+from datetime import date, datetime
 from pydantic import BaseModel, Field, field_validator
 
 class AssetType(str, Enum):
@@ -100,6 +100,60 @@ class Scenario(BaseModel):
     monthly_payment: float = Field(..., ge=0)
     strategy: str = "avalanche"
     created_at: date = Field(default_factory=date.today)
+
+
+# =============================================================================
+# FINANCIAL TASKS & EXPENSES (for mnm CLI)
+# =============================================================================
+
+class TaskPriority(str, Enum):
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+
+
+class TaskCategory(str, Enum):
+    PAYMENT = "payment"
+    REVIEW = "review"
+    INVESTMENT = "investment"
+    TAX = "tax"
+    OTHER = "other"
+
+
+class RecurrenceType(str, Enum):
+    NONE = "none"
+    WEEKLY = "weekly"
+    BIWEEKLY = "biweekly"
+    MONTHLY = "monthly"
+    QUARTERLY = "quarterly"
+    YEARLY = "yearly"
+
+
+class FinancialTask(BaseModel):
+    """A financial task, reminder, or scheduled action."""
+    id: UUID = Field(default_factory=uuid4)
+    title: str
+    description: Optional[str] = None
+    category: TaskCategory = TaskCategory.OTHER
+    priority: TaskPriority = TaskPriority.MEDIUM
+    due_date: Optional[date] = None
+    amount: Optional[float] = Field(None, ge=0, description="Associated amount if applicable")
+    linked_liability_id: Optional[UUID] = None
+    completed: bool = False
+    completed_at: Optional[datetime] = None
+    created_at: datetime = Field(default_factory=datetime.now)
+
+
+class UpcomingExpense(BaseModel):
+    """A scheduled or recurring expense."""
+    id: UUID = Field(default_factory=uuid4)
+    name: str
+    amount: float = Field(..., ge=0)
+    due_date: date
+    recurrence: RecurrenceType = RecurrenceType.NONE
+    category: str
+    auto_pay: bool = False
+    notes: Optional[str] = None
 
 
 # =============================================================================

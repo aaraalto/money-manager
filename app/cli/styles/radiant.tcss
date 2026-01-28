@@ -1,0 +1,346 @@
+/* Radiant Money Manager TUI Theme */
+
+/* Color Variables - Radiant Green Gradient */
+$primary: #00d26a;
+$primary-light: #00ff88;
+$primary-dark: #00875a;
+$primary-darker: #006e38;
+
+$background: #0d1117;
+$surface: #161b22;
+$surface-light: #21262d;
+
+$text: #e6edf3;
+$text-muted: #8b949e;
+$text-dim: #6e7681;
+
+$success: #3fb950;
+$warning: #d29922;
+$error: #f85149;
+
+/* Global Styles */
+Screen {
+    background: $background;
+}
+
+/* Password Screen */
+#password-container {
+    align: center middle;
+    width: 60;
+    height: auto;
+    padding: 2 4;
+    background: $surface;
+    border: round $primary-dark;
+}
+
+#banner {
+    text-align: center;
+    margin-bottom: 1;
+}
+
+#password-prompt {
+    text-align: center;
+    color: $text-muted;
+    margin-bottom: 1;
+}
+
+#password-input, #confirm-input {
+    margin: 1 0;
+    width: 100%;
+}
+
+#unlock-btn {
+    margin-top: 1;
+    width: 100%;
+}
+
+#error-message {
+    text-align: center;
+    margin-top: 1;
+    height: 1;
+}
+
+.hidden {
+    display: none;
+}
+
+/* Home Screen */
+#home-container {
+    padding: 1 2;
+}
+
+#home-header {
+    dock: top;
+    height: 8;
+    padding: 0 1;
+}
+
+#home-content {
+    padding: 1 2;
+}
+
+/* Summary Cards */
+.summary-card {
+    width: 1fr;
+    height: auto;
+    min-height: 5;
+    padding: 1 2;
+    margin: 0 1 1 0;
+    background: $surface;
+    border: round $surface-light;
+}
+
+.summary-card:hover {
+    border: round $primary-dark;
+}
+
+.card-title {
+    color: $text-muted;
+    text-style: bold;
+}
+
+.card-value {
+    color: $primary;
+    text-style: bold;
+}
+
+.card-value.positive {
+    color: $success;
+}
+
+.card-value.negative {
+    color: $error;
+}
+
+.card-subtitle {
+    color: $text-dim;
+}
+
+/* Card Grid */
+.card-row {
+    layout: horizontal;
+    height: auto;
+    margin-bottom: 1;
+}
+
+/* Section Headers */
+.section-header {
+    color: $text;
+    text-style: bold;
+    padding: 1 0;
+    border-bottom: solid $surface-light;
+    margin-bottom: 1;
+}
+
+/* Lists */
+.task-list, .expense-list {
+    height: auto;
+    max-height: 12;
+    overflow-y: auto;
+    background: $surface;
+    border: round $surface-light;
+    padding: 1;
+}
+
+.list-item {
+    padding: 0 1;
+    height: 2;
+}
+
+.list-item:hover {
+    background: $surface-light;
+}
+
+.list-item-title {
+    color: $text;
+}
+
+.list-item-subtitle {
+    color: $text-muted;
+}
+
+.list-item-amount {
+    color: $primary;
+    text-align: right;
+}
+
+.list-item-date {
+    color: $text-dim;
+    text-align: right;
+    width: 12;
+}
+
+/* Priority Indicators */
+.priority-high {
+    color: $error;
+}
+
+.priority-medium {
+    color: $warning;
+}
+
+.priority-low {
+    color: $text-muted;
+}
+
+/* Questionnaire Screens */
+.questionnaire-container {
+    padding: 2;
+}
+
+.step-indicator {
+    dock: top;
+    height: 3;
+    text-align: center;
+    color: $text-muted;
+    border-bottom: solid $surface-light;
+    padding-bottom: 1;
+}
+
+.step-active {
+    color: $primary;
+    text-style: bold;
+}
+
+.question-group {
+    margin: 1 0;
+}
+
+.question-label {
+    color: $text;
+    margin-bottom: 1;
+}
+
+.currency-input {
+    width: 100%;
+}
+
+.input-hint {
+    color: $text-dim;
+    margin-top: 0;
+}
+
+/* Navigation */
+.nav-buttons {
+    dock: bottom;
+    height: 3;
+    layout: horizontal;
+    padding: 1;
+    border-top: solid $surface-light;
+}
+
+.nav-buttons Button {
+    margin: 0 1;
+}
+
+/* Buttons */
+Button {
+    background: $surface-light;
+    color: $text;
+    border: none;
+}
+
+Button:hover {
+    background: $primary-dark;
+}
+
+Button.-primary {
+    background: $primary-dark;
+    color: $text;
+}
+
+Button.-primary:hover {
+    background: $primary;
+}
+
+/* Input */
+Input {
+    background: $surface;
+    border: tall $surface-light;
+    color: $text;
+}
+
+Input:focus {
+    border: tall $primary-dark;
+}
+
+Input.-valid {
+    border: tall $success;
+}
+
+Input.-invalid {
+    border: tall $error;
+}
+
+/* Export Screen */
+#export-container {
+    align: center middle;
+    width: 50;
+    height: auto;
+    padding: 2 4;
+    background: $surface;
+    border: round $primary-dark;
+}
+
+.export-option {
+    width: 100%;
+    margin: 1 0;
+}
+
+/* Tasks Screen */
+#tasks-container {
+    padding: 1 2;
+}
+
+.task-filters {
+    dock: top;
+    height: 3;
+    layout: horizontal;
+    padding: 0 1;
+}
+
+.task-content {
+    padding: 1;
+}
+
+/* Empty States */
+.empty-state {
+    text-align: center;
+    color: $text-muted;
+    padding: 4;
+}
+
+/* DataTable styling */
+DataTable {
+    background: $surface;
+}
+
+DataTable > .datatable--header {
+    background: $surface-light;
+    color: $text;
+    text-style: bold;
+}
+
+DataTable > .datatable--cursor {
+    background: $primary-dark;
+}
+
+/* Footer */
+Footer {
+    background: $surface;
+}
+
+Footer > .footer--key {
+    background: $primary-dark;
+    color: $text;
+}
+
+Footer > .footer--description {
+    color: $text-muted;
+}
+
+/* Notifications */
+Toast {
+    background: $surface;
+    border: round $primary-dark;
+}
